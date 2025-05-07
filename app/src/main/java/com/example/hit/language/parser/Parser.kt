@@ -1,11 +1,10 @@
-package org.example.parser
+package com.example.hit.language.parser
 
-import org.example.parser.operations.AssignmentOperation
-import org.example.parser.operations.BinaryOperation
-import org.example.parser.operations.IOperation
-import org.example.parser.operations.UnaryOperation
-import org.example.parser.operations.ValueOperation
-import org.example.parser.operations.VariableOperation
+import com.example.hit.language.parser.operations.AssignmentOperation
+import com.example.hit.language.parser.operations.BinaryOperation
+import com.example.hit.language.parser.operations.IOperation
+import com.example.hit.language.parser.operations.UnaryOperation
+import com.example.hit.language.parser.operations.VariableOperation
 
 class Parser(
     private val tokens: List<Token>,

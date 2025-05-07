@@ -1,6 +1,6 @@
-package org.example.parser
+package com.example.hit.language.parser
 
-import org.example.parser.exceptions.NumberParseException
+import com.example.hit.language.parser.exceptions.NumberParseException
 
 class Lexer(
     val inputString: String
