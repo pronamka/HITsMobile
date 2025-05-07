@@ -76,7 +76,7 @@ fun CodeScreen(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(top = 12.dp,)
+                    .padding(top = 12.dp)
                     .height(56.dp)
                     .fillMaxWidth(0.9f)
                     .background(
@@ -84,7 +84,7 @@ fun CodeScreen(
                         shape = RoundedCornerShape(100.dp)
                     ),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Start
             ) {
                 Button(
                     modifier = Modifier,
