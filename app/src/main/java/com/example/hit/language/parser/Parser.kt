@@ -42,8 +42,9 @@ class Parser(
     }
 
     private fun atLevelUnary(): IOperation {
+        val tokenType = getCurrentToken().tokenType
         if (checkCurrentTokenType(UnaryOperation.availableTokenTypes)) {
-            return UnaryOperation(atTopLevel(), getCurrentToken().tokenType)
+            return UnaryOperation(atTopLevel(), tokenType)
         }
         return atTopLevel()
     }
