@@ -32,5 +32,7 @@ abstract class Repository : IRepository {
 object VariablesRepository: Repository(){
     init{
         elements["PI"] = DoubleValue(Math.PI)
+        elements["E"] = DoubleValue(Math.E)
+        elements["GOLDEN_RATION"] = DoubleValue(1.618)
     }
 }
