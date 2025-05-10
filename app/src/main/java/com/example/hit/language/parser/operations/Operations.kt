@@ -1,11 +1,11 @@
 package com.example.hit.language.parser.operations
 
 import com.example.hit.language.parser.BoolValue
+import com.example.hit.language.parser.Scopes
 import com.example.hit.language.parser.SupportsArithmetic
 import com.example.hit.language.parser.SupportsComparison
 import com.example.hit.language.parser.TokenType
 import com.example.hit.language.parser.Value
-import com.example.hit.language.parser.VariablesRepository
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
 
 interface IOperation {
@@ -93,7 +93,7 @@ class VariableOperation(
     val variableName: String
 ) : IOperation {
     override fun evaluate(): Value<*> {
-        return VariablesRepository.get(variableName)
+        return Scopes.getVariable(variableName)
     }
 
     override fun toString(): String {
@@ -101,24 +101,10 @@ class VariableOperation(
     }
 }
 
-class AssignmentOperation(
-    val variableName: String,
-    val variableValue: IOperation
-) : IOperation {
-    override fun evaluate(): Value<*> {
-        VariablesRepository.add(variableName, variableValue.evaluate())
-        return VariablesRepository.get(variableName)
-    }
-
-    override fun toString(): String {
-        return "AssignmentOperation: $variableName = $variableValue"
-    }
-}
-
-class ConditionalOperation(
+class ConditionOperation(
     val left: IOperation,
     val right: IOperation,
-    val operationType: ConditionalOperationType
+    val operationType: ConditionOperationType
 ) : IOperation {
     override fun evaluate(): BoolValue {
         val first = left.evaluate()
@@ -132,12 +118,12 @@ class ConditionalOperation(
         }
         val comparisonResult = first.compareTo(second).value
         val operationResult = when (operationType) {
-            ConditionalOperationType.EQUAL -> comparisonResult == 0
-            ConditionalOperationType.NOT_EQUAL -> comparisonResult != 0
-            ConditionalOperationType.LESS -> comparisonResult < 0
-            ConditionalOperationType.LESS_OR_EQUAL -> comparisonResult <= 0
-            ConditionalOperationType.GREATER -> comparisonResult > 0
-            ConditionalOperationType.GREATER_OR_EQUAL -> comparisonResult >= 0
+            ConditionOperationType.EQUAL -> comparisonResult == 0
+            ConditionOperationType.NOT_EQUAL -> comparisonResult != 0
+            ConditionOperationType.LESS -> comparisonResult < 0
+            ConditionOperationType.LESS_OR_EQUAL -> comparisonResult <= 0
+            ConditionOperationType.GREATER -> comparisonResult > 0
+            ConditionOperationType.GREATER_OR_EQUAL -> comparisonResult >= 0
         }
         return BoolValue(operationResult)
     }

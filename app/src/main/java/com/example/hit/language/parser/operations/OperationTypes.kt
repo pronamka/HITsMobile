@@ -1,6 +1,6 @@
 package com.example.hit.language.parser.operations
 
-enum class ConditionalOperationType {
+enum class ConditionOperationType {
     EQUAL,
     LESS,
     GREATER,
