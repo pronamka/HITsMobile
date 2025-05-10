@@ -47,15 +47,18 @@ class AssignmentStatement(
         }
         val repository = Scopes.getRepositoryWithVariable(variableName)
         val variable = repository.get(variableName)
+
         val value: Value<*>
         if (variable is Variable) {
             value = Variable(variable.type, variableValue).toValue()
         } else {
             val newValue = variableValue.evaluate()
-            if (newValue::class != variable::class) {
+            if (newValue::class != variable::class &&
+                !(newValue is IntValue && variable is DoubleValue)
+            ) {
                 throw IllegalArgumentException(
-                    "Cannot assign a value of type ${newValue::class} " +
-                            "to a variable of class ${variable::class}"
+                    "Cannot assign a value of type ${newValue::class.simpleName} " +
+                            "to a variable of class ${variable::class.simpleName}"
                 )
             }
             value = newValue
@@ -95,15 +98,16 @@ class BlockStatement(
 }
 
 class IfElseStatement(
-    val condition: ConditionOperation,
-    val first: BlockStatement,
-    val second: BlockStatement? = null,
+    val blocks: List<Pair<ConditionOperation, BlockStatement>>,
+    val defaultBlock: BlockStatement? = null,
 ) : IStatement {
     override fun evaluate() {
-        if (condition.evaluate().value) {
-            first.evaluate()
-            return
+        for ((condition, block) in blocks){
+            if (condition.evaluate().value) {
+                block.evaluate()
+                return
+            }
         }
-        second?.evaluate()
+        defaultBlock?.evaluate()
     }
 }
