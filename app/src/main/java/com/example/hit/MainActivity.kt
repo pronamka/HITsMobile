@@ -58,64 +58,13 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun NavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "start") {
-        composable("start") {
-            StartScr(
-                onMyProjects = { navController.navigate("code") },
-                onAbout = { showDialog.value = true }
-            )
-        }
-        composable("code") {
-            CodeScreen()
-        }
-    }
-
-    if (showDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showDialog.value = false },
-            title = { Text("О приложении") },
-            text = { Text("Это простое приложение для визуального кодинга.") },
-            confirmButton = {
-                TextButton(onClick = { showDialog.value = false }) {
-                    Text("OK")
-                }
-            }
-        )
-    }
-}
-
-val showDialog = mutableStateOf(false)
-
-@Composable
-fun CodeScreen() {
-    Scaffold(
-        modifier = Modifier.fillMaxSize()
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Экран кодинга 🚀",
-                style = MaterialTheme.typography.headlineMedium
-            )
-        }
-    }
-}
 
 @Composable
 fun StartScr(
-    onMyProjects: () -> Unit,
-    onAbout: () -> Unit,
-    modifier: Modifier = Modifier
+    navController: NavHostController
 ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
@@ -129,7 +78,7 @@ fun StartScr(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Bilding grils \uD83D\uDCA1",
+            text = "Building grils \uD83D\uDCA1",
             fontSize = 36.sp,
             letterSpacing = 1.sp,
             lineHeight = 44.sp,
@@ -140,7 +89,7 @@ fun StartScr(
         Spacer(modifier = Modifier.height(30.dp))
 
         Button(
-            onClick = onMyProjects,
+            onClick = { navController.navigate(Destinations.CODE_SCREEN) },
             modifier = Modifier.height(50.dp).width(250.dp),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF4143E3),
@@ -156,7 +105,7 @@ fun StartScr(
         Spacer(modifier = Modifier.height(25.dp))
 
         Button(
-            onClick = onAbout,
+            onClick = { showDialog.value = true },
             modifier = Modifier.height(50.dp).width(250.dp),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF4143E3),
@@ -168,6 +117,18 @@ fun StartScr(
             Spacer(modifier = Modifier.width(8.dp))
             Text("О приложении")
         }
+        if (showDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showDialog.value = false },
+                title = { Text("О приложении") },
+                text = { Text("Это приложение для новичков, которые хотят погрузиться в мир программирования.") },
+                confirmButton = {
+                    TextButton(onClick = { showDialog.value = false }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
     }
 
 }
@@ -178,6 +139,6 @@ fun StartScr(
 @Composable
 fun GreetingPreview() {
     HitTheme {
-        StartScr(onMyProjects = {}, onAbout = {})
+//        StartScr()
     }
 }
