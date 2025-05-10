@@ -1,47 +1,109 @@
 package com.example.hit.language.parser
 
+import com.example.hit.language.parser.operations.ConditionOperation
 import com.example.hit.language.parser.operations.IOperation
+
+interface IStatement {
+    fun evaluate()
+}
 
 class DeclarationStatement(
     val variableType: VariableType,
     val variableName: String,
     val variableValue: IOperation? = null
-): IOperation{
-    override fun evaluate(): Value<*> {
-        if (VariablesRepository.exists(variableName)){
+) : IStatement {
+    override fun evaluate() {
+        if (Scopes.getLast().exists(variableName)) {
             throw IllegalStateException("Variable $variableName has already been declared.")
         }
         val variable = Variable(variableType, variableValue)
         val value: Value<*>
-        if (variableValue!=null){
+        if (variableValue != null) {
             value = variable.toValue()
-        }
-        else{
+        } else {
             value = variable
         }
-        VariablesRepository.add(variableName, value)
-        return value
+        Scopes.getLast().add(variableName, value)
+    }
+
+    override fun toString(): String {
+        var s =
+            "Declaration Statement: Declaring variable of " +
+                    "type $variableType with name $variableName"
+        if (variableValue != null) {
+            s += "and value $variableValue"
+        }
+        return s
     }
 }
 
 class AssignmentStatement(
     val variableName: String,
     val variableValue: IOperation
-): IOperation{
-    override fun evaluate(): Value<*> {
-        if (!VariablesRepository.exists(variableName)){
+) : IStatement {
+    override fun evaluate() {
+        if (!Scopes.variableExists(variableName)) {
             throw IllegalStateException("Variable $variableName is not declared.")
         }
-        val variable = VariablesRepository.get(variableName)
+        val repository = Scopes.getRepositoryWithVariable(variableName)
+        val variable = repository.get(variableName)
         val value: Value<*>
-        if (variable is Variable){
+        if (variable is Variable) {
             value = Variable(variable.type, variableValue).toValue()
+        } else {
+            val newValue = variableValue.evaluate()
+            if (newValue::class != variable::class) {
+                throw IllegalArgumentException(
+                    "Cannot assign a value of type ${newValue::class} " +
+                            "to a variable of class ${variable::class}"
+                )
+            }
+            value = newValue
         }
-        else{
-            value = variable
-        }
-        VariablesRepository.add(variableName, value)
-        return value
+        repository.add(variableName, value)
+    }
+
+    override fun toString(): String {
+        return "Assignment Statement: Assigning value $variableValue to $variableName."
     }
 }
 
+class PrintStatement(
+    val toPrint: IOperation
+) : IStatement {
+    override fun evaluate() {
+        println(toPrint.evaluate())
+    }
+
+    override fun toString(): String {
+        return "Print statement: Printing $toPrint"
+    }
+}
+
+class BlockStatement(
+    val statements: List<IStatement>
+) : IStatement {
+
+    override fun evaluate() {
+        Scopes.add(VariablesRepository())
+        for (statement in statements) {
+            statement.evaluate()
+        }
+
+        Scopes.removeLast()
+    }
+}
+
+class IfElseStatement(
+    val condition: ConditionOperation,
+    val first: BlockStatement,
+    val second: BlockStatement? = null,
+) : IStatement {
+    override fun evaluate() {
+        if (condition.evaluate().value) {
+            first.evaluate()
+            return
+        }
+        second?.evaluate()
+    }
+}
