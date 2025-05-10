@@ -15,7 +15,7 @@ class Parser(
     fun parse(): List<IOperation> {
         val results: MutableList<IOperation> = mutableListOf()
         while (currentIndex < tokens.size) {
-            results.add(atBottomLevel())
+            results.add(atLevelUnary())
         }
         return results
     }
