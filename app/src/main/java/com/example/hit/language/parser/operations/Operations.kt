@@ -1,6 +1,8 @@
 package com.example.hit.language.parser.operations
 
+import com.example.hit.language.parser.BoolValue
 import com.example.hit.language.parser.SupportsArithmetic
+import com.example.hit.language.parser.SupportsComparison
 import com.example.hit.language.parser.TokenType
 import com.example.hit.language.parser.Value
 import com.example.hit.language.parser.VariablesRepository
@@ -41,7 +43,7 @@ class UnaryOperation(
 
     override fun evaluate(): SupportsArithmetic<*> {
         val value = operand.evaluate()
-        if (value !is SupportsArithmetic){
+        if (value !is SupportsArithmetic) {
             throw IncompatibleTypesException(operationType.toString(), listOf(value))
         }
         return operationsMap[operationType]!!.invoke(value)
@@ -110,5 +112,33 @@ class AssignmentOperation(
 
     override fun toString(): String {
         return "AssignmentOperation: $variableName = $variableValue"
+    }
+}
+
+class ConditionalOperation(
+    val left: IOperation,
+    val right: IOperation,
+    val operationType: ConditionalOperationType
+) : IOperation {
+    override fun evaluate(): BoolValue {
+        val first = left.evaluate()
+        val second = right.evaluate()
+        if (first !is SupportsComparison<*> || second !is SupportsComparison<*>) {
+            throw IncompatibleTypesException(
+                operationType.toString(), listOf(
+                    first, second
+                )
+            )
+        }
+        val comparisonResult = first.compareTo(second).value
+        val operationResult = when (operationType) {
+            ConditionalOperationType.EQUAL -> comparisonResult == 0
+            ConditionalOperationType.NOT_EQUAL -> comparisonResult != 0
+            ConditionalOperationType.LESS -> comparisonResult < 0
+            ConditionalOperationType.LESS_OR_EQUAL -> comparisonResult <= 0
+            ConditionalOperationType.GREATER -> comparisonResult > 0
+            ConditionalOperationType.GREATER_OR_EQUAL -> comparisonResult >= 0
+        }
+        return BoolValue(operationResult)
     }
 }
