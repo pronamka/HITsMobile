@@ -24,6 +24,14 @@ abstract class Repository : IRepository {
         return elements[key]!!
     }
 
+    fun getValue(key: String): Value<*>{
+        val value = get(key)
+        if (value is Variable){
+            throw IllegalStateException("Variable $key has not been initialized yet.")
+        }
+        return value
+    }
+
     override fun exists(key: String): Boolean {
         return elements.containsKey(key)
     }
