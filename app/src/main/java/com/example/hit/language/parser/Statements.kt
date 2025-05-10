@@ -111,3 +111,29 @@ class IfElseStatement(
         defaultBlock?.evaluate()
     }
 }
+
+class WhileLoop(
+    val condition: ConditionOperation,
+    val block: BlockStatement
+): IStatement{
+    override fun evaluate() {
+        while(condition.evaluate().value){
+            block.evaluate()
+        }
+    }
+}
+
+class ForLoop(
+    val initializer: IStatement,
+    val condition: ConditionOperation,
+    val stateChange: IStatement,
+    val block: BlockStatement
+): IStatement{
+    override fun evaluate() {
+        initializer.evaluate()
+        while(condition.evaluate().value){
+            block.evaluate()
+            stateChange.evaluate()
+        }
+    }
+}
