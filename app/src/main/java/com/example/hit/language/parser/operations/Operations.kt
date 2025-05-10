@@ -128,3 +128,23 @@ class ConditionOperation(
         return BoolValue(operationResult)
     }
 }
+
+class LogicalOperation(
+    val left: IOperation,
+    val right: IOperation,
+    val operationType: LogicalOperationType
+): IOperation{
+    override fun evaluate(): BoolValue {
+        val first = left.evaluate()
+        val second = right.evaluate()
+        if (first !is BoolValue || second !is BoolValue){
+            throw IncompatibleTypesException(operationType.toString(), listOf(first, second))
+        }
+
+        val result = when (operationType){
+            LogicalOperationType.OR -> first.value || second.value
+            LogicalOperationType.AND -> first.value && second.value
+        }
+        return BoolValue(result)
+    }
+}

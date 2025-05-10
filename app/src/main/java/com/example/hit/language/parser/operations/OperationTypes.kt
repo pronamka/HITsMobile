@@ -8,3 +8,8 @@ enum class ConditionOperationType {
     GREATER_OR_EQUAL,
     NOT_EQUAL
 }
+
+enum class LogicalOperationType{
+    AND,
+    OR
+}
