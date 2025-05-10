@@ -23,14 +23,20 @@ class Variable(
         }
     }
 
-    override fun toString(): String{
+    override fun toString(): String {
         return "Variable type $type and value $value"
     }
 }
 
-abstract class SupportsArithmetic<T>(
+abstract class SupportsComparison<T : Comparable<T>>(
     value: T
 ) : Value<T>(value) {
+    abstract fun compareTo(other: SupportsComparison<*>): IntValue
+}
+
+abstract class SupportsArithmetic<T : Comparable<T>>(
+    value: T
+) : SupportsComparison<T>(value) {
     abstract fun add(other: SupportsArithmetic<*>): SupportsArithmetic<*>
     abstract fun subtract(other: SupportsArithmetic<*>): SupportsArithmetic<*>
     abstract fun multiplyBy(other: SupportsArithmetic<*>): SupportsArithmetic<*>
@@ -82,6 +88,14 @@ class IntValue(
     override fun changeSign(): SupportsArithmetic<*> {
         return IntValue(-this.value)
     }
+
+    override fun compareTo(other: SupportsComparison<*>): IntValue {
+        return when (other) {
+            is IntValue -> IntValue(value.compareTo(other.value))
+            is DoubleValue -> IntValue(value.compareTo(other.value))
+            else -> throw IncompatibleTypesException("comparison", listOf(this, other))
+        }
+    }
 }
 
 class DoubleValue(
@@ -126,6 +140,14 @@ class DoubleValue(
     override fun changeSign(): SupportsArithmetic<*> {
         return DoubleValue(-this.value)
     }
+
+    override fun compareTo(other: SupportsComparison<*>): IntValue {
+        return when (other) {
+            is IntValue -> IntValue(value.compareTo(other.value))
+            is DoubleValue -> IntValue(value.compareTo(other.value))
+            else -> throw IncompatibleTypesException("comparison", listOf(this, other))
+        }
+    }
 }
 
 class StringValue(value: String) : SupportsArithmetic<String>(value) {
@@ -158,8 +180,17 @@ class StringValue(value: String) : SupportsArithmetic<String>(value) {
     override fun changeSign(): SupportsArithmetic<*> {
         throw IncompatibleTypesException("-", listOf(this))
     }
+
+    override fun compareTo(other: SupportsComparison<*>): IntValue {
+        return when (other) {
+            is StringValue -> IntValue(value.compareTo(other.value))
+            else -> throw IncompatibleTypesException("comparison", listOf(this, other))
+        }
+    }
 }
 
 class BoolValue(value: Boolean) : Value<Boolean>(value) {
-
+    override fun toString(): String {
+        return "BoolValue: $value"
+    }
 }
