@@ -19,7 +19,16 @@ class Variable(
             VariableType.INT -> IntValue(variableValue.toInt())
             VariableType.DOUBLE -> DoubleValue(variableValue.toDouble())
             VariableType.STRING -> StringValue(variableValue)
-            else -> throw NotImplementedError("Variable with type $type cannot be created yet.")
+            VariableType.BOOL -> {
+                return when (variableValue) {
+                    "true" -> BoolValue(true)
+                    "false" -> BoolValue(false)
+                    else -> throw IllegalArgumentException(
+                        "Cannot initialize a variable of " +
+                                "type BoolValue with value $variableValue"
+                    )
+                }
+            }
         }
     }
 
