@@ -1,11 +1,12 @@
 package com.example.hit.language.parser.operations
 
-import com.example.hit.language.parser.DoubleValue
-import com.example.hit.language.parser.IntValue
-import com.example.hit.language.parser.Token
+import com.example.hit.language.parser.BoolValue
+import com.example.hit.language.parser.Scopes
+import com.example.hit.language.parser.SupportsArithmetic
+import com.example.hit.language.parser.SupportsComparison
 import com.example.hit.language.parser.TokenType
 import com.example.hit.language.parser.Value
-import com.example.hit.language.parser.VariablesRepository
+import com.example.hit.language.parser.exceptions.IncompatibleTypesException
 
 interface IOperation {
     fun evaluate(): Value<*>
@@ -33,51 +34,22 @@ class UnaryOperation(
         val availableTokenTypes = listOf(
             TokenType.PLUS, TokenType.MINUS,
         )
-        fun canBeApplied(token: Token): Boolean{
-            return availableTokenTypes.contains(token.tokenType)
-        }
     }
-    val operationsMap: Map<TokenType, (IOperation) -> UnaryLeafOperation> = mapOf(
-        TokenType.PLUS to { value -> UnaryPlusOperation(value.evaluate()) },
-        TokenType.MINUS to { value -> UnaryMinusOperation(value.evaluate()) },
+
+    val operationsMap: Map<TokenType, (SupportsArithmetic<*>) -> SupportsArithmetic<*>> = mapOf(
+        TokenType.PLUS to { value -> value },
+        TokenType.MINUS to { value -> value.changeSign() },
     )
 
-    override fun evaluate(): Value<*> = operationsMap[operationType]!!.invoke(operand).evaluate()
-}
-
-abstract class UnaryLeafOperation(
-    val operand: Value<*>,
-) : IOperation {
-    abstract val operationSymbol: String
-    override fun toString(): String {
-        return "$operationSymbol $operand = ${evaluate()}"
+    override fun evaluate(): SupportsArithmetic<*> {
+        val value = operand.evaluate()
+        if (value !is SupportsArithmetic) {
+            throw IncompatibleTypesException(operationType.toString(), listOf(value))
+        }
+        return operationsMap[operationType]!!.invoke(value)
     }
 }
 
-class UnaryPlusOperation(
-    value: Value<*>,
-) : UnaryLeafOperation(value) {
-    override val operationSymbol = "+"
-    override fun evaluate(): Value<*> = operand
-}
-
-class UnaryMinusOperation(
-    value: Value<*>,
-) : UnaryLeafOperation(value) {
-    override val operationSymbol = "-"
-    override fun evaluate(): Value<*> {
-        if (operand is IntValue) {
-            return IntValue(-operand.value)
-        }
-        if (operand is DoubleValue) {
-            return DoubleValue(-operand.value)
-        }
-
-        throw IllegalArgumentException(
-            "Operation '-' cannot be performed on a ${operand::class::qualifiedName} value: $operand"
-        )
-    }
-}
 
 interface IBinaryOperation : IOperation {
     val left: IOperation
@@ -91,33 +63,37 @@ class BinaryOperation(
 ) : IBinaryOperation {
     companion object {
         val availableTokenTypes = listOf(
-            TokenType.PLUS, TokenType.MINUS,TokenType.ASTERISK, TokenType.SLASH
+            TokenType.PLUS, TokenType.MINUS, TokenType.ASTERISK, TokenType.SLASH
         )
-        fun canBeApplied(token: Token): Boolean{
-            return availableTokenTypes.contains(token.tokenType)
-        }
     }
-    val operationsMap: Map<TokenType, (left: IOperation, right: IOperation) -> Value<*>> = mapOf(
-        TokenType.PLUS to { left, right -> left.evaluate().add(right.evaluate()) },
-        TokenType.MINUS to { left, right -> left.evaluate().subtract(right.evaluate()) },
-        TokenType.ASTERISK to { left, right -> left.evaluate().multiplyBy(right.evaluate()) },
-        TokenType.SLASH to { left, right -> left.evaluate().divideBy(right.evaluate()) }
-    )
 
-    override fun evaluate(): Value<*> {
-        return operationsMap[operationType]!!.invoke(left, right)
+    val operationsMap: Map<TokenType, (left: SupportsArithmetic<*>, right: SupportsArithmetic<*>) -> SupportsArithmetic<*>> =
+        mapOf(
+            TokenType.PLUS to { left, right -> left.add(right) },
+            TokenType.MINUS to { left, right -> left.subtract(right) },
+            TokenType.ASTERISK to { left, right -> left.multiplyBy(right) },
+            TokenType.SLASH to { left, right -> left.divideBy(right) }
+        )
+
+    override fun evaluate(): SupportsArithmetic<*> {
+        val first = left.evaluate()
+        val second = right.evaluate()
+        if (first !is SupportsArithmetic<*> || second !is SupportsArithmetic<*>) {
+            throw IncompatibleTypesException(operationType.toString(), listOf(left, right))
+        }
+        return operationsMap[operationType]!!.invoke(first, second)
     }
 
     override fun toString(): String {
-        return "BinaryOperation: ${left} $operationType ${right}"
+        return "BinaryOperation: $left $operationType $right"
     }
 }
 
 class VariableOperation(
     val variableName: String
-): IOperation{
+) : IOperation {
     override fun evaluate(): Value<*> {
-        return VariablesRepository.get(variableName)
+        return Scopes.getVariable(variableName)
     }
 
     override fun toString(): String {
@@ -125,16 +101,50 @@ class VariableOperation(
     }
 }
 
-class AssignmentOperation(
-    val variableName: String,
-    val variableValue: IOperation
-): IOperation {
-    override fun evaluate(): Value<*> {
-        VariablesRepository.add(variableName, variableValue.evaluate())
-        return VariablesRepository.get(variableName)
+class ConditionOperation(
+    val left: IOperation,
+    val right: IOperation,
+    val operationType: ConditionOperationType
+) : IOperation {
+    override fun evaluate(): BoolValue {
+        val first = left.evaluate()
+        val second = right.evaluate()
+        if (first !is SupportsComparison<*> || second !is SupportsComparison<*>) {
+            throw IncompatibleTypesException(
+                operationType.toString(), listOf(
+                    first, second
+                )
+            )
+        }
+        val comparisonResult = first.compareTo(second).value
+        val operationResult = when (operationType) {
+            ConditionOperationType.EQUAL -> comparisonResult == 0
+            ConditionOperationType.NOT_EQUAL -> comparisonResult != 0
+            ConditionOperationType.LESS -> comparisonResult < 0
+            ConditionOperationType.LESS_OR_EQUAL -> comparisonResult <= 0
+            ConditionOperationType.GREATER -> comparisonResult > 0
+            ConditionOperationType.GREATER_OR_EQUAL -> comparisonResult >= 0
+        }
+        return BoolValue(operationResult)
     }
+}
 
-    override fun toString(): String {
-        return "AssignmentOperation: $variableName = $variableValue"
+class LogicalOperation(
+    val left: IOperation,
+    val right: IOperation,
+    val operationType: LogicalOperationType
+): IOperation{
+    override fun evaluate(): BoolValue {
+        val first = left.evaluate()
+        val second = right.evaluate()
+        if (first !is BoolValue || second !is BoolValue){
+            throw IncompatibleTypesException(operationType.toString(), listOf(first, second))
+        }
+
+        val result = when (operationType){
+            LogicalOperationType.OR -> first.value || second.value
+            LogicalOperationType.AND -> first.value && second.value
+        }
+        return BoolValue(result)
     }
 }

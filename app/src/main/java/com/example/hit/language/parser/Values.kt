@@ -1,122 +1,205 @@
 package com.example.hit.language.parser
 
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
+import com.example.hit.language.parser.operations.IOperation
 
-interface IValue{}
+interface IValue {}
+
 abstract class Value<T>(
     val value: T
-){
-    abstract fun add(other: Value<*>): Value<*>
-    abstract fun subtract(other: Value<*>): Value<*>
-    abstract fun multiplyBy(other: Value<*>): Value<*>
-    abstract fun divideBy(other: Value<*>): Value<*>
+)
+
+class Variable(
+    val type: VariableType,
+    value: IOperation? = null,
+) : Value<IOperation?>(value) {
+    fun toValue(): Value<*> {
+        val variableValue = value!!.evaluate().value.toString()
+        return when (type) {
+            VariableType.INT -> IntValue(variableValue.toInt())
+            VariableType.DOUBLE -> DoubleValue(variableValue.toDouble())
+            VariableType.STRING -> StringValue(variableValue)
+            VariableType.BOOL -> {
+                return when (variableValue) {
+                    "true" -> BoolValue(true)
+                    "false" -> BoolValue(false)
+                    else -> throw IllegalArgumentException(
+                        "Cannot initialize a variable of " +
+                                "type BoolValue with value $variableValue"
+                    )
+                }
+            }
+        }
+    }
+
+    override fun toString(): String {
+        return "Variable type $type and value $value"
+    }
 }
+
+abstract class SupportsComparison<T : Comparable<T>>(
+    value: T
+) : Value<T>(value) {
+    abstract fun compareTo(other: SupportsComparison<*>): IntValue
+}
+
+abstract class SupportsArithmetic<T : Comparable<T>>(
+    value: T
+) : SupportsComparison<T>(value) {
+    abstract fun add(other: SupportsArithmetic<*>): SupportsArithmetic<*>
+    abstract fun subtract(other: SupportsArithmetic<*>): SupportsArithmetic<*>
+    abstract fun multiplyBy(other: SupportsArithmetic<*>): SupportsArithmetic<*>
+    abstract fun divideBy(other: SupportsArithmetic<*>): SupportsArithmetic<*>
+    abstract fun changeSign(): SupportsArithmetic<*>
+}
+
+
 class IntValue(
     value: Int
-) : Value<Int>(value){
+) : SupportsArithmetic<Int>(value) {
     override fun toString(): String {
         return value.toString()
     }
 
-    override fun add(other: Value<*>): Value<*> {
-        return when(other){
-            is IntValue -> IntValue(value+other.value)
-            is DoubleValue -> DoubleValue(value+other.value)
+    override fun add(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
+            is IntValue -> IntValue(value + other.value)
+            is DoubleValue -> DoubleValue(value + other.value)
             else -> throw IncompatibleTypesException("+", listOf(this, other))
         }
     }
 
-    override fun subtract(other: Value<*>): Value<*> {
-        return when(other){
-            is IntValue -> IntValue(value-other.value)
-            is DoubleValue -> DoubleValue(value-other.value)
+    override fun subtract(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
+            is IntValue -> IntValue(value - other.value)
+            is DoubleValue -> DoubleValue(value - other.value)
             else -> throw IncompatibleTypesException("-", listOf(this, other))
         }
     }
 
-    override fun multiplyBy(other: Value<*>): Value<*> {
-        return when(other){
-            is IntValue -> IntValue(value*other.value)
-            is DoubleValue -> DoubleValue(value*other.value)
+    override fun multiplyBy(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
+            is IntValue -> IntValue(value * other.value)
+            is DoubleValue -> DoubleValue(value * other.value)
             is StringValue -> StringValue(other.value.repeat(value))
             else -> throw IncompatibleTypesException("*", listOf(this, other))
         }
     }
 
-    override fun divideBy(other: Value<*>): Value<*> {
-        return when(other){
-            is IntValue -> IntValue(value/other.value)
-            is DoubleValue -> DoubleValue(value/other.value)
+    override fun divideBy(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
+            is IntValue -> IntValue(value / other.value)
+            is DoubleValue -> DoubleValue(value / other.value)
             else -> throw IncompatibleTypesException("/", listOf(this, other))
+        }
+    }
+
+    override fun changeSign(): SupportsArithmetic<*> {
+        return IntValue(-this.value)
+    }
+
+    override fun compareTo(other: SupportsComparison<*>): IntValue {
+        return when (other) {
+            is IntValue -> IntValue(value.compareTo(other.value))
+            is DoubleValue -> IntValue(value.compareTo(other.value))
+            else -> throw IncompatibleTypesException("comparison", listOf(this, other))
         }
     }
 }
 
 class DoubleValue(
     value: Double
-): Value<Double>(value) {
+) : SupportsArithmetic<Double>(value) {
     override fun toString(): String {
         return value.toString()
     }
 
-    override fun add(other: Value<*>): Value<*> {
-        return when(other){
-            is IntValue -> DoubleValue(value+other.value)
-            is DoubleValue -> DoubleValue(value+other.value)
+    override fun add(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
+            is IntValue -> DoubleValue(value + other.value)
+            is DoubleValue -> DoubleValue(value + other.value)
             else -> throw IncompatibleTypesException("+", listOf(this, other))
         }
     }
 
-    override fun subtract(other: Value<*>): Value<*> {
-        return when(other){
-            is IntValue -> DoubleValue(value-other.value)
-            is DoubleValue -> DoubleValue(value-other.value)
+    override fun subtract(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
+            is IntValue -> DoubleValue(value - other.value)
+            is DoubleValue -> DoubleValue(value - other.value)
             else -> throw IncompatibleTypesException("-", listOf(this, other))
         }
     }
 
-    override fun multiplyBy(other: Value<*>): Value<*> {
-        return when(other){
-            is IntValue -> DoubleValue(value*other.value)
-            is DoubleValue -> DoubleValue(value*other.value)
+    override fun multiplyBy(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
+            is IntValue -> DoubleValue(value * other.value)
+            is DoubleValue -> DoubleValue(value * other.value)
             else -> throw IncompatibleTypesException("*", listOf(this, other))
         }
     }
 
-    override fun divideBy(other: Value<*>): Value<*> {
-        return when(other){
-            is IntValue -> DoubleValue(value/other.value)
-            is DoubleValue -> DoubleValue(value/other.value)
+    override fun divideBy(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
+            is IntValue -> DoubleValue(value / other.value)
+            is DoubleValue -> DoubleValue(value / other.value)
             else -> throw IncompatibleTypesException("/", listOf(this, other))
+        }
+    }
+
+    override fun changeSign(): SupportsArithmetic<*> {
+        return DoubleValue(-this.value)
+    }
+
+    override fun compareTo(other: SupportsComparison<*>): IntValue {
+        return when (other) {
+            is IntValue -> IntValue(value.compareTo(other.value))
+            is DoubleValue -> IntValue(value.compareTo(other.value))
+            else -> throw IncompatibleTypesException("comparison", listOf(this, other))
         }
     }
 }
 
-class StringValue(value: String) : Value<String>(value) {
+class StringValue(value: String) : SupportsArithmetic<String>(value) {
     override fun toString(): String {
         return value
     }
 
-    override fun add(other: Value<*>): Value<*> {
-        return when(other){
-            is StringValue -> StringValue(value+other.value)
+    override fun add(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
+            is StringValue -> StringValue(value + other.value)
             else -> throw IncompatibleTypesException("+", listOf(this, other))
         }
     }
 
-    override fun subtract(other: Value<*>): Value<*> {
+    override fun subtract(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
         throw IncompatibleTypesException("-", listOf(this, other))
     }
 
-    override fun multiplyBy(other: Value<*>): Value<*> {
-        return when(other){
+    override fun multiplyBy(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
+        return when (other) {
             is IntValue -> StringValue(value.repeat(other.value))
             else -> throw IncompatibleTypesException("*", listOf(this, other))
         }
     }
 
-    override fun divideBy(other: Value<*>): Value<*> {
+    override fun divideBy(other: SupportsArithmetic<*>): SupportsArithmetic<*> {
         throw IncompatibleTypesException("/", listOf(this, other))
+    }
+
+    override fun changeSign(): SupportsArithmetic<*> {
+        throw IncompatibleTypesException("-", listOf(this))
+    }
+
+    override fun compareTo(other: SupportsComparison<*>): IntValue {
+        return when (other) {
+            is StringValue -> IntValue(value.compareTo(other.value))
+            else -> throw IncompatibleTypesException("comparison", listOf(this, other))
+        }
     }
 }
 
+class BoolValue(value: Boolean) : Value<Boolean>(value) {
+    override fun toString(): String {
+        return "BoolValue: $value"
+    }
+}

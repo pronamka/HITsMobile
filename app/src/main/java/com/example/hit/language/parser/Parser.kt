@@ -1,6 +1,5 @@
 package com.example.hit.language.parser
 
-import com.example.hit.language.parser.operations.AssignmentOperation
 import com.example.hit.language.parser.operations.BinaryOperation
 import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.UnaryOperation
@@ -15,7 +14,7 @@ class Parser(
     fun parse(): List<IOperation> {
         val results: MutableList<IOperation> = mutableListOf()
         while (currentIndex < tokens.size) {
-            results.add(atBottomLevel())
+            results.add(atLevelUnary())
         }
         return results
     }
@@ -23,7 +22,7 @@ class Parser(
     private fun atTopLevel(): IOperation {
         val currentToken = getCurrentToken()
         if (checkCurrentTokenType(listOf(TokenType.LEFT_BRACE))) {
-            val result = atBottomLevel()
+            val result = atLevelUnary()
             checkCurrentTokenType(listOf(TokenType.RIGHT_BRACE))
             return result
         }
@@ -42,8 +41,9 @@ class Parser(
     }
 
     private fun atLevelUnary(): IOperation {
+        val tokenType = getCurrentToken().tokenType
         if (checkCurrentTokenType(UnaryOperation.availableTokenTypes)) {
-            return UnaryOperation(atTopLevel(), getCurrentToken().tokenType)
+            return UnaryOperation(atTopLevel(), tokenType)
         }
         return atTopLevel()
     }
@@ -79,21 +79,6 @@ class Parser(
         }
         return result
     }
-
-    private fun atLevelAssignment(): IOperation {
-        val currentToken = getCurrentToken()
-        if (checkCurrentTokenType(listOf(TokenType.WORD)) &&
-            checkCurrentTokenType(listOf(TokenType.EQUALS))
-        ) {
-            return AssignmentOperation(currentToken.tokenValue, atLevelAdditionSubstraction())
-        }
-        return atLevelAdditionSubstraction()
-    }
-
-    private fun atBottomLevel(): IOperation {
-        return atLevelAssignment()
-    }
-
 
     private fun checkCurrentTokenType(targetTypes: List<TokenType>): Boolean {
         val currentToken = getCurrentToken()
