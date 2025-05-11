@@ -11,5 +11,6 @@ enum class ConditionOperationType {
 
 enum class LogicalOperationType{
     AND,
-    OR
+    OR,
+    NOT
 }

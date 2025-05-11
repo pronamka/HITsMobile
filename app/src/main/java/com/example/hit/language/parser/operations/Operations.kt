@@ -7,6 +7,7 @@ import com.example.hit.language.parser.SupportsComparison
 import com.example.hit.language.parser.TokenType
 import com.example.hit.language.parser.Value
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
+import java.security.InvalidParameterException
 
 interface IOperation {
     fun evaluate(): Value<*>
@@ -131,19 +132,24 @@ class ConditionOperation(
 
 class LogicalOperation(
     val left: IOperation,
-    val right: IOperation,
+    val right: IOperation? = null,
     val operationType: LogicalOperationType
-): IOperation{
+) : IOperation {
     override fun evaluate(): BoolValue {
         val first = left.evaluate()
-        val second = right.evaluate()
-        if (first !is BoolValue || second !is BoolValue){
-            throw IncompatibleTypesException(operationType.toString(), listOf(first, second))
+        if (first is BoolValue && operationType == LogicalOperationType.NOT) {
+            return BoolValue(!first.value)
+        }
+        val second = right?.evaluate()
+        if (first !is BoolValue || second !is BoolValue) {
+            throw IncompatibleTypesException(operationType.toString(), listOf(first, second!!))
         }
 
-        val result = when (operationType){
+        val result = when (operationType) {
             LogicalOperationType.OR -> first.value || second.value
             LogicalOperationType.AND -> first.value && second.value
+            LogicalOperationType.NOT -> throw InvalidParameterException("The ! operation takes " +
+                    "only argument, but two were given.")
         }
         return BoolValue(result)
     }
