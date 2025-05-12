@@ -10,3 +10,8 @@ class IncompatibleTypesException(
     elements: List<Any>
 ): Exception("Unsupported operand classes for operation $operationName: " +
         elements.joinToString(", ") { it::class.simpleName!! })
+
+
+class StopIterationException(): Exception()
+
+class ContinueIterationException(): Exception()

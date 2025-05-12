@@ -1,5 +1,7 @@
 package com.example.hit.language.parser
 
+import com.example.hit.language.parser.exceptions.ContinueIterationException
+import com.example.hit.language.parser.exceptions.StopIterationException
 import com.example.hit.language.parser.operations.ConditionOperation
 import com.example.hit.language.parser.operations.IOperation
 
@@ -102,7 +104,7 @@ class IfElseStatement(
     val defaultBlock: BlockStatement? = null,
 ) : IStatement {
     override fun evaluate() {
-        for ((condition, block) in blocks){
+        for ((condition, block) in blocks) {
             if (condition.evaluate().value) {
                 block.evaluate()
                 return
@@ -115,10 +117,16 @@ class IfElseStatement(
 class WhileLoop(
     val condition: ConditionOperation,
     val block: BlockStatement
-): IStatement{
+) : IStatement {
     override fun evaluate() {
-        while(condition.evaluate().value){
-            block.evaluate()
+        while (condition.evaluate().value) {
+            try {
+                block.evaluate()
+            } catch (e: StopIterationException) {
+                break
+            } catch (e: ContinueIterationException) {
+                continue
+            }
         }
     }
 }
@@ -128,12 +136,31 @@ class ForLoop(
     val condition: ConditionOperation,
     val stateChange: IStatement,
     val block: BlockStatement
-): IStatement{
+) : IStatement {
     override fun evaluate() {
         initializer.evaluate()
-        while(condition.evaluate().value){
-            block.evaluate()
-            stateChange.evaluate()
+        while (condition.evaluate().value) {
+            try {
+                block.evaluate()
+            } catch (e: StopIterationException) {
+                break
+            } catch (e: ContinueIterationException) {
+                continue
+            } finally {
+                stateChange.evaluate()
+            }
         }
+    }
+}
+
+class BreakStatement : IStatement {
+    override fun evaluate() {
+        throw StopIterationException()
+    }
+}
+
+class ContinueStatement : IStatement {
+    override fun evaluate() {
+        throw ContinueIterationException()
     }
 }
