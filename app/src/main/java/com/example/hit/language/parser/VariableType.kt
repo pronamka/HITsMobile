@@ -1,8 +1,13 @@
 package com.example.hit.language.parser
 
-enum class VariableType{
-    INT,
-    DOUBLE,
-    STRING,
-    BOOL
+sealed class VariableType{
+    object INT: VariableType()
+    object DOUBLE: VariableType()
+    object STRING: VariableType()
+    object BOOL: VariableType()
+
+    class ARRAY(
+        val elementType: VariableType,
+        val size: Int
+    ): VariableType()
 }

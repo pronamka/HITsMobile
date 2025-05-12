@@ -14,21 +14,28 @@ class Variable(
     value: IOperation? = null,
 ) : Value<IOperation?>(value) {
     fun toValue(): Value<*> {
-        val variableValue = value!!.evaluate().value.toString()
+        val variableValue = value!!.evaluate()
+        val variableValueString = variableValue.value.toString()
         return when (type) {
-            VariableType.INT -> IntValue(variableValue.toInt())
-            VariableType.DOUBLE -> DoubleValue(variableValue.toDouble())
-            VariableType.STRING -> StringValue(variableValue)
-            VariableType.BOOL -> {
-                return when (variableValue) {
+            is VariableType.INT -> IntValue(variableValueString.toInt())
+            is VariableType.DOUBLE -> DoubleValue(variableValueString.toDouble())
+            is VariableType.STRING -> StringValue(variableValueString)
+            is VariableType.BOOL -> {
+                return when (variableValueString) {
                     "true" -> BoolValue(true)
                     "false" -> BoolValue(false)
                     else -> throw IllegalArgumentException(
                         "Cannot initialize a variable of " +
-                                "type BoolValue with value $variableValue"
+                                "type BoolValue with value $variableValueString"
                     )
                 }
             }
+
+            is VariableType.ARRAY -> ArrayValueFactory(
+                type.size,
+                type.elementType,
+                variableValueString
+            ).create()
         }
     }
 
@@ -201,5 +208,33 @@ class StringValue(value: String) : SupportsArithmetic<String>(value) {
 class BoolValue(value: Boolean) : Value<Boolean>(value) {
     override fun toString(): String {
         return "BoolValue: $value"
+    }
+}
+
+class ArrayValue<T : Value<*>>(
+    val size: Int,
+    value: MutableList<T>
+) : Value<MutableList<T>>(value) {
+    fun set(index: Int, element: T) {
+        value[index] = element
+    }
+
+    fun get(index: Int): T {
+        if (index < 0 || index >= size) {
+            throw IndexOutOfBoundsException(
+                "Array index out of " +
+                        "range: the size of the array is :$size, but " +
+                        "the element index was $index"
+            )
+        }
+        return value[index]
+    }
+
+    override fun toString(): String {
+        val stringRepresentation: StringBuilder = StringBuilder()
+        for (element in value) {
+            stringRepresentation.append(element.toString()).append(", ")
+        }
+        return "Array Value: Size $size, Elements: [${stringRepresentation.toString().trimEnd().trimEnd(',')}]"
     }
 }
