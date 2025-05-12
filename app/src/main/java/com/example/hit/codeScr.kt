@@ -40,7 +40,7 @@ import com.example.hit.ui.theme.HitTheme
 import org.jetbrains.annotations.TestOnly
 
 
-public val font = FontFamily(Font(R.font.fredoka))
+var font = FontFamily(Font(R.font.fredoka))
 
 @Composable
 fun CodeScreen(

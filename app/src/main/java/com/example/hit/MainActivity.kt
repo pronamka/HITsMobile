@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
-
+val fontSt = FontFamily(Font(com.example.hit.R.font.fredoka))
 
 @Composable
 fun StartScr(
@@ -88,7 +88,7 @@ fun StartScr(
             lineHeight = 44.sp,
             style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
             color = Color(0xFFFFFFFF),
-            fontFamily = font
+            fontFamily = fontSt
         )
 
         Spacer(modifier = Modifier.height(30.dp))
@@ -104,7 +104,8 @@ fun StartScr(
         ) {
             Icon(Icons.Default.PlayArrow, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Начать кодить", fontFamily = font)
+            Text("Начать кодить",
+                fontFamily = fontSt)
         }
 
         Spacer(modifier = Modifier.height(25.dp))
@@ -120,17 +121,17 @@ fun StartScr(
         ) {
             Icon(Icons.Default.Info, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("О приложении", fontFamily = font)
+            Text("О приложении", fontFamily = fontSt)
         }
         if (showDialog.value) {
             AlertDialog(
                 onDismissRequest = { showDialog.value = false },
-                title = { Text("О приложении") },
+                title = { Text("О приложении", fontFamily = fontSt) },
                 text = { Text("Это приложение для новичков, которые хотят погрузиться в мир программирования.",
-                    fontFamily = font)},
+                    fontFamily = fontSt)},
                 confirmButton = {
                     TextButton(onClick = { showDialog.value = false }) {
-                        Text("OK", fontFamily = font)
+                        Text("OK", fontFamily = fontSt)
                     }
                 }
             )
