@@ -28,14 +28,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.hit.ui.theme.HitTheme
 import org.jetbrains.annotations.TestOnly
 
 
-
+public val font = FontFamily(Font(R.font.fredoka))
 
 @Composable
 fun CodeScreen(
@@ -61,7 +66,7 @@ fun CodeScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Icon(Icons.Outlined.Add, contentDescription = null)
-                    Text(text = "Add Block")
+                    Text(text = "Add Block", fontFamily = font)
                 }
             }
         }
@@ -76,12 +81,12 @@ fun CodeScreen(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(top = 12.dp)
-                    .height(56.dp)
+                    .padding(top = 16.dp)
+                    .height(72.dp)
                     .fillMaxWidth(0.9f)
                     .background(
                         color = Color(0xFF7943DE),
-                        shape = RoundedCornerShape(100.dp)
+                        shape = RoundedCornerShape(65.dp)
                     ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
@@ -99,9 +104,19 @@ fun CodeScreen(
                         contentDescription = null,
                     )
                 }
+                Text(
+                    "Code Editor",
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 16.dp),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = font
+                )
 
             }
 
         }
     }
 }
+
+
