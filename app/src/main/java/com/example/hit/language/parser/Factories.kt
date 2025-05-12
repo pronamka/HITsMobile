@@ -21,8 +21,26 @@ class ValueFactory(
 
 class ValueOperationFactory(
     val token: Token
-){
+) {
     fun create(): ValueOperation {
         return ValueOperation(ValueFactory(token).create())
+    }
+}
+
+class ArrayValueFactory(
+    val size: Int,
+    val elementsType: VariableType,
+    val values: String
+) {
+    fun create(): ArrayValue<*> {
+        val elementsStrings = values.split(",")
+        val elements: MutableList<Value<*>> = mutableListOf()
+
+        for (elementString in elementsStrings) {
+            val value =
+                Variable(elementsType, Parser(Lexer(elementString).tokenize()).parse()[0]).toValue()
+            elements.add(value)
+        }
+        return ArrayValue(size, elements)
     }
 }
