@@ -1,6 +1,6 @@
 package com.example.hit.language.parser
 
-class Token(
+open class Token(
     val tokenType: TokenType,
     val tokenValue: String
 ){
@@ -12,3 +12,9 @@ class Token(
         return "Token: Type $tokenType; Value: $tokenValue;"
     }
 }
+
+class ArrayToken(
+    val size: Int,
+    val elementType: VariableType,
+    val value: CollectionValue
+): Token(TokenType.ARRAY, "")
