@@ -52,7 +52,7 @@ class Parser(
         }
         if (checkCurrentTokenTypeIn(
                 listOf(
-                    TokenType.INT, TokenType.DOUBLE, TokenType.STRING
+                    TokenType.INT, TokenType.DOUBLE, TokenType.STRING, TokenType.TRUE, TokenType.FALSE
                 )
             )
         ) {

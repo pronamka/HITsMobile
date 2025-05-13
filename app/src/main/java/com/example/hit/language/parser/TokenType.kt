@@ -5,6 +5,8 @@ enum class TokenType {
     DOUBLE,
     STRING,
     BOOL,
+    TRUE,
+    FALSE,
 
     PLUS,
     MINUS,
