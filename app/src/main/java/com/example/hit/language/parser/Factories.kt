@@ -11,6 +11,8 @@ class ValueFactory(
             TokenType.INT -> IntValue(token.tokenValue.toInt())
             TokenType.DOUBLE -> DoubleValue(token.tokenValue.toDouble())
             TokenType.STRING -> StringValue(token.tokenValue)
+            TokenType.TRUE -> BoolValue(true)
+            TokenType.FALSE -> BoolValue(false)
             TokenType.ARRAY -> {
                 if (token !is ArrayToken) {
                     throw ArrayInitializationException(

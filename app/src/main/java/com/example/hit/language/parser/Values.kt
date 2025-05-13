@@ -1,6 +1,7 @@
 package com.example.hit.language.parser
 
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
+import com.example.hit.language.parser.exceptions.InvalidOperationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
 import kotlin.reflect.KClass
@@ -19,36 +20,31 @@ class Variable(
         if (type is VariableType.ARRAY && value == null) {
             return ArrayValue(type.size, VariableType.classMap[type.elementType]!!)
         }
-        val variableValue = value!!.evaluate()
-        val variableValueString = variableValue.value.toString()
-        return when (type) {
-            is VariableType.INT -> IntValue(variableValueString.toInt())
-            is VariableType.DOUBLE -> DoubleValue(variableValueString.toDouble())
-            is VariableType.STRING -> StringValue(variableValueString)
-            is VariableType.BOOL -> {
-                return when (variableValueString) {
-                    "true" -> BoolValue(true)
-                    "false" -> BoolValue(false)
-                    else -> throw IllegalArgumentException(
-                        "Cannot initialize a variable of " +
-                                "type BoolValue with value $variableValueString"
-                    )
-                }
-            }
-
-            is VariableType.ARRAY -> {
-                if (variableValue !is CollectionValue) {
-                    throw IllegalArgumentException("Array can only be initialized with an array expression.")
-                }
-                return ValueOperationFactory(
-                    ArrayToken(
-                        type.size,
-                        type.elementType,
-                        variableValue
-                    )
-                ).create().evaluate()
-            }
+        if (value == null) {
+            throw InvalidOperationException("Cannot initialize a variable with an empty value.")
         }
+        val variableValue: Value<*> = value.evaluate()
+        if (type is VariableType.ARRAY) {
+            if (variableValue !is CollectionValue) {
+                throw IllegalArgumentException("Array can only be initialized with an array expression.")
+            }
+            return ValueOperationFactory(
+                ArrayToken(
+                    type.size,
+                    type.elementType,
+                    variableValue
+                )
+            ).create().evaluate()
+        }
+        val desiredType = VariableType.classMap[type]!!
+        if (desiredType.isInstance(variableValue)) {
+            return variableValue
+        }
+        throw UnexpectedTypeException(
+            "Cannot assign a value of type " +
+                    "${variableValue::class.java.simpleName} to a " +
+                    "variable of type ${type::class.java.simpleName}"
+        )
     }
 
     override fun toString(): String {
@@ -253,7 +249,7 @@ class ArrayValue<T : Value<*>>(
 
     init {
         if (initialValue != null) {
-            for (i in 0..size-1) {
+            for (i in 0..size - 1) {
                 value[i] = initialValue[i]
             }
         }
@@ -284,7 +280,7 @@ class ArrayValue<T : Value<*>>(
     override fun toString(): String {
         val stringRepresentation: StringBuilder = StringBuilder()
         for (element in value) {
-            if (element == null){
+            if (element == null) {
                 stringRepresentation.append("null").append(", ")
                 continue
             }
