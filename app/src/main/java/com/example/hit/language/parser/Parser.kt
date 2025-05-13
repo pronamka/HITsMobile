@@ -1,8 +1,10 @@
 package com.example.hit.language.parser
 
+import com.example.hit.language.parser.operations.ArrayElementOperation
 import com.example.hit.language.parser.operations.BinaryOperation
 import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.UnaryOperation
+import com.example.hit.language.parser.operations.ValueOperation
 import com.example.hit.language.parser.operations.VariableOperation
 
 class Parser(
@@ -21,15 +23,34 @@ class Parser(
 
     private fun atTopLevel(): IOperation {
         val currentToken = getCurrentToken()
-        if (checkCurrentTokenType(listOf(TokenType.LEFT_BRACE))) {
-            val result = atLevelUnary()
-            checkCurrentTokenType(listOf(TokenType.RIGHT_BRACE))
+        if (checkCurrentTokenType(TokenType.LEFT_BRACKET)){
+            val values: MutableList<Value<*>> = mutableListOf()
+            while (!checkCurrentTokenType(TokenType.RIGHT_BRACKET)){
+                if (checkCurrentTokenType(TokenType.COMMA)){
+                    continue
+                }
+                values.add(ValueFactory(getCurrentToken()).create())
+                move()
+            }
+            val collectionValue = CollectionValue(values)
+            return ValueOperation(collectionValue)
+        }
+        if (checkCurrentTokenType(TokenType.LEFT_PARENTHESIS)) {
+            val result = atBottomLevel()
+            move()
             return result
         }
-        if (checkCurrentTokenType(listOf(TokenType.WORD))) {
+        if (checkTokenType(0, TokenType.WORD) && checkTokenType(1, TokenType.LEFT_BRACKET)){
+            val arrayName = getCurrentToken().tokenValue
+            move(2)
+            val operation = ArrayElementOperation(arrayName, atBottomLevel())
+            move()
+            return operation
+        }
+        if (checkCurrentTokenType(TokenType.WORD)) {
             return VariableOperation(currentToken.tokenValue)
         }
-        if (checkCurrentTokenType(
+        if (checkCurrentTokenTypeIn(
                 listOf(
                     TokenType.INT, TokenType.DOUBLE, TokenType.STRING
                 )
@@ -42,7 +63,7 @@ class Parser(
 
     private fun atLevelUnary(): IOperation {
         val tokenType = getCurrentToken().tokenType
-        if (checkCurrentTokenType(UnaryOperation.availableTokenTypes)) {
+        if (checkCurrentTokenTypeIn(UnaryOperation.availableTokenTypes)) {
             return UnaryOperation(atTopLevel(), tokenType)
         }
         return atTopLevel()
@@ -52,7 +73,7 @@ class Parser(
         var result = atLevelUnary()
         while (true) {
             val operationType = getCurrentToken()
-            if (checkCurrentTokenType(listOf(TokenType.ASTERISK, TokenType.SLASH))) {
+            if (checkCurrentTokenTypeIn(listOf(TokenType.ASTERISK, TokenType.SLASH))) {
                 result = BinaryOperation(
                     result, atLevelUnary(),
                     operationType.tokenType
@@ -64,11 +85,11 @@ class Parser(
         return result
     }
 
-    private fun atLevelAdditionSubstraction(): IOperation {
+    private fun atLevelAdditionSubtraction(): IOperation {
         var result = atLevelMultiplicationDivision()
         while (true) {
             val operationType = getCurrentToken()
-            if (checkCurrentTokenType(listOf(TokenType.PLUS, TokenType.MINUS))) {
+            if (checkCurrentTokenTypeIn(listOf(TokenType.PLUS, TokenType.MINUS))) {
                 result = BinaryOperation(
                     result, atLevelMultiplicationDivision(),
                     operationType.tokenType
@@ -80,7 +101,28 @@ class Parser(
         return result
     }
 
-    private fun checkCurrentTokenType(targetTypes: List<TokenType>): Boolean {
+    private fun atBottomLevel(): IOperation{
+        return atLevelUnary()
+    }
+
+    private fun checkTokenType(index: Int, targetType: TokenType): Boolean{
+        val targetToken = getToken(index)
+        if (targetToken.tokenTypeEquals(targetType)) {
+            return true
+        }
+        return false
+    }
+
+    private fun checkCurrentTokenType(targetType: TokenType): Boolean {
+        val currentToken = getCurrentToken()
+        if (currentToken.tokenTypeEquals(targetType)) {
+            currentIndex++
+            return true
+        }
+        return false
+    }
+
+    private fun checkCurrentTokenTypeIn(targetTypes: List<TokenType>): Boolean {
         val currentToken = getCurrentToken()
         for (tokenType in targetTypes) {
             if (currentToken.tokenTypeEquals(tokenType)) {
@@ -91,9 +133,18 @@ class Parser(
         return false
     }
 
-    fun getCurrentToken(): Token {
+    private fun getToken(index: Int): Token{
+        if (currentIndex+index >= tokens.size) return EOF_TOKEN
+        return tokens[currentIndex+index]
+    }
+
+    private fun getCurrentToken(): Token {
         if (currentIndex >= tokens.size) return EOF_TOKEN
         return tokens[currentIndex]
+    }
+
+    private fun move(n: Int = 1){
+        currentIndex += n
     }
 }
 
