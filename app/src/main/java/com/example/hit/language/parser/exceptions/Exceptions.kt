@@ -8,10 +8,22 @@ class NumberParseException(
 class IncompatibleTypesException(
     operationName: String,
     elements: List<Any>
-): Exception("Unsupported operand classes for operation $operationName: " +
-        elements.joinToString(", ") { it::class.simpleName!! })
+) : Exception(
+    "Unsupported operand classes for operation $operationName: " +
+            elements.joinToString(", ") { it::class.simpleName!! })
 
 
-class StopIterationException(): Exception()
+class ArrayInitializationException(
+    message: String
+) : Exception(message)
 
-class ContinueIterationException(): Exception()
+class UnexpectedTypeException(
+    message: String
+): Exception(message)
+
+class InvalidOperationException(message: String): Exception(message)
+
+
+class StopIterationException() : Exception()
+
+class ContinueIterationException() : Exception()
