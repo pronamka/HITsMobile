@@ -5,13 +5,22 @@ enum class TokenType {
     DOUBLE,
     STRING,
     BOOL,
+
     PLUS,
     MINUS,
     ASTERISK,
     SLASH,
+
     WORD,
     EQUALS,
-    LEFT_BRACE,
-    RIGHT_BRACE,
+
+    LEFT_PARENTHESIS,
+    RIGHT_PARENTHESIS,
+    LEFT_BRACKET,
+    RIGHT_BRACKET,
+    COMMA,
+
+    ARRAY,
+
     EOF;
 }

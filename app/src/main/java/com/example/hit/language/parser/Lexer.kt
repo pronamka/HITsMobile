@@ -10,8 +10,11 @@ class Lexer(
         '-' to TokenType.MINUS,
         '*' to TokenType.ASTERISK,
         '/' to TokenType.SLASH,
-        '(' to TokenType.LEFT_BRACE,
-        ')' to TokenType.RIGHT_BRACE,
+        '(' to TokenType.LEFT_PARENTHESIS,
+        ')' to TokenType.RIGHT_PARENTHESIS,
+        '[' to TokenType.LEFT_BRACKET,
+        ']' to TokenType.RIGHT_BRACKET,
+        ',' to TokenType.COMMA,
         '=' to TokenType.EQUALS,
     )
 
