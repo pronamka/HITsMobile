@@ -1,12 +1,17 @@
 package com.example.hit.language.parser.operations
 
+import com.example.hit.language.parser.ArrayValue
 import com.example.hit.language.parser.BoolValue
+import com.example.hit.language.parser.IntValue
 import com.example.hit.language.parser.Scopes
 import com.example.hit.language.parser.SupportsArithmetic
 import com.example.hit.language.parser.SupportsComparison
 import com.example.hit.language.parser.TokenType
 import com.example.hit.language.parser.Value
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
+import com.example.hit.language.parser.exceptions.InvalidOperationException
+import com.example.hit.language.parser.exceptions.UnexpectedTypeException
+import java.security.InvalidParameterException
 
 interface IOperation {
     fun evaluate(): Value<*>
@@ -101,6 +106,23 @@ class VariableOperation(
     }
 }
 
+class ArrayElementOperation(
+    val variableName: String,
+    val indexValue: IOperation
+) : IOperation {
+    override fun evaluate(): Value<*> {
+        val array = VariableOperation(variableName).evaluate()
+        val index = indexValue.evaluate()
+        if (array !is ArrayValue<*>) {
+            throw InvalidOperationException("Cannot use get operator: $variableName is not an array.")
+        }
+        if (index !is IntValue){
+            throw UnexpectedTypeException("Array indices can only be an integer, but $index was given.")
+        }
+        return array.get(index.value)
+    }
+}
+
 class ConditionOperation(
     val left: IOperation,
     val right: IOperation,
@@ -131,19 +153,26 @@ class ConditionOperation(
 
 class LogicalOperation(
     val left: IOperation,
-    val right: IOperation,
+    val right: IOperation? = null,
     val operationType: LogicalOperationType
-): IOperation{
+) : IOperation {
     override fun evaluate(): BoolValue {
         val first = left.evaluate()
-        val second = right.evaluate()
-        if (first !is BoolValue || second !is BoolValue){
-            throw IncompatibleTypesException(operationType.toString(), listOf(first, second))
+        if (first is BoolValue && operationType == LogicalOperationType.NOT) {
+            return BoolValue(!first.value)
+        }
+        val second = right?.evaluate()
+        if (first !is BoolValue || second !is BoolValue) {
+            throw IncompatibleTypesException(operationType.toString(), listOf(first, second!!))
         }
 
-        val result = when (operationType){
+        val result = when (operationType) {
             LogicalOperationType.OR -> first.value || second.value
             LogicalOperationType.AND -> first.value && second.value
+            LogicalOperationType.NOT -> throw InvalidParameterException(
+                "The ! operation takes " +
+                        "only argument, but two were given."
+            )
         }
         return BoolValue(result)
     }

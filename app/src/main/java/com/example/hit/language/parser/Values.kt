@@ -1,7 +1,10 @@
 package com.example.hit.language.parser
 
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
+import com.example.hit.language.parser.exceptions.InvalidOperationException
+import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
+import kotlin.reflect.KClass
 
 interface IValue {}
 
@@ -14,22 +17,34 @@ class Variable(
     value: IOperation? = null,
 ) : Value<IOperation?>(value) {
     fun toValue(): Value<*> {
-        val variableValue = value!!.evaluate().value.toString()
-        return when (type) {
-            VariableType.INT -> IntValue(variableValue.toInt())
-            VariableType.DOUBLE -> DoubleValue(variableValue.toDouble())
-            VariableType.STRING -> StringValue(variableValue)
-            VariableType.BOOL -> {
-                return when (variableValue) {
-                    "true" -> BoolValue(true)
-                    "false" -> BoolValue(false)
-                    else -> throw IllegalArgumentException(
-                        "Cannot initialize a variable of " +
-                                "type BoolValue with value $variableValue"
-                    )
-                }
-            }
+        if (type is VariableType.ARRAY && value == null) {
+            return ArrayValue(type.size, VariableType.classMap[type.elementType]!!)
         }
+        if (value == null) {
+            throw InvalidOperationException("Cannot initialize a variable with an empty value.")
+        }
+        val variableValue: Value<*> = value.evaluate()
+        if (type is VariableType.ARRAY) {
+            if (variableValue !is CollectionValue) {
+                throw IllegalArgumentException("Array can only be initialized with an array expression.")
+            }
+            return ValueOperationFactory(
+                ArrayToken(
+                    type.size,
+                    type.elementType,
+                    variableValue
+                )
+            ).create().evaluate()
+        }
+        val desiredType = VariableType.classMap[type]!!
+        if (desiredType.isInstance(variableValue)) {
+            return variableValue
+        }
+        throw UnexpectedTypeException(
+            "Cannot assign a value of type " +
+                    "${variableValue::class.java.simpleName} to a " +
+                    "variable of type ${type::class.java.simpleName}"
+        )
     }
 
     override fun toString(): String {
@@ -201,5 +216,78 @@ class StringValue(value: String) : SupportsArithmetic<String>(value) {
 class BoolValue(value: Boolean) : Value<Boolean>(value) {
     override fun toString(): String {
         return "BoolValue: $value"
+    }
+}
+
+class CollectionValue(
+    value: List<Value<*>>
+) : Value<List<Value<*>>>(value) {
+    fun toList(): List<Value<*>> {
+        return value
+    }
+
+    fun size(): Int {
+        return value.size
+    }
+}
+
+class ArrayValue<T : Value<*>>(
+    val size: Int,
+    val elementType: KClass<out T>,
+    initialValue: MutableList<T>? = null
+) : Value<Array<T>>(createEmptyArray(size, elementType)) {
+
+    companion object {
+        private fun <T : Value<*>> createEmptyArray(
+            size: Int,
+            elementType: KClass<out T>
+        ): Array<T> {
+            @Suppress("UNCHECKED_CAST")
+            return java.lang.reflect.Array.newInstance(elementType.java, size) as Array<T>
+        }
+    }
+
+    init {
+        if (initialValue != null) {
+            for (i in 0..size - 1) {
+                value[i] = initialValue[i]
+            }
+        }
+    }
+
+    fun set(index: Int, element: Value<*>) {
+        if (!elementType.isInstance(element)) {
+            throw UnexpectedTypeException(
+                "Expected type was ${elementType.java.simpleName}, " +
+                        "but got an element $element"
+            )
+        }
+        @Suppress("UNCHECKED_CAST")
+        value[index] = element as T
+    }
+
+    fun get(index: Int): T {
+        if (index < 0 || index >= size) {
+            throw IndexOutOfBoundsException(
+                "Array index out of " +
+                        "range: the size of the array is :$size, but " +
+                        "the element index was $index"
+            )
+        }
+        return value[index]
+    }
+
+    override fun toString(): String {
+        val stringRepresentation: StringBuilder = StringBuilder()
+        for (element in value) {
+            if (element == null) {
+                stringRepresentation.append("null").append(", ")
+                continue
+            }
+            stringRepresentation.append(element.toString()).append(", ")
+        }
+        return "Array Value: Size $size, Elements: [${
+            stringRepresentation.toString().trimEnd().trimEnd(',')
+        }]"
     }
 }

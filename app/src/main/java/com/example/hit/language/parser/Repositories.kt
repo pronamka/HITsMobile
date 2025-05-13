@@ -16,7 +16,7 @@ class VariablesRepository : IRepository {
     init{
         elements["PI"] = DoubleValue(Math.PI)
         elements["E"] = DoubleValue(Math.E)
-        elements["GOLDEN_RATION"] = DoubleValue(1.618)
+        elements["GOLDEN_RATIO"] = DoubleValue(1.618)
     }
 
     override fun add(key: String, value: Value<*>){

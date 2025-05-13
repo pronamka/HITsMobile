@@ -49,4 +49,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation(kotlin("test"))
 }
