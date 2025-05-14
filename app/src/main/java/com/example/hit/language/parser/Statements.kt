@@ -3,7 +3,7 @@ package com.example.hit.language.parser
 import com.example.hit.language.parser.exceptions.ContinueIterationException
 import com.example.hit.language.parser.exceptions.StopIterationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
-import com.example.hit.language.parser.operations.ConditionOperation
+import com.example.hit.language.parser.operations.ComparisonOperation
 import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.ReturnOperation
 
@@ -164,7 +164,7 @@ class BlockStatement(
 }
 
 class IfElseStatement(
-    val blocks: List<Pair<ConditionOperation, BlockStatement>>,
+    val blocks: List<Pair<ComparisonOperation, BlockStatement>>,
     val defaultBlock: BlockStatement? = null,
 ) : IStatement {
     override fun evaluate() {
@@ -179,7 +179,7 @@ class IfElseStatement(
 }
 
 class WhileLoop(
-    val condition: ConditionOperation,
+    val condition: ComparisonOperation,
     val block: BlockStatement
 ) : IStatement {
     override fun evaluate() {
@@ -197,7 +197,7 @@ class WhileLoop(
 
 class ForLoop(
     val initializer: IStatement,
-    val condition: ConditionOperation,
+    val condition: ComparisonOperation,
     val stateChange: IStatement,
     val block: BlockStatement
 ) : IStatement {
