@@ -5,6 +5,7 @@ import com.example.hit.language.parser.exceptions.StopIterationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.ConditionOperation
 import com.example.hit.language.parser.operations.IOperation
+import com.example.hit.language.parser.operations.ReturnOperation
 
 interface IStatement {
     fun evaluate()
@@ -13,7 +14,7 @@ interface IStatement {
 class DeclarationStatement(
     val variableType: VariableType,
     val variableName: String,
-    val variableValue: IOperation? = null
+    var variableValue: IOperation? = null
 ) : IStatement {
     override fun evaluate() {
         if (Scopes.getLast().exists(variableName)) {
@@ -37,6 +38,20 @@ class DeclarationStatement(
             s += " and value $variableValue"
         }
         return s
+    }
+}
+
+class FunctionDeclarationStatement(
+    val name: String,
+    val parameters: List<DeclarationStatement> = listOf(),
+    val body: BlockStatement
+): IStatement{
+    override fun evaluate() {
+        if (Scopes.getLast().exists(name)) {
+            throw IllegalStateException("Function $name has already been declared.")
+        }
+        val function = FunctionValue(parameters, body)
+        Scopes.getLast().add(name, function)
     }
 }
 
@@ -116,17 +131,35 @@ class PrintStatement(
     }
 }
 
-class BlockStatement(
-    val statements: List<IStatement>
-) : IStatement {
+class ReturnStatement(
+    val returnOperation: ReturnOperation
+): IStatement{
+    var returnValue: IOperation? = null
+    override fun evaluate() {
+        returnValue = returnOperation
+    }
+}
 
+class BlockStatement(
+    val statements: MutableList<IStatement>
+) : IStatement {
+    var outputValue: IOperation? = null
     override fun evaluate() {
         Scopes.add(VariablesRepository())
         for (statement in statements) {
+            if (statement is ReturnStatement){
+                statement.evaluate()
+                outputValue = statement.returnValue
+                return
+            }
             statement.evaluate()
         }
 
         Scopes.removeLast()
+    }
+
+    fun addStatement(index: Int = 0, statement: IStatement){
+        statements.add(index, statement)
     }
 }
 
