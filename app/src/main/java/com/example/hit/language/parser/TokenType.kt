@@ -22,6 +22,8 @@ enum class TokenType {
     RIGHT_BRACKET,
     COMMA,
 
+    RETURN,
+
     ARRAY,
 
     EOF;

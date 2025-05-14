@@ -21,6 +21,7 @@ class Lexer(
     private val keywords: Map<String, TokenType> = mapOf(
         "true" to TokenType.TRUE,
         "false" to TokenType.FALSE,
+        "return" to TokenType.RETURN,
     )
 
     private val tokens: MutableList<Token> = mutableListOf()
