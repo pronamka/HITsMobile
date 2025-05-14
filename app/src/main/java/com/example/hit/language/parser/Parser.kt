@@ -2,8 +2,11 @@ package com.example.hit.language.parser
 
 import com.example.hit.language.parser.operations.ArrayElementOperation
 import com.example.hit.language.parser.operations.BinaryOperation
+import com.example.hit.language.parser.operations.ComparisonOperation
 import com.example.hit.language.parser.operations.FunctionCallOperation
 import com.example.hit.language.parser.operations.IOperation
+import com.example.hit.language.parser.operations.LogicalNotOperation
+import com.example.hit.language.parser.operations.LogicalOperation
 import com.example.hit.language.parser.operations.ReturnOperation
 import com.example.hit.language.parser.operations.UnaryOperation
 import com.example.hit.language.parser.operations.ValueOperation
@@ -12,6 +15,12 @@ import com.example.hit.language.parser.operations.VariableOperation
 class Parser(
     private val tokens: List<Token>,
 ) {
+
+    private val comparisonOperators = listOf(
+        TokenType.EQUAL, TokenType.NOT_EQUAL,
+        TokenType.LESS, TokenType.GREATER,
+        TokenType.LESS_OR_EQUAL, TokenType.GREATER_OR_EQUAL
+    )
     private val EOF_TOKEN = Token(TokenType.EOF, "")
     private var currentIndex = 0
 
@@ -25,13 +34,13 @@ class Parser(
 
     private fun atTopLevel(): IOperation {
         val currentToken = getCurrentToken()
-        if (checkCurrentTokenType(TokenType.RETURN)){
+        if (checkCurrentTokenType(TokenType.RETURN)) {
             return ReturnOperation(atBottomLevel())
         }
-        if (checkCurrentTokenType(TokenType.LEFT_BRACKET)){
+        if (checkCurrentTokenType(TokenType.LEFT_BRACKET)) {
             val values: MutableList<Value<*>> = mutableListOf()
-            while (!checkCurrentTokenType(TokenType.RIGHT_BRACKET)){
-                if (checkCurrentTokenType(TokenType.COMMA)){
+            while (!checkCurrentTokenType(TokenType.RIGHT_BRACKET)) {
+                if (checkCurrentTokenType(TokenType.COMMA)) {
                     continue
                 }
                 values.add(ValueFactory(getCurrentToken()).create())
@@ -45,19 +54,19 @@ class Parser(
             move()
             return result
         }
-        if (checkTokenType(0, TokenType.WORD) && checkTokenType(1, TokenType.LEFT_BRACKET)){
+        if (checkTokenType(0, TokenType.WORD) && checkTokenType(1, TokenType.LEFT_BRACKET)) {
             val arrayName = getCurrentToken().tokenValue
             move(2)
             val operation = ArrayElementOperation(arrayName, atBottomLevel())
             move()
             return operation
         }
-        if (checkTokenType(0, TokenType.WORD) && checkTokenType(1, TokenType.LEFT_PARENTHESIS)){
+        if (checkTokenType(0, TokenType.WORD) && checkTokenType(1, TokenType.LEFT_PARENTHESIS)) {
             val functionName = getCurrentToken().tokenValue
             move(2)
             val values: MutableList<IOperation> = mutableListOf()
-            while (!checkCurrentTokenType(TokenType.RIGHT_PARENTHESIS)){
-                if (checkCurrentTokenType(TokenType.COMMA)){
+            while (!checkCurrentTokenType(TokenType.RIGHT_PARENTHESIS)) {
+                if (checkCurrentTokenType(TokenType.COMMA)) {
                     continue
                 }
                 values.add(atBottomLevel())
@@ -69,7 +78,11 @@ class Parser(
         }
         if (checkCurrentTokenTypeIn(
                 listOf(
-                    TokenType.INT, TokenType.DOUBLE, TokenType.STRING, TokenType.TRUE, TokenType.FALSE
+                    TokenType.INT,
+                    TokenType.DOUBLE,
+                    TokenType.STRING,
+                    TokenType.TRUE,
+                    TokenType.FALSE
                 )
             )
         ) {
@@ -118,11 +131,50 @@ class Parser(
         return result
     }
 
-    private fun atBottomLevel(): IOperation{
-        return atLevelAdditionSubtraction()
+    private fun atLevelComparison(): IOperation {
+        var result = atLevelAdditionSubtraction()
+        while (true) {
+            val operationType = getCurrentToken()
+            if (checkCurrentTokenTypeIn(comparisonOperators)) {
+                result = ComparisonOperation(
+                    result, atLevelAdditionSubtraction(),
+                    operationType.tokenType
+                )
+                continue
+            }
+            break
+        }
+        return result
     }
 
-    private fun checkTokenType(index: Int, targetType: TokenType): Boolean{
+    private fun atLevelLogicalNot(): IOperation {
+        if (checkCurrentTokenType(TokenType.NOT)) {
+            return LogicalNotOperation(atLevelComparison())
+        }
+        return atLevelComparison()
+    }
+
+    private fun atLevelLogical(): IOperation {
+        var result = atLevelLogicalNot()
+        while (true) {
+            val operationType = getCurrentToken()
+            if (checkCurrentTokenTypeIn(listOf(TokenType.AND, TokenType.OR))) {
+                result = LogicalOperation(
+                    result, atLevelLogicalNot(),
+                    operationType.tokenType
+                )
+                continue
+            }
+            break
+        }
+        return result
+    }
+
+    private fun atBottomLevel(): IOperation {
+        return atLevelLogical()
+    }
+
+    private fun checkTokenType(index: Int, targetType: TokenType): Boolean {
         val targetToken = getToken(index)
         if (targetToken.tokenTypeEquals(targetType)) {
             return true
@@ -150,9 +202,9 @@ class Parser(
         return false
     }
 
-    private fun getToken(index: Int): Token{
-        if (currentIndex+index >= tokens.size) return EOF_TOKEN
-        return tokens[currentIndex+index]
+    private fun getToken(index: Int): Token {
+        if (currentIndex + index >= tokens.size) return EOF_TOKEN
+        return tokens[currentIndex + index]
     }
 
     private fun getCurrentToken(): Token {
@@ -160,7 +212,7 @@ class Parser(
         return tokens[currentIndex]
     }
 
-    private fun move(n: Int = 1){
+    private fun move(n: Int = 1) {
         currentIndex += n
     }
 }
