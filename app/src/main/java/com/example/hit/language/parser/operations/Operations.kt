@@ -2,6 +2,7 @@ package com.example.hit.language.parser.operations
 
 import com.example.hit.language.parser.ArrayValue
 import com.example.hit.language.parser.BoolValue
+import com.example.hit.language.parser.CallableValue
 import com.example.hit.language.parser.IntValue
 import com.example.hit.language.parser.Scopes
 import com.example.hit.language.parser.SupportsArithmetic
@@ -116,7 +117,7 @@ class ArrayElementOperation(
         if (array !is ArrayValue<*>) {
             throw InvalidOperationException("Cannot use get operator: $variableName is not an array.")
         }
-        if (index !is IntValue){
+        if (index !is IntValue) {
             throw UnexpectedTypeException("Array indices can only be an integer, but $index was given.")
         }
         return array.get(index.value)
@@ -175,5 +176,28 @@ class LogicalOperation(
             )
         }
         return BoolValue(result)
+    }
+}
+
+class ReturnOperation(
+    val value: IOperation
+): IOperation{
+    override fun evaluate(): Value<*> {
+        return value.evaluate()
+    }
+}
+
+class FunctionCallOperation(
+    val functionName: String,
+    val parameters: List<IOperation> = listOf()
+) : IOperation {
+    override fun evaluate(): Value<*> {
+        val function = Scopes.getVariable(functionName)
+        if (function !is CallableValue<*>) {
+            throw InvalidOperationException(
+                "Variable of type ${function::class.java.simpleName} is not callable."
+            )
+        }
+        return function.call(parameters)
     }
 }
