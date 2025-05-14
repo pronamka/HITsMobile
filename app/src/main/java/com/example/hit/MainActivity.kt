@@ -34,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,6 +61,8 @@ class MainActivity : ComponentActivity() {
 }
 
 
+val fontSt = FontFamily(Font(com.example.hit.R.font.fredoka))
+
 @Composable
 fun StartScr(
     navController: NavHostController
@@ -83,7 +87,8 @@ fun StartScr(
             letterSpacing = 1.sp,
             lineHeight = 44.sp,
             style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-            color = Color(0xFFFFFFFF)
+            color = Color(0xFFFFFFFF),
+            fontFamily = fontSt
         )
 
         Spacer(modifier = Modifier.height(30.dp))
@@ -99,7 +104,8 @@ fun StartScr(
         ) {
             Icon(Icons.Default.PlayArrow, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Начать кодить")
+            Text("Начать кодить",
+                fontFamily = fontSt)
         }
 
         Spacer(modifier = Modifier.height(25.dp))
@@ -115,16 +121,17 @@ fun StartScr(
         ) {
             Icon(Icons.Default.Info, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("О приложении")
+            Text("О приложении", fontFamily = fontSt)
         }
         if (showDialog.value) {
             AlertDialog(
                 onDismissRequest = { showDialog.value = false },
-                title = { Text("О приложении") },
-                text = { Text("Это приложение для новичков, которые хотят погрузиться в мир программирования.") },
+                title = { Text("О приложении", fontFamily = fontSt) },
+                text = { Text("Это приложение для новичков, которые хотят погрузиться в мир программирования.",
+                    fontFamily = fontSt)},
                 confirmButton = {
                     TextButton(onClick = { showDialog.value = false }) {
-                        Text("OK")
+                        Text("OK", fontFamily = fontSt)
                     }
                 }
             )
@@ -134,11 +141,3 @@ fun StartScr(
 }
 
 
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    HitTheme {
-//        StartScr()
-    }
-}
