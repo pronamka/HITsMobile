@@ -86,4 +86,9 @@ object Scopes{
         }
         return false
     }
+
+    fun reset(){
+        repositories.clear()
+        repositories.add(VariablesRepository())
+    }
 }

@@ -21,4 +21,8 @@ sealed class VariableType{
         val elementType: VariableType,
         val size: IOperation
     ): VariableType()
+
+    override fun toString(): String {
+        return this::class.java.simpleName
+    }
 }

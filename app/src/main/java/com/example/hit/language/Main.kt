@@ -1,4 +1,4 @@
-package com.example.hit.language
+/*package com.example.hit.language
 
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
 import com.example.hit.language.parser.BlockStatement
@@ -112,4 +112,4 @@ class Main {
 
 fun main(args: Array<String>) {
     Main().main()
-}
+}*/

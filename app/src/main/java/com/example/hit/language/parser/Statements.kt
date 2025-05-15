@@ -122,8 +122,10 @@ class ArrayElementAssignmentStatement(
 class PrintStatement(
     val toPrint: IOperation
 ) : IStatement {
+    var outputValue: String? = null
     override fun evaluate() {
-        println(toPrint.evaluate())
+        outputValue = toPrint.evaluate().toString()
+        println(outputValue)
     }
 
     override fun toString(): String {
@@ -164,12 +166,16 @@ class BlockStatement(
 }
 
 class IfElseStatement(
-    val blocks: List<Pair<ComparisonOperation, BlockStatement>>,
+    val blocks: List<Pair<IOperation, BlockStatement>>,
     val defaultBlock: BlockStatement? = null,
 ) : IStatement {
     override fun evaluate() {
         for ((condition, block) in blocks) {
-            if (condition.evaluate().value) {
+            val conditionValue = condition.evaluate()
+            if (conditionValue !is BoolValue){
+                throw UnexpectedTypeException("Expected a BoolValue, but got ${conditionValue::class.java.simpleName}")
+            }
+            if (conditionValue.value) {
                 block.evaluate()
                 return
             }
