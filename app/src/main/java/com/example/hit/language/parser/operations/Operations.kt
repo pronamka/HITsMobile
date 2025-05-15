@@ -2,6 +2,7 @@ package com.example.hit.language.parser.operations
 
 import com.example.hit.language.parser.ArrayValue
 import com.example.hit.language.parser.BoolValue
+import com.example.hit.language.parser.CallableValue
 import com.example.hit.language.parser.IntValue
 import com.example.hit.language.parser.Scopes
 import com.example.hit.language.parser.SupportsArithmetic
@@ -11,7 +12,6 @@ import com.example.hit.language.parser.Value
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
 import com.example.hit.language.parser.exceptions.InvalidOperationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
-import java.security.InvalidParameterException
 
 interface IOperation {
     fun evaluate(): Value<*>
@@ -116,17 +116,17 @@ class ArrayElementOperation(
         if (array !is ArrayValue<*>) {
             throw InvalidOperationException("Cannot use get operator: $variableName is not an array.")
         }
-        if (index !is IntValue){
+        if (index !is IntValue) {
             throw UnexpectedTypeException("Array indices can only be an integer, but $index was given.")
         }
         return array.get(index.value)
     }
 }
 
-class ConditionOperation(
+class ComparisonOperation(
     val left: IOperation,
     val right: IOperation,
-    val operationType: ConditionOperationType
+    val operationType: TokenType
 ) : IOperation {
     override fun evaluate(): BoolValue {
         val first = left.evaluate()
@@ -140,40 +140,76 @@ class ConditionOperation(
         }
         val comparisonResult = first.compareTo(second).value
         val operationResult = when (operationType) {
-            ConditionOperationType.EQUAL -> comparisonResult == 0
-            ConditionOperationType.NOT_EQUAL -> comparisonResult != 0
-            ConditionOperationType.LESS -> comparisonResult < 0
-            ConditionOperationType.LESS_OR_EQUAL -> comparisonResult <= 0
-            ConditionOperationType.GREATER -> comparisonResult > 0
-            ConditionOperationType.GREATER_OR_EQUAL -> comparisonResult >= 0
+            TokenType.EQUAL -> comparisonResult == 0
+            TokenType.NOT_EQUAL -> comparisonResult != 0
+            TokenType.LESS -> comparisonResult < 0
+            TokenType.LESS_OR_EQUAL -> comparisonResult <= 0
+            TokenType.GREATER -> comparisonResult > 0
+            TokenType.GREATER_OR_EQUAL -> comparisonResult >= 0
+            else -> throw InvalidOperationException(
+                "${operationType::class.java.simpleName} is not a " +
+                        "comparison operator."
+            )
         }
         return BoolValue(operationResult)
     }
 }
 
+class LogicalNotOperation(
+    val left: IOperation
+) : IOperation {
+    override fun evaluate(): Value<*> {
+        val value = left.evaluate()
+        if (value !is BoolValue) {
+            throw InvalidOperationException("Cannot perform logical not operation on a non-bool value.")
+        }
+        return BoolValue(!value.value)
+    }
+}
+
 class LogicalOperation(
     val left: IOperation,
-    val right: IOperation? = null,
-    val operationType: LogicalOperationType
+    val right: IOperation,
+    val operationType: TokenType
 ) : IOperation {
     override fun evaluate(): BoolValue {
         val first = left.evaluate()
-        if (first is BoolValue && operationType == LogicalOperationType.NOT) {
-            return BoolValue(!first.value)
-        }
-        val second = right?.evaluate()
+        val second = right.evaluate()
         if (first !is BoolValue || second !is BoolValue) {
             throw IncompatibleTypesException(operationType.toString(), listOf(first, second!!))
         }
 
         val result = when (operationType) {
-            LogicalOperationType.OR -> first.value || second.value
-            LogicalOperationType.AND -> first.value && second.value
-            LogicalOperationType.NOT -> throw InvalidParameterException(
-                "The ! operation takes " +
-                        "only argument, but two were given."
+            TokenType.OR -> first.value || second.value
+            TokenType.AND -> first.value && second.value
+            else -> throw InvalidOperationException(
+                "${operationType::class.java.simpleName} is not a " +
+                        "logical operator."
             )
         }
         return BoolValue(result)
+    }
+}
+
+class ReturnOperation(
+    val value: IOperation
+) : IOperation {
+    override fun evaluate(): Value<*> {
+        return value.evaluate()
+    }
+}
+
+class FunctionCallOperation(
+    val functionName: String,
+    val parameters: List<IOperation> = listOf()
+) : IOperation {
+    override fun evaluate(): Value<*> {
+        val function = Scopes.getVariable(functionName)
+        if (function !is CallableValue<*>) {
+            throw InvalidOperationException(
+                "Variable of type ${function::class.java.simpleName} is not callable."
+            )
+        }
+        return function.call(parameters)
     }
 }

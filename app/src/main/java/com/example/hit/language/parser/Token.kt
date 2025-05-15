@@ -1,5 +1,7 @@
 package com.example.hit.language.parser
 
+import com.example.hit.language.parser.operations.IOperation
+
 open class Token(
     val tokenType: TokenType,
     val tokenValue: String
@@ -14,7 +16,7 @@ open class Token(
 }
 
 class ArrayToken(
-    val size: Int,
+    val size: IOperation,
     val elementType: VariableType,
-    val value: CollectionValue
+    val value: IOperation? = null
 ): Token(TokenType.ARRAY, "")

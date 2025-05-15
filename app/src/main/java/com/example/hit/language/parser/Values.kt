@@ -2,6 +2,7 @@ package com.example.hit.language.parser
 
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
 import com.example.hit.language.parser.exceptions.InvalidOperationException
+import com.example.hit.language.parser.exceptions.InvalidParametersAmountException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
 import kotlin.reflect.KClass
@@ -12,30 +13,26 @@ abstract class Value<T>(
     val value: T
 )
 
+class NullValue : Value<Any>(0)
+
 class Variable(
     val type: VariableType,
     value: IOperation? = null,
 ) : Value<IOperation?>(value) {
     fun toValue(): Value<*> {
-        if (type is VariableType.ARRAY && value == null) {
-            return ArrayValue(type.size, VariableType.classMap[type.elementType]!!)
+        if (type is VariableType.ARRAY) {
+            return ValueOperationFactory(
+                ArrayToken(
+                    type.size,
+                    type.elementType,
+                    value
+                )
+            ).create().evaluate()
         }
         if (value == null) {
             throw InvalidOperationException("Cannot initialize a variable with an empty value.")
         }
         val variableValue: Value<*> = value.evaluate()
-        if (type is VariableType.ARRAY) {
-            if (variableValue !is CollectionValue) {
-                throw IllegalArgumentException("Array can only be initialized with an array expression.")
-            }
-            return ValueOperationFactory(
-                ArrayToken(
-                    type.size,
-                    type.elementType,
-                    variableValue
-                )
-            ).create().evaluate()
-        }
         val desiredType = VariableType.classMap[type]!!
         if (desiredType.isInstance(variableValue)) {
             return variableValue
@@ -289,5 +286,36 @@ class ArrayValue<T : Value<*>>(
         return "Array Value: Size $size, Elements: [${
             stringRepresentation.toString().trimEnd().trimEnd(',')
         }]"
+    }
+}
+
+abstract class CallableValue<T>(
+    val parametersDeclarations: List<DeclarationStatement> = listOf(),
+    value: T
+) : Value<T>(value) {
+    abstract fun call(parametersValues: List<IOperation> = listOf()): Value<*>
+}
+
+class FunctionValue(
+    parametersDeclarations: List<DeclarationStatement>,
+    value: BlockStatement
+) : CallableValue<BlockStatement>(parametersDeclarations, value) {
+    override fun call(parametersValues: List<IOperation>): Value<*> {
+        if (parametersDeclarations.size != parametersValues.size) {
+            throw InvalidParametersAmountException(
+                parametersDeclarations.size,
+                parametersValues.size
+            )
+        }
+        for (i in 0..parametersDeclarations.size - 1) {
+            parametersDeclarations[i].variableValue = parametersValues[i]
+            value.addStatement(i, parametersDeclarations[i])
+        }
+        value.evaluate()
+        var returnValue = value.outputValue?.evaluate()
+        if (returnValue == null) {
+            return NullValue()
+        }
+        return returnValue
     }
 }

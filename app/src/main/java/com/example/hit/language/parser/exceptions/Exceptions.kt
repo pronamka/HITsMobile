@@ -19,10 +19,16 @@ class ArrayInitializationException(
 
 class UnexpectedTypeException(
     message: String
-): Exception(message)
+) : Exception(message)
 
-class InvalidOperationException(message: String): Exception(message)
+class InvalidOperationException(message: String) : Exception(message)
 
+class InvalidParametersAmountException(
+    expectedAmount: Int,
+    actualAmount: Int
+) : Exception(
+    "Invalid amount of parameters: expected $expectedAmount but got $actualAmount"
+)
 
 class StopIterationException() : Exception()
 
