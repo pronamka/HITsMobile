@@ -1,5 +1,7 @@
 package com.example.hit.language.parser
 
+import com.example.hit.language.parser.operations.IOperation
+
 sealed class VariableType{
     companion object{
         val classMap = mapOf(
@@ -17,6 +19,6 @@ sealed class VariableType{
 
     class ARRAY(
         val elementType: VariableType,
-        val size: Int
+        val size: IOperation
     ): VariableType()
 }

@@ -1,6 +1,7 @@
 package com.example.hit.language.parser
 
 import com.example.hit.language.parser.exceptions.ArrayInitializationException
+import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.ValueOperation
 
 class ValueFactory(
@@ -20,14 +21,23 @@ class ValueFactory(
                                 "be initialized with an array expression."
                     )
                 }
-                if (token.value.size() != token.size) {
-                    throw ArrayInitializationException(
-                        "Failed to initialize array: Array size was ${token.size} " +
-                                "but the array expression contains ${token.value.size()} elements"
+                val arraySize = token.size.evaluate()
+                if (arraySize !is IntValue) {
+                    throw UnexpectedTypeException(
+                        "The size of an array must be an Int value, " +
+                                "but got ${arraySize::class.java.simpleName}"
                     )
                 }
-                val elements: MutableList<Value<*>> = token.value.toList().toMutableList()
+
                 val desiredClass = VariableType.classMap[token.elementType]!!
+                if (token.value == null) {
+                    return ArrayValue(arraySize.value, desiredClass)
+                }
+                val arrayValue = token.value.evaluate()
+                if (arrayValue !is CollectionValue) {
+                    throw IllegalArgumentException("Array can only be initialized with an array expression.")
+                }
+                val elements: MutableList<Value<*>> = arrayValue.toList().toMutableList()
                 for (element in elements) {
                     if (!desiredClass.isInstance(element)) {
                         throw ArrayInitializationException(
@@ -36,7 +46,7 @@ class ValueFactory(
                         )
                     }
                 }
-                return ArrayValue(token.size, desiredClass, elements)
+                return ArrayValue(arraySize.value, desiredClass, elements)
             }
 
             else -> throw NotImplementedError("Token of type ${token.tokenType} cannot be parsed into a value.")
