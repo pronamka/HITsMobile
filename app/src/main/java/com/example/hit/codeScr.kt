@@ -84,7 +84,7 @@ fun CodeScreen(
                 if (i < ourBlocks.size-1) {
                     block = ourBlocks[++i]
                 }
-                while (block is ElseIfBlock){
+                while (block is ElifBlock){
                     blocks.add(block.execute().blocks[0])
                     if (i < ourBlocks.size-1) {
                         block = ourBlocks[++i]
