@@ -184,12 +184,25 @@ class IfElseStatement(
     }
 }
 
+abstract class Loop(
+    val condition: IOperation,
+    val block: BlockStatement,
+): IStatement{
+    fun checkCondition(): Boolean{
+        val value = condition.evaluate()
+        if (value !is BoolValue){
+            throw UnexpectedTypeException("")
+        }
+        return value.value
+    }
+}
+
 class WhileLoop(
-    val condition: ComparisonOperation,
-    val block: BlockStatement
-) : IStatement {
+    condition: IOperation,
+    block: BlockStatement
+) : Loop(condition, block) {
     override fun evaluate() {
-        while (condition.evaluate().value) {
+        while (checkCondition()) {
             try {
                 block.evaluate()
             } catch (e: StopIterationException) {
@@ -203,13 +216,13 @@ class WhileLoop(
 
 class ForLoop(
     val initializer: IStatement,
-    val condition: ComparisonOperation,
+    condition: IOperation,
     val stateChange: IStatement,
-    val block: BlockStatement
-) : IStatement {
+    block: BlockStatement
+) : Loop(condition, block) {
     override fun evaluate() {
         initializer.evaluate()
-        while (condition.evaluate().value) {
+        while (checkCondition()) {
             try {
                 block.evaluate()
             } catch (e: StopIterationException) {
