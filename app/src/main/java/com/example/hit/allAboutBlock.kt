@@ -29,6 +29,8 @@ import java.util.UUID
 import kotlin.uuid.Uuid
 
 enum class BlockType(string: String) {
+    VARIABLE_INITIALIZATION("variable_initialization"),
+
     VARIABLE_DECLARATION("variable_declaration"),
     ARRAY_DECLARATION("array_declaration"),
 
@@ -224,7 +226,6 @@ abstract class DeclarationBlock(
 ) : BasicBlock(blockId, type = type, color = Color(0xFF45A3FF)) {
     val nameInput = StringInputField()
     val typeInput = StringInputField()
-    val valueInput = OperationInputField()
 
     val stringToTypeMap = mapOf(
         "Int" to VariableType.INT,
@@ -233,14 +234,23 @@ abstract class DeclarationBlock(
         "Double" to VariableType.DOUBLE
     )
     
-    fun getParameters(): Triple<String, VariableType, IOperation>{
+    fun getParameters(): Pair<String, VariableType>{
         val name = nameInput.get()
         val type = typeInput.get()
         if (!stringToTypeMap.containsKey(type)) {
-            throw Exception()
+            throw Exception("wrong type")
         }
-        val operation = valueInput.getOperation()
-        return Triple(name, stringToTypeMap[type]!!, operation)
+        return Pair(name, stringToTypeMap[type]!!)
+    }
+}
+
+class VariableInitializationBlock(
+    blockId: UUID,
+) : DeclarationBlock(blockId = blockId, type = BlockType.VARIABLE_INITIALIZATION) {
+
+    override fun execute(): DeclarationStatement {
+        val parameters = getParameters()
+        return DeclarationStatement(parameters.second, parameters.first)
     }
 }
 
@@ -248,9 +258,12 @@ class VariableDeclarationBlock(
     blockId: UUID,
 ) : DeclarationBlock(blockId = blockId, type = BlockType.VARIABLE_DECLARATION) {
 
+    val valueInput = OperationInputField()
+
     override fun execute(): DeclarationStatement {
+        val value = valueInput.getOperation()
         val parameters = getParameters()
-        return DeclarationStatement(parameters.second, parameters.first, parameters.third)
+        return DeclarationStatement(parameters.second, parameters.first, value)
     }
 }
 
@@ -258,12 +271,14 @@ class ArrayDeclarationBlock(
     blockId: UUID,
 ) : DeclarationBlock(blockId = blockId, type = BlockType.ARRAY_DECLARATION) {
 
+    val valueInput = OperationInputField()
     val sizeInput = OperationInputField()
     
     override fun execute(): DeclarationStatement {
-        val parameters = getParameters()
         val size = sizeInput.getOperation()
-        return DeclarationStatement(VariableType.ARRAY(parameters.second, size), parameters.first, parameters.third)
+        val value = valueInput.getOperation()
+        val parameters = getParameters()
+        return DeclarationStatement(VariableType.ARRAY(parameters.second, size), parameters.first, value)
     }
 }
 
@@ -442,7 +457,7 @@ class FunctionBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.FUNCTION, color = Color(0xFF45A3FF)) {
     val nameInput = StringInputField()
-    val inputParameters = mutableListOf<VariableDeclarationBlock>()
+    val inputParameters = mutableListOf<VariableInitializationBlock>()
     val blocks = BlockBlock(blockId = UUID.randomUUID())
 
     override fun execute(): FunctionDeclarationStatement {
@@ -458,7 +473,7 @@ class FunctionBlock(
         return FunctionDeclarationStatement (name, parameters, BlockStatement(statements))
     }
 
-    fun addParameter(initBlock: VariableDeclarationBlock) {
+    fun addParameter(initBlock: VariableInitializationBlock) {
         inputParameters.add(initBlock)
     }
 }
