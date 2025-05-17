@@ -75,33 +75,8 @@ fun CodeScreen(
     fun runProgram(){
         val ourBlocks = listOf<BasicBlock>()
         val statements = mutableListOf<IStatement>()
-        var i = 0
-        while (i < ourBlocks.size){
-            var block = ourBlocks[i]
-            if (block is IfBlock){
-                val blocks = mutableListOf<Pair<IOperation, BlockStatement>>()
-                blocks.add(block.execute().blocks[0])
-                if (i < ourBlocks.size-1) {
-                    block = ourBlocks[++i]
-                }
-                while (block is ElifBlock){
-                    blocks.add(block.execute().blocks[0])
-                    if (i < ourBlocks.size-1) {
-                        block = ourBlocks[++i]
-                    } else {
-                        break
-                    }
-                }
-                var elseBlock: BlockStatement? = null
-                if (block is ElseBlock){
-                    elseBlock = block.execute()
-                }
-                statements.add(IfElseStatement(blocks, elseBlock))
-                continue
-            } else {
-                i++
-            }
-            statements.add(block.execute())
+        for (ourBlock in ourBlocks) {
+            statements.add(ourBlock.execute())
         }
     }
 

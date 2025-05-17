@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
 import com.example.hit.language.parser.AssignmentStatement
 import com.example.hit.language.parser.BlockStatement
+import com.example.hit.language.parser.BoolValue
 import com.example.hit.language.parser.BreakStatement
 import com.example.hit.language.parser.ContinueStatement
 import com.example.hit.language.parser.DeclarationStatement
@@ -22,6 +23,7 @@ import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
 import com.example.hit.language.parser.exceptions.ContinueIterationException
 import com.example.hit.language.parser.exceptions.StopIterationException
+import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.ComparisonOperation
 import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.ReturnOperation
@@ -330,7 +332,7 @@ class PrintBlock(
     }
 }
 
-class BlockBlock(
+class BodyBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.BLOCK, color = Color(0xFF45A3FF)) {
     val blocks = mutableListOf<BasicBlock>()
@@ -344,51 +346,64 @@ class BlockBlock(
     }
 }
 
+class IfElseStatement(
+    val blocks: List<Pair<IOperation, BlockStatement>>,
+    val defaultBlock: BlockStatement? = null,
+) : IStatement {
+    override fun evaluate() {
+        for ((condition, block) in blocks) {
+            val conditionValue = condition.evaluate()
+            if (conditionValue !is BoolValue){
+                throw UnexpectedTypeException("Expected a BoolValue, but got ${conditionValue::class.java.simpleName}")
+            }
+            if (conditionValue.value) {
+                block.evaluate()
+                return
+            }
+        }
+        defaultBlock?.evaluate()
+    }
+}
 
-class IfBlock(
+class IfElseBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.IF, color = Color(0xFF45A3FF)) {
-    var conditionInput = OperationInputField()
-    val blocks = BlockBlock(blockId = UUID.randomUUID())
-    
+
+    val blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
+    var defaultBlockInput: BodyBlock? = null
+
+    fun addElseIfBlock() {
+        val conditionInput = OperationInputField()
+        val block = BodyBlock(blockId = UUID.randomUUID())
+        blocksInput.add(Pair(conditionInput, block))
+    }
+
+    fun addElseBlock() {
+        defaultBlockInput = BodyBlock(blockId = UUID.randomUUID())
+    }
 
     override fun execute(): IfElseStatement {
-        val operation = conditionInput.getOperation()
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks){
-            statements.add(block.execute())
+        val blocks = mutableListOf<Pair<IOperation, BlockStatement>>()
+        var defaultBlock: BlockStatement? = null
+
+        for (blockInput in blocksInput) {
+            val operation = blockInput.first.getOperation()
+            val statements = mutableListOf<IStatement>()
+            for (block in blockInput.second.blocks){
+                statements.add(block.execute())
+            }
+            blocks.add(Pair(operation, BlockStatement(statements)))
         }
-        return IfElseStatement(listOf(Pair(operation, BlockStatement(statements))))
-    }
-}
 
-class ElifBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.ELSE_IF, color = Color(0xFF45A3FF)) {
-    val conditionInput = OperationInputField()
-    val blocks = BlockBlock(blockId = UUID.randomUUID())
-
-    override fun execute(): IfElseStatement {
-        val operation = conditionInput.getOperation()
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks){
-            statements.add(block.execute())
+        if (defaultBlockInput != null) {
+            val statements = mutableListOf<IStatement>()
+            for (block in defaultBlockInput!!.blocks) {
+                statements.add(block.execute())
+            }
+            defaultBlock = BlockStatement(statements)
         }
-        return IfElseStatement(listOf(Pair(operation, BlockStatement(statements))))
-    }
-}
 
-class ElseBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.ELSE, color = Color(0xFF45A3FF)) {
-    val blocks = BlockBlock(blockId = UUID.randomUUID())
-
-    override fun execute(): BlockStatement {
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks){
-            statements.add(block.execute())
-        }
-        return BlockStatement(statements)
+        return IfElseStatement(blocks, defaultBlock)
     }
 }
 
@@ -398,7 +413,7 @@ class ForBlock(
     val initializer = VariableAssignmentBlock(blockId = UUID.randomUUID())
     val conditionInput = OperationInputField()
     val stateChange = VariableAssignmentBlock(blockId = UUID.randomUUID())
-    val blocks = BlockBlock(blockId = UUID.randomUUID())
+    val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     override fun execute(): ForLoop {
         val operation = conditionInput.getOperation()
@@ -415,7 +430,7 @@ class WhileBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.WHILE, color = Color(0xFF45A3FF)) {
     val conditionInput = OperationInputField()
-    val blocks = BlockBlock(blockId = UUID.randomUUID())
+    val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     override fun execute(): WhileLoop {
         val operation = conditionInput.getOperation()
@@ -458,7 +473,7 @@ class FunctionBlock(
 ) : BasicBlock(blockId, type = BlockType.FUNCTION, color = Color(0xFF45A3FF)) {
     val nameInput = StringInputField()
     val inputParameters = mutableListOf<VariableInitializationBlock>()
-    val blocks = BlockBlock(blockId = UUID.randomUUID())
+    val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     override fun execute(): FunctionDeclarationStatement {
         val name = nameInput.get()
