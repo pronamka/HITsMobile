@@ -69,11 +69,9 @@ fun CodeScreen(
 
     val menuOffset by animateDpAsState(
         targetValue = if (showMenu) 0.dp else (-300).dp,
-        label = "menuAnimation"
     )
     val Alpha by animateFloatAsState(
         targetValue = if (showMenu) 0.5f else 0f,
-        label = "overlayAnimation"
     )
 
     val defaultBlocks = remember { BlockData.defaultBlocks }
@@ -234,8 +232,6 @@ fun CodeScreen(
                 items(defaultBlocks) { block ->
                     BlockItem(
                         block = block,
-                        isFirst = false,
-                        isLast = false,
                         onClick = {
                             listBlocks.add(block.copy())
                             val newBlock = block.copy()
@@ -256,8 +252,6 @@ fun CodeScreen(
 @Composable
 fun BlockItem(
     block: CodeBlock,
-    isFirst: Boolean = false,
-    isLast: Boolean = false,
     onClick: () -> Unit
 ) {
     Box(
@@ -267,7 +261,7 @@ fun BlockItem(
             .height(64.dp)
             .background(
                 color = block.color,
-                shape = PuzzleShape(isFirst, isLast)
+                shape = PuzzleShape()
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.CenterStart

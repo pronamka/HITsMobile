@@ -43,8 +43,6 @@ fun Drag(
     ) {
         BlockItem(
             block = block,
-            isFirst = false,
-            isLast = false,
             onClick = { }
         )
     }

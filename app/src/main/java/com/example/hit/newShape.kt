@@ -7,10 +7,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 
-class PuzzleShape(
-    private val isFirst: Boolean = false,
-    private val isLast: Boolean = false
-) : Shape {
+class PuzzleShape() : Shape {
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,
