@@ -278,7 +278,7 @@ fun BlockItem(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical =  16.dp)
             .fillMaxWidth()
-            .height(64.dp)
+            .height(84.dp)
             .background(
                 color = block.color,
                 shape = PuzzleShape(isFirst, isLast)
