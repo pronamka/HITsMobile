@@ -30,8 +30,9 @@ import com.example.hit.language.parser.operations.ReturnOperation
 import java.util.UUID
 import kotlin.uuid.Uuid
 
-enum class BlockType(string: String) {
-    VARIABLE_INITIALIZATION("variable_initialization"),
+enum class BlockType(val value: String) {
+
+    VARIABLE_INITIALIZATION(""),
 
     VARIABLE_DECLARATION("variable_declaration"),
     ARRAY_DECLARATION("array_declaration"),
@@ -64,7 +65,7 @@ enum class BlockType(string: String) {
     CONTINUE("continue"),
 
     BLOCK("block"),
-    FUNCTION("function")
+    FUNCTION("function");
 }
 
 enum class DataType {
@@ -88,6 +89,11 @@ data class CodeBlock(
 
 object BlockData {
     val defaultBlocks = listOf(
+
+        CodeBlock(
+            type = BlockType.VARIABLE_INITIALIZATION,
+            color = Color(0xFF2196F3)
+        ),
 
         CodeBlock(
             type = BlockType.IF,
