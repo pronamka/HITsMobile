@@ -7,7 +7,6 @@ import com.example.hit.language.parser.operations.FunctionCallOperation
 import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.LogicalNotOperation
 import com.example.hit.language.parser.operations.LogicalOperation
-import com.example.hit.language.parser.operations.ReturnOperation
 import com.example.hit.language.parser.operations.UnaryOperation
 import com.example.hit.language.parser.operations.ValueOperation
 import com.example.hit.language.parser.operations.VariableOperation
@@ -35,7 +34,7 @@ class Parser(
     private fun atTopLevel(): IOperation {
         val currentToken = getCurrentToken()
         if (checkCurrentTokenType(TokenType.RETURN)) {
-            return ReturnOperation(atBottomLevel())
+            return atBottomLevel()
         }
         if (checkCurrentTokenType(TokenType.LEFT_BRACKET)) {
             val values: MutableList<Value<*>> = mutableListOf()

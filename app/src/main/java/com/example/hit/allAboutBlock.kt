@@ -26,7 +26,6 @@ import com.example.hit.language.parser.exceptions.StopIterationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.ComparisonOperation
 import com.example.hit.language.parser.operations.IOperation
-import com.example.hit.language.parser.operations.ReturnOperation
 import java.util.UUID
 import kotlin.uuid.Uuid
 
@@ -464,7 +463,7 @@ class ReturnBlock(
     val valueInputField = OperationInputField()
     
     override fun execute(): ReturnStatement{
-        return ReturnStatement(ReturnOperation(valueInputField.getOperation()))
+        return ReturnStatement(valueInputField.getOperation())
     }
 }
 

@@ -1,11 +1,10 @@
 package com.example.hit.language.parser
 
 import com.example.hit.language.parser.exceptions.ContinueIterationException
+import com.example.hit.language.parser.exceptions.ReturnException
 import com.example.hit.language.parser.exceptions.StopIterationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
-import com.example.hit.language.parser.operations.ComparisonOperation
 import com.example.hit.language.parser.operations.IOperation
-import com.example.hit.language.parser.operations.ReturnOperation
 
 interface IStatement {
     fun evaluate()
@@ -134,26 +133,19 @@ class PrintStatement(
 }
 
 class ReturnStatement(
-    val returnOperation: ReturnOperation
+    val returnOperation: IOperation
 ): IStatement{
-    var returnValue: IOperation? = null
     override fun evaluate() {
-        returnValue = returnOperation
+        throw ReturnException(returnOperation.evaluate())
     }
 }
 
 class BlockStatement(
     val statements: MutableList<IStatement>
 ) : IStatement {
-    var outputValue: IOperation? = null
     override fun evaluate() {
         Scopes.add(VariablesRepository())
         for (statement in statements) {
-            if (statement is ReturnStatement){
-                statement.evaluate()
-                outputValue = statement.returnValue
-                return
-            }
             statement.evaluate()
         }
 

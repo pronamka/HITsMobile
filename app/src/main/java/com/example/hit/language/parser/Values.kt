@@ -3,6 +3,7 @@ package com.example.hit.language.parser
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
 import com.example.hit.language.parser.exceptions.InvalidOperationException
 import com.example.hit.language.parser.exceptions.InvalidParametersAmountException
+import com.example.hit.language.parser.exceptions.ReturnException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
 import kotlin.reflect.KClass
@@ -311,11 +312,12 @@ class FunctionValue(
             parametersDeclarations[i].variableValue = parametersValues[i]
             value.addStatement(i, parametersDeclarations[i])
         }
-        value.evaluate()
-        var returnValue = value.outputValue?.evaluate()
-        if (returnValue == null) {
+        try{
+            value.evaluate()
             return NullValue()
         }
-        return returnValue
+        catch (e: ReturnException){
+            return e.returnValue
+        }
     }
 }
