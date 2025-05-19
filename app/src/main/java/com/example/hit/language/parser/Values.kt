@@ -288,6 +288,10 @@ class ArrayValue<T : Value<*>>(
             stringRepresentation.toString().trimEnd().trimEnd(',')
         }]"
     }
+
+    fun toCollectionValue(): CollectionValue {
+        return CollectionValue(value.toList())
+    }
 }
 
 abstract class CallableValue<T>(
@@ -312,11 +316,10 @@ class FunctionValue(
             parametersDeclarations[i].variableValue = parametersValues[i]
             value.addStatement(i, parametersDeclarations[i])
         }
-        try{
+        try {
             value.evaluate()
             return NullValue()
-        }
-        catch (e: ReturnException){
+        } catch (e: ReturnException) {
             return e.returnValue
         }
     }
