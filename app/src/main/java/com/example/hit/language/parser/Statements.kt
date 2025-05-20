@@ -16,7 +16,7 @@ class DeclarationStatement(
     var variableValue: IOperation? = null
 ) : IStatement {
     override fun evaluate() {
-        if (Scopes.getLast().exists(variableName)) {
+        if (Scopes.variableExists(variableName)) {
             throw IllegalStateException("Variable $variableName has already been declared.")
         }
         val variable = Variable(variableType, variableValue)
@@ -26,7 +26,7 @@ class DeclarationStatement(
         } else {
             value = variable
         }
-        Scopes.getLast().add(variableName, value)
+        Scopes.addVariable(variableName, value)
     }
 
     override fun toString(): String {
@@ -46,11 +46,11 @@ class FunctionDeclarationStatement(
     val body: BlockStatement
 ): IStatement{
     override fun evaluate() {
-        if (Scopes.getLast().exists(name)) {
+        if (Scopes.variableExists(name)) {
             throw IllegalStateException("Function $name has already been declared.")
         }
         val function = FunctionValue(parameters, body)
-        Scopes.getLast().add(name, function)
+        Scopes.addVariable(name, function)
     }
 }
 
@@ -71,8 +71,7 @@ class VariableAssignmentStatement(
 ) : AssignmentStatement(variableName, variableValue) {
     override fun evaluate() {
         checkIfVariableDeclared()
-        val repository = Scopes.getRepositoryWithVariable(variableName)
-        val variable = repository.get(variableName)
+        val variable = Scopes.getVariable(variableName)
 
         val value: Value<*>
         if (variable is Variable) {
@@ -89,7 +88,7 @@ class VariableAssignmentStatement(
             }
             value = newValue
         }
-        repository.add(variableName, value)
+        Scopes.addVariable(variableName, value)
     }
 
     override fun toString(): String {
@@ -104,8 +103,7 @@ class ArrayElementAssignmentStatement(
 ) : AssignmentStatement(variableName, variableValue) {
     override fun evaluate() {
         checkIfVariableDeclared()
-        val repository = Scopes.getRepositoryWithVariable(variableName)
-        val variable = repository.get(variableName)
+        val variable = Scopes.getVariable(variableName)
         if (variable !is ArrayValue<*>) {
             throw RuntimeException("$variable is not an array.")
         }
@@ -141,14 +139,14 @@ class ReturnStatement(
 }
 
 class BlockStatement(
-    val statements: MutableList<IStatement>
+    val statements: MutableList<IStatement>,
+    val isFunctionBody: Boolean = false
 ) : IStatement {
     override fun evaluate() {
-        Scopes.add(VariablesRepository())
+        Scopes.createNewScope(isFunctionBody)
         for (statement in statements) {
             statement.evaluate()
         }
-
         Scopes.removeLast()
     }
 

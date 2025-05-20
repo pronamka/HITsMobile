@@ -41,16 +41,32 @@ class VariablesRepository : IRepository {
     override fun exists(key: String): Boolean {
         return elements.containsKey(key)
     }
+
+    fun copyState(): VariablesRepository{
+        val state = VariablesRepository()
+        state.elements.clear()
+        state.elements.putAll(this.elements)
+        return state
+    }
 }
 
 object Scopes{
     val repositories: MutableList<VariablesRepository> = mutableListOf()
+    var currentFunctionScope = repositories
 
     init{
         repositories.add(VariablesRepository())
     }
 
     fun add(repository: VariablesRepository) = repositories.add(repository)
+
+    fun createNewScope(forFunction: Boolean = false){
+        if (!forFunction){
+            add(repositories.last().copyState())
+            return
+        }
+        add(repositories.first().copyState())
+    }
 
     fun remove(index: Int) = repositories.removeAt(index)
 
@@ -60,31 +76,19 @@ object Scopes{
 
     fun get(index: Int) = repositories[index]
 
-    fun getRepositoryWithVariable(name: String): VariablesRepository{
-        for (repository in repositories.reversed()){
-            if (repository.exists(name)){
-                return repository
-            }
-        }
-        throw IllegalStateException("Variable $name is not declared.")
+    fun addVariable(name: String, value: Value<*>){
+        repositories.last().add(name, value)
     }
 
     fun getVariable(name: String): Value<*>{
-        for (repository in repositories.reversed()){
-            if (repository.exists(name)){
-                return repository.get(name)
-            }
+        if (repositories.last().exists(name)){
+            return repositories.last().get(name)
         }
         throw IllegalStateException("Variable $name is not declared.")
     }
 
     fun variableExists(name: String): Boolean{
-        for (repository in repositories.reversed()){
-            if (repository.exists(name)){
-                return true
-            }
-        }
-        return false
+        return repositories.last().exists(name)
     }
 
     fun reset(){
