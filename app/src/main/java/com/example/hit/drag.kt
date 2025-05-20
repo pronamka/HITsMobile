@@ -9,8 +9,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.core.*
 import androidx.compose.ui.draw.drawBehind
@@ -18,10 +16,7 @@ import androidx.compose.ui.graphics.Color
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-@Composable
-private fun Dp.toPx(): Float {
-    return with(LocalDensity.current) { this@toPx.toPx() }
-}
+
 
 @Composable
 fun Drag(
@@ -37,7 +32,7 @@ fun Drag(
     
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val blockHeight = 150f
+    val blockHeight = 94f
 
     var isNearSnap by remember { mutableStateOf(false) }
     var snapTarget by remember { mutableStateOf<Pair<Float, Float>?>(null) }
@@ -51,7 +46,7 @@ fun Drag(
         label = "snapAnimation"
     )
 
-    fun checkSnapTargets(currentY: Float): Pair<Float, Float>? {
+    fun checkSnapTargets(currentY: Float, currentX: Float): Pair<Float, Float>? {
         var closestSnap: Pair<Float, Float>? = null
         var minDistance = Float.MAX_VALUE
 
@@ -60,15 +55,15 @@ fun Drag(
                 val blockBottom = pos.posY + blockHeight
                 val blockTop = pos.posY
 
-                val topDistance = abs(currentY + blockHeight - blockTop)
-                if (topDistance < 50 && topDistance < minDistance) {
-                    minDistance = topDistance
+                val bottomToTopDistance = abs((currentY + blockHeight) - blockTop)
+                if (bottomToTopDistance < 50 && bottomToTopDistance < minDistance && abs(currentX - pos.posX) < 50) {
+                    minDistance = bottomToTopDistance
                     closestSnap = Pair(pos.posX, blockTop - blockHeight)
                 }
 
-                val bottomDistance = abs(currentY - blockBottom)
-                if (bottomDistance < 50 && bottomDistance < minDistance) {
-                    minDistance = bottomDistance
+                val topToBottomDistance = abs(currentY - blockBottom)
+                if (topToBottomDistance < 50 && topToBottomDistance < minDistance && abs(currentX - pos.posX) < 50) {
+                    minDistance = topToBottomDistance
                     closestSnap = Pair(pos.posX, blockBottom)
                 }
             }
@@ -98,9 +93,8 @@ fun Drag(
                         change.consume()
                         val newX = (X + dragAmount.x).coerceAtLeast(0f)
                         val newY = Y + dragAmount.y
-                        
 
-                        val potentialSnap = checkSnapTargets(newY)
+                        val potentialSnap = checkSnapTargets(newY, newX)
                         isNearSnap = potentialSnap != null
                         
                         X = newX
@@ -108,11 +102,11 @@ fun Drag(
                         positionChange(position.copy(posX = X, posY = Y))
                     },
                     onDragEnd = {
-                        val finalSnap = checkSnapTargets(Y)
-                        if (finalSnap != null) {
-                            snapTarget = finalSnap
-                            X = finalSnap.first
-                            Y = finalSnap.second
+                        val final = checkSnapTargets(Y, X)
+                        if (final != null) {
+                            snapTarget = final
+                            X = final.first
+                            Y = final.second
                             positionChange(position.copy(posX = X, posY = Y))
                         }
                         isNearSnap = false
@@ -122,8 +116,6 @@ fun Drag(
     ) {
         BlockItem(
             block = block,
-            isFirst = false,
-            isLast = false,
             onClick = { }
         )
     }

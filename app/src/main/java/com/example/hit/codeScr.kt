@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -211,7 +212,7 @@ fun CodeScreen(
                                 initID = { blockId = position.id },
                                 positionChange = { newPosition -> 
                                     blockPositions[block.hashCode()] = newPosition },
-                                blockPositions
+                                allBlockPositions = blockPositions
                             )
                         }
                     }
@@ -249,9 +250,8 @@ fun CodeScreen(
             ) {
                 items(defaultBlocks) { block ->
                     BlockItem(
+                        showMenu = true,
                         block = block,
-                        isFirst = false,
-                        isLast = false,
                         onClick = {
                             listBlocks.add(block.copy())
                             val newBlock = block.copy()
@@ -269,12 +269,13 @@ fun CodeScreen(
 }
 
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BlockItem(
+    showMenu : Boolean = false,
     block: CodeBlock,
-    isFirst: Boolean = false,
-    isLast: Boolean = false,
     onClick: () -> Unit
 ) {
     var variableName by remember { mutableStateOf("") }
@@ -308,10 +309,10 @@ fun BlockItem(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 16.dp)
             .fillMaxWidth()
-            .height(94.dp)
+            .height(124.dp)
             .background(
                 color = block.color,
-                shape = PuzzleShape(isFirst, isLast)
+                shape = PuzzleShape()
             )
             .clickable(onClick = onClick)
     ) {
@@ -325,10 +326,9 @@ fun BlockItem(
             Text(
                 text = block.type.value,
                 color = Color.White,
-                fontSize = 16.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = font,
-                modifier = Modifier.width(80.dp)
             )
 
             when (block.type) {
@@ -338,16 +338,20 @@ fun BlockItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        OutlinedTextField(
-                            value = variableName,
-                            onValueChange = { variableName = it },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp),
-                            singleLine = true,
-                            colors = textFieldColors
-                        )
+                        if(!showMenu) {
+                            OutlinedTextField(
+                                value = variableName,
+                                onValueChange = { variableName = it },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp),
+                                singleLine = true,
+                                colors = textFieldColors
+                            )
+                        }
+
                         Text(":")
+
                         Box(modifier = Modifier.weight(1f)) {
                             ExposedDropdownMenuBox(
                                 expanded = isDataTypeDropdownExpanded,
@@ -396,9 +400,8 @@ fun BlockItem(
                         value = value,
                         onValueChange = { value = it },
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .width(60.dp)
                             .height(40.dp),
-                        placeholder = { Text("Введите условие") },
                         singleLine = true,
                         colors = textFieldColors
                     )
@@ -411,7 +414,6 @@ fun BlockItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(40.dp),
-                        placeholder = { Text("Введите параметры цикла (например: i in 0..10)") },
                         singleLine = true,
                         colors = textFieldColors
                     )
