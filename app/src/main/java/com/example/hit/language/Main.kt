@@ -13,46 +13,74 @@ import com.example.hit.language.parser.Parser
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.ReturnStatement
-import com.example.hit.language.parser.TokenType
-import com.example.hit.language.parser.operations.BinaryOperation
-import com.example.hit.language.parser.operations.ComparisonOperation
-import com.example.hit.language.parser.operations.ConditionOperationType
+import com.example.hit.language.parser.operations.IOperation
+
+fun getOperation(input: String): IOperation {
+    return Parser(Lexer(input).tokenize()).parse()[0]
+}
 
 class Main {
     fun main() {
-        val atomicValues = """
-            a+b
-            2
-            3
-            sum(first, second)
-            a
-            b
-        """.trimIndent()
-        println(VariableType.classMap)
-        val values = Parser(Lexer(atomicValues).tokenize()).parse()
         println(VariableType.classMap)
         val program: List<IStatement> = listOf(
             FunctionDeclarationStatement(
-                "sum", listOf(
+                "bubbleSort",
+                listOf(
                     DeclarationStatement(
-                        VariableType.INT, "a"
+                        VariableType.INT, "array_size"
                     ),
                     DeclarationStatement(
-                        VariableType.INT, "b"
+                        VariableType.ARRAY(VariableType.INT, getOperation("5")), "arr"
                     )
                 ),
                 BlockStatement(
                     mutableListOf(
-                        IfElseStatement(
-                            listOf(
-                                Pair(
-                                    ComparisonOperation(
-                                        values[4], values[5], TokenType.LESS
-                                    ),
-                                    BlockStatement(
-                                        mutableListOf(
-                                            ReturnStatement(
-                                                values[0]
+                        ForLoop(
+                            DeclarationStatement(
+                                VariableType.INT, "i", getOperation("0")
+                            ),
+                            getOperation("i<array_size"),
+                            VariableAssignmentStatement(
+                                "i", getOperation("i+1")
+                            ),
+                            BlockStatement(
+                                mutableListOf(
+                                    ForLoop(
+                                        DeclarationStatement(
+                                            VariableType.INT, "j", getOperation("i")
+                                        ),
+                                        getOperation("j<array_size"),
+                                        VariableAssignmentStatement(
+                                            "j", getOperation("j+1")
+                                        ),
+                                        BlockStatement(
+                                            mutableListOf(
+                                                IfElseStatement(
+                                                    listOf(
+                                                        Pair(
+                                                            getOperation("arr[i]>arr[j]"),
+                                                            BlockStatement(
+                                                                mutableListOf(
+                                                                    DeclarationStatement(
+                                                                        VariableType.INT,
+                                                                        "t",
+                                                                        getOperation("arr[i]")
+                                                                    ),
+                                                                    ArrayElementAssignmentStatement(
+                                                                        "arr",
+                                                                        getOperation("arr[j]"),
+                                                                        getOperation("i")
+                                                                    ),
+                                                                    ArrayElementAssignmentStatement(
+                                                                        "arr",
+                                                                        getOperation("t"),
+                                                                        getOperation("j")
+                                                                    ),
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
                                             )
                                         )
                                     )
@@ -60,18 +88,31 @@ class Main {
                             )
                         ),
                         ReturnStatement(
-                            values[5]
+                            getOperation("arr")
                         )
-                    )
-                )
+                    ),
+                    isFunctionBody = true
+                ),
             ),
             DeclarationStatement(
-                VariableType.INT, "first", values[1]
+                VariableType.INT, "size", getOperation("5")
             ),
             DeclarationStatement(
-                VariableType.INT, "second", values[2]
+                VariableType.ARRAY(VariableType.INT, getOperation("size")),
+                "unsorted_array",
+                getOperation("[5, 4, 3, 2, 1]")
             ),
-            PrintStatement(values[3])
+            DeclarationStatement(
+                VariableType.ARRAY(VariableType.INT, getOperation("size")),
+                "sorted_array",
+                getOperation("bubbleSort(size, unsorted_array)")
+            ),
+            PrintStatement(
+                getOperation("unsorted_array")
+            ),
+            PrintStatement(
+                getOperation("sorted_array")
+            )
         )
         println(VariableType.classMap)
         for (statement in program) {
