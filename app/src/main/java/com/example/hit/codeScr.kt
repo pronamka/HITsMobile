@@ -65,13 +65,6 @@ fun CodeScreen(
     var blockPositions = remember { mutableStateMapOf<Int, BlockPosition>() }
     var blockId by remember { mutableStateOf<Int?>(null) }
 
-    fun runProgram(){
-        val ourBlocks = listOf<BasicBlock>()
-        val statements = mutableListOf<IStatement>()
-        for (ourBlock in ourBlocks) {
-            statements.add(ourBlock.execute())
-        }
-    }
 
     val menuOff by animateDpAsState(
         targetValue = if (showMenu) 0.dp else (-300).dp,
@@ -210,7 +203,7 @@ fun CodeScreen(
                                 position = position,
                                 active = blockId == position.id,
                                 initID = { blockId = position.id },
-                                positionChange = { newPosition -> 
+                                positionChange = { newPosition ->
                                     blockPositions[block.hashCode()] = newPosition },
                                 allBlockPositions = blockPositions
                             )
