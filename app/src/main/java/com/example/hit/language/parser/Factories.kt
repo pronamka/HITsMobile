@@ -33,7 +33,10 @@ class ValueFactory(
                 if (token.value == null) {
                     return ArrayValue(arraySize.value, desiredClass)
                 }
-                val arrayValue = token.value.evaluate()
+                var arrayValue = token.value.evaluate()
+                if (arrayValue is ArrayValue<*>) {
+                    arrayValue = arrayValue.toCollectionValue()
+                }
                 if (arrayValue !is CollectionValue) {
                     throw IllegalArgumentException("Array can only be initialized with an array expression.")
                 }

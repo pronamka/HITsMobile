@@ -191,14 +191,6 @@ class LogicalOperation(
     }
 }
 
-class ReturnOperation(
-    val value: IOperation
-) : IOperation {
-    override fun evaluate(): Value<*> {
-        return value.evaluate()
-    }
-}
-
 class FunctionCallOperation(
     val functionName: String,
     val parameters: List<IOperation> = listOf()

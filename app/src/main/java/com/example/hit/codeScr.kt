@@ -52,6 +52,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.IntOffset
+import com.example.hit.language.parser.BlockStatement
+import com.example.hit.language.parser.IStatement
+import com.example.hit.language.parser.IfElseStatement
+import com.example.hit.language.parser.operations.ComparisonOperation
+import com.example.hit.language.parser.operations.IOperation
 import org.jetbrains.annotations.NonBlockingExecutor
 import kotlin.math.roundToInt
 
@@ -66,6 +71,14 @@ fun CodeScreen(
     var listBlocks = remember { mutableStateListOf<CodeBlock>() }
     var blockPositions = remember { mutableStateMapOf<Int, BlockPosition>() }
     var blockId by remember { mutableStateOf<Int?>(null) }
+
+    fun runProgram(){
+        val ourBlocks = listOf<BasicBlock>()
+        val statements = mutableListOf<IStatement>()
+        for (ourBlock in ourBlocks) {
+            statements.add(ourBlock.execute())
+        }
+    }
 
     val menuOffset by animateDpAsState(
         targetValue = if (showMenu) 0.dp else (-300).dp,
@@ -198,6 +211,7 @@ fun CodeScreen(
                             active = blockId == position.id,
                             { blockId = position.id },
                             { newPosition -> blockPositions[block.hashCode()] = newPosition }
+                            /*{ newBlock  }*/
                         )
                     }
                 }

@@ -1,11 +1,10 @@
 package com.example.hit.language.parser
 
 import com.example.hit.language.parser.exceptions.ContinueIterationException
+import com.example.hit.language.parser.exceptions.ReturnException
 import com.example.hit.language.parser.exceptions.StopIterationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
-import com.example.hit.language.parser.operations.ComparisonOperation
 import com.example.hit.language.parser.operations.IOperation
-import com.example.hit.language.parser.operations.ReturnOperation
 
 interface IStatement {
     fun evaluate()
@@ -17,7 +16,7 @@ class DeclarationStatement(
     var variableValue: IOperation? = null
 ) : IStatement {
     override fun evaluate() {
-        if (Scopes.getLast().exists(variableName)) {
+        if (Scopes.variableExists(variableName)) {
             throw IllegalStateException("Variable $variableName has already been declared.")
         }
         val variable = Variable(variableType, variableValue)
@@ -27,7 +26,7 @@ class DeclarationStatement(
         } else {
             value = variable
         }
-        Scopes.getLast().add(variableName, value)
+        Scopes.addVariable(variableName, value)
     }
 
     override fun toString(): String {
@@ -47,11 +46,11 @@ class FunctionDeclarationStatement(
     val body: BlockStatement
 ): IStatement{
     override fun evaluate() {
-        if (Scopes.getLast().exists(name)) {
+        if (Scopes.variableExists(name)) {
             throw IllegalStateException("Function $name has already been declared.")
         }
         val function = FunctionValue(parameters, body)
-        Scopes.getLast().add(name, function)
+        Scopes.addVariable(name, function)
     }
 }
 
@@ -72,8 +71,7 @@ class VariableAssignmentStatement(
 ) : AssignmentStatement(variableName, variableValue) {
     override fun evaluate() {
         checkIfVariableDeclared()
-        val repository = Scopes.getRepositoryWithVariable(variableName)
-        val variable = repository.get(variableName)
+        val variable = Scopes.getVariable(variableName)
 
         val value: Value<*>
         if (variable is Variable) {
@@ -90,7 +88,7 @@ class VariableAssignmentStatement(
             }
             value = newValue
         }
-        repository.add(variableName, value)
+        Scopes.addVariable(variableName, value)
     }
 
     override fun toString(): String {
@@ -105,8 +103,7 @@ class ArrayElementAssignmentStatement(
 ) : AssignmentStatement(variableName, variableValue) {
     override fun evaluate() {
         checkIfVariableDeclared()
-        val repository = Scopes.getRepositoryWithVariable(variableName)
-        val variable = repository.get(variableName)
+        val variable = Scopes.getVariable(variableName)
         if (variable !is ArrayValue<*>) {
             throw RuntimeException("$variable is not an array.")
         }
@@ -122,8 +119,10 @@ class ArrayElementAssignmentStatement(
 class PrintStatement(
     val toPrint: IOperation
 ) : IStatement {
+    var outputValue: String? = null
     override fun evaluate() {
-        println(toPrint.evaluate())
+        outputValue = toPrint.evaluate().toString()
+        println(outputValue)
     }
 
     override fun toString(): String {
@@ -132,29 +131,22 @@ class PrintStatement(
 }
 
 class ReturnStatement(
-    val returnOperation: ReturnOperation
+    val returnOperation: IOperation
 ): IStatement{
-    var returnValue: IOperation? = null
     override fun evaluate() {
-        returnValue = returnOperation
+        throw ReturnException(returnOperation.evaluate())
     }
 }
 
 class BlockStatement(
-    val statements: MutableList<IStatement>
+    val statements: MutableList<IStatement>,
+    val isFunctionBody: Boolean = false
 ) : IStatement {
-    var outputValue: IOperation? = null
     override fun evaluate() {
-        Scopes.add(VariablesRepository())
+        Scopes.createNewScope(isFunctionBody)
         for (statement in statements) {
-            if (statement is ReturnStatement){
-                statement.evaluate()
-                outputValue = statement.returnValue
-                return
-            }
             statement.evaluate()
         }
-
         Scopes.removeLast()
     }
 
@@ -164,12 +156,16 @@ class BlockStatement(
 }
 
 class IfElseStatement(
-    val blocks: List<Pair<ComparisonOperation, BlockStatement>>,
+    val blocks: List<Pair<IOperation, BlockStatement>>,
     val defaultBlock: BlockStatement? = null,
 ) : IStatement {
     override fun evaluate() {
         for ((condition, block) in blocks) {
-            if (condition.evaluate().value) {
+            val conditionValue = condition.evaluate()
+            if (conditionValue !is BoolValue){
+                throw UnexpectedTypeException("Expected a BoolValue, but got ${conditionValue::class.java.simpleName}")
+            }
+            if (conditionValue.value) {
                 block.evaluate()
                 return
             }
@@ -178,12 +174,25 @@ class IfElseStatement(
     }
 }
 
+abstract class Loop(
+    val condition: IOperation,
+    val block: BlockStatement,
+): IStatement{
+    fun checkCondition(): Boolean{
+        val value = condition.evaluate()
+        if (value !is BoolValue){
+            throw UnexpectedTypeException("")
+        }
+        return value.value
+    }
+}
+
 class WhileLoop(
-    val condition: ComparisonOperation,
-    val block: BlockStatement
-) : IStatement {
+    condition: IOperation,
+    block: BlockStatement
+) : Loop(condition, block) {
     override fun evaluate() {
-        while (condition.evaluate().value) {
+        while (checkCondition()) {
             try {
                 block.evaluate()
             } catch (e: StopIterationException) {
@@ -197,13 +206,13 @@ class WhileLoop(
 
 class ForLoop(
     val initializer: IStatement,
-    val condition: ComparisonOperation,
+    condition: IOperation,
     val stateChange: IStatement,
-    val block: BlockStatement
-) : IStatement {
+    block: BlockStatement
+) : Loop(condition, block) {
     override fun evaluate() {
         initializer.evaluate()
-        while (condition.evaluate().value) {
+        while (checkCondition()) {
             try {
                 block.evaluate()
             } catch (e: StopIterationException) {

@@ -1,5 +1,7 @@
 package com.example.hit.language.parser.exceptions
 
+import com.example.hit.language.parser.Value
+
 class NumberParseException(
     errorIndex: Int,
 ) : Exception("Conversion to number failed: Invalid syntax at index ${errorIndex}.")
@@ -33,3 +35,7 @@ class InvalidParametersAmountException(
 class StopIterationException() : Exception()
 
 class ContinueIterationException() : Exception()
+
+class ReturnException(
+    val returnValue: Value<*>
+): Exception()
