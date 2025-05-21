@@ -1,5 +1,8 @@
 package com.example.hit.language.parser
 
+import com.example.hit.language.parser.operations.ValueOperation
+import com.example.hit.language.parser.operations.VariableOperation
+
 interface IRepository {
     val elements: MutableMap<String, Value<*>>
 
@@ -13,13 +16,27 @@ interface IRepository {
 class VariablesRepository : IRepository {
     override val elements: MutableMap<String, Value<*>> = mutableMapOf()
 
-    init{
+    init {
         elements["PI"] = DoubleValue(Math.PI)
         elements["E"] = DoubleValue(Math.E)
         elements["GOLDEN_RATIO"] = DoubleValue(1.618)
+        elements["array"] = FunctionValue(
+            listOf("size"),
+            BlockStatement(
+                mutableListOf(
+                    ReturnStatement(
+                        ValueOperationFactory(
+                            ArrayToken(
+                                VariableOperation("size"),
+                            )
+                        ).create()
+                    )
+                )
+            )
+        )
     }
 
-    override fun add(key: String, value: Value<*>){
+    override fun add(key: String, value: Value<*>) {
         elements[key] = value
     }
 
@@ -30,11 +47,8 @@ class VariablesRepository : IRepository {
         return elements[key]!!
     }
 
-    fun getValue(key: String): Value<*>{
+    fun getValue(key: String): Value<*> {
         val value = get(key)
-        if (value is Variable){
-            throw IllegalStateException("Variable $key has not been initialized yet.")
-        }
         return value
     }
 
@@ -42,7 +56,7 @@ class VariablesRepository : IRepository {
         return elements.containsKey(key)
     }
 
-    fun copyState(): VariablesRepository{
+    fun copyState(): VariablesRepository {
         val state = VariablesRepository()
         state.elements.clear()
         state.elements.putAll(this.elements)
@@ -50,18 +64,18 @@ class VariablesRepository : IRepository {
     }
 }
 
-object Scopes{
+object Scopes {
     val repositories: MutableList<VariablesRepository> = mutableListOf()
     var currentFunctionScope = repositories
 
-    init{
+    init {
         repositories.add(VariablesRepository())
     }
 
     fun add(repository: VariablesRepository) = repositories.add(repository)
 
-    fun createNewScope(forFunction: Boolean = false){
-        if (!forFunction){
+    fun createNewScope(forFunction: Boolean = false) {
+        if (!forFunction) {
             add(repositories.last().copyState())
             return
         }
@@ -76,22 +90,22 @@ object Scopes{
 
     fun get(index: Int) = repositories[index]
 
-    fun addVariable(name: String, value: Value<*>){
+    fun addVariable(name: String, value: Value<*>) {
         repositories.last().add(name, value)
     }
 
-    fun getVariable(name: String): Value<*>{
-        if (repositories.last().exists(name)){
+    fun getVariable(name: String): Value<*> {
+        if (repositories.last().exists(name)) {
             return repositories.last().get(name)
         }
         throw IllegalStateException("Variable $name is not declared.")
     }
 
-    fun variableExists(name: String): Boolean{
+    fun variableExists(name: String): Boolean {
         return repositories.last().exists(name)
     }
 
-    fun reset(){
+    fun reset() {
         repositories.clear()
         repositories.add(VariablesRepository())
     }

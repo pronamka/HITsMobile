@@ -4,9 +4,6 @@ import com.example.hit.blocks.exeptions.InvalidNameException
 import com.example.hit.blocks.exeptions.InvalidTypeException
 import com.example.hit.language.parser.Lexer
 import com.example.hit.language.parser.Parser
-import com.example.hit.language.parser.Value
-import com.example.hit.language.parser.VariableType
-import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
 
 class StringInputField{
@@ -53,25 +50,6 @@ class NameInputField{
             throw InvalidNameException(name)
         }
         return name
-    }
-}
-
-class TypeInputField{
-    private val inputFiled: StringInputField = StringInputField()
-
-    private val stringToTypeMap = mapOf(
-        "Int" to VariableType.INT,
-        "String" to VariableType.STRING,
-        "Bool" to VariableType.BOOL,
-        "Double" to VariableType.DOUBLE
-    )
-
-    fun getType(): VariableType {
-        val type = inputFiled.get()
-        if (!stringToTypeMap.containsKey(type)) {
-            throw InvalidTypeException(type)
-        }
-        return stringToTypeMap[type]!!
     }
 }
 

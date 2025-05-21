@@ -40,7 +40,6 @@ class VariableAssignmentStatement(
     variableValue: IOperation
 ) : AssignmentStatement(variableName, variableValue) {
     override fun evaluate() {
-        checkIfVariableDeclared()
         Scopes.addVariable(variableName, variableValue.evaluate())
     }
 

@@ -17,5 +17,5 @@ open class Token(
 
 class ArrayToken(
     val size: IOperation,
-    val value: IOperation
+    val value: IOperation? = null
 ): Token(TokenType.ARRAY, "")

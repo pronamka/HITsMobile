@@ -1,6 +1,7 @@
 package com.example.hit.language
 
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
+import com.example.hit.language.parser.ArrayToken
 import com.example.hit.language.parser.AssignmentStatement
 import com.example.hit.language.parser.BlockStatement
 import com.example.hit.language.parser.VariableAssignmentStatement
@@ -12,6 +13,7 @@ import com.example.hit.language.parser.Lexer
 import com.example.hit.language.parser.Parser
 import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.ReturnStatement
+import com.example.hit.language.parser.ValueOperationFactory
 import com.example.hit.language.parser.operations.IOperation
 
 fun getOperation(input: String): IOperation {
@@ -91,7 +93,7 @@ class Main {
             ),
             VariableAssignmentStatement(
                 "unsorted_array",
-                getOperation("[5, 4, 3, 2, 1]")
+                getOperation("array(size)")
             ),
             VariableAssignmentStatement(
                 "sorted_array",

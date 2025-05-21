@@ -1,16 +1,11 @@
 package com.example.hit.blocks
 
-import androidx.compose.ui.graphics.Color
-import com.example.hit.BlockType
-import com.example.hit.CodeBlock
 import java.util.UUID
 
 object BlockData {
     val defaultBlocks = listOf(
         VariableInitializationBlock(UUID.randomUUID()),
-        VariableDeclarationBlock(UUID.randomUUID()),
-        ArrayDeclarationBlock(UUID.randomUUID()),
-        VariableAssignmentBlock(UUID.randomUUID()),
+        ArrayInitializationBlock(UUID.randomUUID()),
         ArrayElementAssignmentBlock(UUID.randomUUID()),
         PrintBlock(UUID.randomUUID()),
         BodyBlock(UUID.randomUUID()),

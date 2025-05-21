@@ -4,26 +4,20 @@ import androidx.compose.ui.graphics.Color
 import com.example.hit.BlockPosition
 import com.example.hit.BlockType
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
-import com.example.hit.language.parser.AssignmentStatement
+import com.example.hit.language.parser.ArrayToken
 import com.example.hit.language.parser.BlockStatement
-import com.example.hit.language.parser.BoolValue
 import com.example.hit.language.parser.BreakStatement
 import com.example.hit.language.parser.ContinueStatement
-import com.example.hit.language.parser.DeclarationStatement
 import com.example.hit.language.parser.ForLoop
 import com.example.hit.language.parser.FunctionDeclarationStatement
 import com.example.hit.language.parser.IStatement
 import com.example.hit.language.parser.IfElseStatement
-import com.example.hit.language.parser.Lexer
-import com.example.hit.language.parser.Parser
 import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.ReturnStatement
+import com.example.hit.language.parser.ValueOperationFactory
 import com.example.hit.language.parser.VariableAssignmentStatement
-import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
-import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
-import com.example.hit.language.parser.operations.ReturnOperation
 import java.util.UUID
 
 abstract class BasicBlock(
@@ -37,55 +31,42 @@ abstract class BasicBlock(
     abstract fun execute(): IStatement
 }
 
-abstract class DeclarationBlock(
-    type : BlockType,
+abstract class InitializationBlock(
+    type: BlockType,
     blockId: UUID,
 ) : BasicBlock(blockId, type = type, color = Color(0xFF45A3FF)) {
     private val nameInput = NameInputField()
-    private val typeInput = TypeInputField()
+    private val valueInput = OperationInputField()
 
-    fun getParameters(): Pair<String, VariableType>{
+    fun getParameters(): Pair<String, IOperation> {
         val name = nameInput.getName()
-        val type = typeInput.getType()
-        return Pair(name, type)
+        val value = valueInput.getOperation()
+        return Pair(name, value)
     }
 }
 
 class VariableInitializationBlock(
     blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.VARIABLE_INITIALIZATION) {
-
-    override fun execute(): DeclarationStatement {
+) : InitializationBlock(blockId = blockId, type = BlockType.VARIABLE_DECLARATION) {
+    override fun execute(): VariableAssignmentStatement {
         val parameters = getParameters()
-        return DeclarationStatement(parameters.second, parameters.first)
+        return VariableAssignmentStatement(parameters.first, parameters.second)
     }
 }
 
-class VariableDeclarationBlock(
+class ArrayInitializationBlock(
     blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.VARIABLE_DECLARATION) {
+) : InitializationBlock(blockId = blockId, type = BlockType.ARRAY_DECLARATION) {
 
-    private val valueInput = OperationInputField()
-
-    override fun execute(): DeclarationStatement {
-        val value = valueInput.getOperation()
-        val parameters = getParameters()
-        return DeclarationStatement(parameters.second, parameters.first, value)
-    }
-}
-
-class ArrayDeclarationBlock(
-    blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.ARRAY_DECLARATION) {
-
-    private val valueInput = OperationInputField()
     private val sizeInput = OperationInputField()
 
-    override fun execute(): DeclarationStatement {
+    override fun execute(): VariableAssignmentStatement {
         val size = sizeInput.getOperation()
-        val value = valueInput.getOperation()
         val parameters = getParameters()
-        return DeclarationStatement(VariableType.ARRAY(parameters.second, size), parameters.first, value)
+        return VariableAssignmentStatement(
+            parameters.first,
+            ValueOperationFactory(ArrayToken(size, parameters.second)).create()
+        )
     }
 }
 
@@ -97,19 +78,10 @@ abstract class AssignmentBlock(
     private val valueInput = OperationInputField()
 
 
-    fun getParameters(): Pair<String, IOperation>{
+    fun getParameters(): Pair<String, IOperation> {
         val name = nameInput.getName()
         val operation = valueInput.getOperation()
         return Pair(name, operation)
-    }
-}
-
-class VariableAssignmentBlock(
-    blockId: UUID
-) : AssignmentBlock(blockId = blockId, type = BlockType.VARIABLE_ASSIGNMENT) {
-    override fun execute(): AssignmentStatement {
-        val parameters = getParameters()
-        return VariableAssignmentStatement(parameters.first, parameters.second)
     }
 }
 
@@ -144,7 +116,7 @@ class BodyBlock(
 
     override fun execute(): BlockStatement {
         val statements = mutableListOf<IStatement>()
-        for (block in blocks){
+        for (block in blocks) {
             statements.add(block.execute())
         }
         return BlockStatement(statements)
@@ -175,7 +147,7 @@ class IfElseBlock(
         for (blockInput in blocksInput) {
             val operation = blockInput.first.getOperation()
             val statements = mutableListOf<IStatement>()
-            for (block in blockInput.second.blocks){
+            for (block in blockInput.second.blocks) {
                 statements.add(block.execute())
             }
             blocks.add(Pair(operation, BlockStatement(statements)))
@@ -196,18 +168,23 @@ class IfElseBlock(
 class ForBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.FOR, color = Color(0xFF45A3FF)) {
-    private val initializer = VariableAssignmentBlock(blockId = UUID.randomUUID())
+    private val initializer = VariableInitializationBlock(blockId = UUID.randomUUID())
     private val conditionInput = OperationInputField()
-    private val stateChange = VariableAssignmentBlock(blockId = UUID.randomUUID())
+    private val stateChange = VariableInitializationBlock(blockId = UUID.randomUUID())
     private val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     override fun execute(): ForLoop {
         val operation = conditionInput.getOperation()
         val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks){
+        for (block in blocks.blocks) {
             statements.add(block.execute())
         }
-        return ForLoop(initializer.execute(), operation, stateChange.execute(), BlockStatement(statements))
+        return ForLoop(
+            initializer.execute(),
+            operation,
+            stateChange.execute(),
+            BlockStatement(statements)
+        )
     }
 }
 
@@ -221,7 +198,7 @@ class WhileBlock(
     override fun execute(): WhileLoop {
         val operation = conditionInput.getOperation()
         val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks){
+        for (block in blocks.blocks) {
             statements.add(block.execute())
         }
         return WhileLoop(operation, BlockStatement(statements))
@@ -250,7 +227,7 @@ class ReturnBlock(
     private val valueInputField = OperationInputField()
 
     override fun execute(): ReturnStatement {
-        return ReturnStatement(ReturnOperation(valueInputField.getOperation()))
+        return ReturnStatement(valueInputField.getOperation())
     }
 }
 
@@ -258,23 +235,22 @@ class FunctionBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.FUNCTION, color = Color(0xFF45A3FF)) {
     private val nameInput = NameInputField()
-    private val inputParameters = mutableListOf<VariableInitializationBlock>()
+    private val inputParameters = StringInputField()
     private val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     override fun execute(): FunctionDeclarationStatement {
         val name = nameInput.getName()
         val statements = mutableListOf<IStatement>()
-        val parameters = mutableListOf<DeclarationStatement>()
-        for (block in blocks.blocks){
+        val parameters = mutableListOf<String>()
+        for (block in blocks.blocks) {
             statements.add(block.execute())
         }
-        for (inputParameter in inputParameters){
-            parameters.add(inputParameter.execute())
+        for (inputParameter in inputParameters.value!!.split(",")) {
+            if (inputParameter.isEmpty()){
+                break
+            }
+            parameters.add(inputParameter.trim())
         }
         return FunctionDeclarationStatement(name, parameters, BlockStatement(statements))
-    }
-
-    fun addParameter(initBlock: VariableInitializationBlock) {
-        inputParameters.add(initBlock)
     }
 }

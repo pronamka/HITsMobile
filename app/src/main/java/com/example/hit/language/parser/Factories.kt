@@ -28,6 +28,13 @@ class ValueFactory(
                                 "but got ${arraySize::class.java.simpleName}"
                     )
                 }
+                if (token.value == null){
+                    var arrayValue = mutableListOf<Value<*>>()
+                    for (i in 0..arraySize.value){
+                        arrayValue.add(IntValue(0))
+                    }
+                    return ArrayValue(arraySize.value, arrayValue)
+                }
                 var arrayValue = token.value.evaluate()
                 if (arrayValue is ArrayValue) {
                     arrayValue = arrayValue.toCollectionValue()
