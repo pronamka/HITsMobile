@@ -28,28 +28,15 @@ class ValueFactory(
                                 "but got ${arraySize::class.java.simpleName}"
                     )
                 }
-
-                val desiredClass = VariableType.classMap[token.elementType]!!
-                if (token.value == null) {
-                    return ArrayValue(arraySize.value, desiredClass)
-                }
                 var arrayValue = token.value.evaluate()
-                if (arrayValue is ArrayValue<*>) {
+                if (arrayValue is ArrayValue) {
                     arrayValue = arrayValue.toCollectionValue()
                 }
                 if (arrayValue !is CollectionValue) {
                     throw IllegalArgumentException("Array can only be initialized with an array expression.")
                 }
                 val elements: MutableList<Value<*>> = arrayValue.toList().toMutableList()
-                for (element in elements) {
-                    if (!desiredClass.isInstance(element)) {
-                        throw ArrayInitializationException(
-                            "Failed to initialize array: Array element type was ${desiredClass.java.simpleName}," +
-                                    "but the element $element has different type."
-                        )
-                    }
-                }
-                return ArrayValue(arraySize.value, desiredClass, elements)
+                return ArrayValue(arraySize.value, elements)
             }
 
             else -> throw NotImplementedError("Token of type ${token.tokenType} cannot be parsed into a value.")

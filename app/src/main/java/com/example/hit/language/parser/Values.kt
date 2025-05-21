@@ -16,40 +16,6 @@ abstract class Value<T>(
 
 class NullValue : Value<Any>(0)
 
-class Variable(
-    val type: VariableType,
-    value: IOperation? = null,
-) : Value<IOperation?>(value) {
-    fun toValue(): Value<*> {
-        if (type is VariableType.ARRAY) {
-            return ValueOperationFactory(
-                ArrayToken(
-                    type.size,
-                    type.elementType,
-                    value
-                )
-            ).create().evaluate()
-        }
-        if (value == null) {
-            throw InvalidOperationException("Cannot initialize a variable with an empty value.")
-        }
-        val variableValue: Value<*> = value.evaluate()
-        val desiredType = VariableType.classMap[type]!!
-        if (desiredType.isInstance(variableValue)) {
-            return variableValue
-        }
-        throw UnexpectedTypeException(
-            "Cannot assign a value of type " +
-                    "${variableValue::class.java.simpleName} to a " +
-                    "variable of type ${type::class.java.simpleName}"
-        )
-    }
-
-    override fun toString(): String {
-        return "Variable type $type and value $value"
-    }
-}
-
 abstract class SupportsComparison<T : Comparable<T>>(
     value: T
 ) : Value<T>(value) {
@@ -229,42 +195,12 @@ class CollectionValue(
     }
 }
 
-class ArrayValue<T : Value<*>>(
+class ArrayValue(
     val size: Int,
-    val elementType: KClass<out T>,
-    initialValue: MutableList<T>? = null
-) : Value<Array<T>>(createEmptyArray(size, elementType)) {
+    value: MutableList<Value<*>>
+) : Value<MutableList<Value<*>>>(value) {
 
-    companion object {
-        private fun <T : Value<*>> createEmptyArray(
-            size: Int,
-            elementType: KClass<out T>
-        ): Array<T> {
-            @Suppress("UNCHECKED_CAST")
-            return java.lang.reflect.Array.newInstance(elementType.java, size) as Array<T>
-        }
-    }
-
-    init {
-        if (initialValue != null) {
-            for (i in 0..size - 1) {
-                value[i] = initialValue[i]
-            }
-        }
-    }
-
-    fun set(index: Int, element: Value<*>) {
-        if (!elementType.isInstance(element)) {
-            throw UnexpectedTypeException(
-                "Expected type was ${elementType.java.simpleName}, " +
-                        "but got an element $element"
-            )
-        }
-        @Suppress("UNCHECKED_CAST")
-        value[index] = element as T
-    }
-
-    fun get(index: Int): T {
+    fun checkIndexInBounds(index: Int){
         if (index < 0 || index >= size) {
             throw IndexOutOfBoundsException(
                 "Array index out of " +
@@ -272,16 +208,21 @@ class ArrayValue<T : Value<*>>(
                         "the element index was $index"
             )
         }
+    }
+
+    fun set(index: Int, element: Value<*>) {
+        checkIndexInBounds(index)
+        value[index] = element
+    }
+
+    fun get(index: Int): Value<*> {
+        checkIndexInBounds(index)
         return value[index]
     }
 
     override fun toString(): String {
         val stringRepresentation: StringBuilder = StringBuilder()
         for (element in value) {
-            if (element == null) {
-                stringRepresentation.append("null").append(", ")
-                continue
-            }
             stringRepresentation.append(element.toString()).append(", ")
         }
         return "Array Value: Size $size, Elements: [${
@@ -295,14 +236,14 @@ class ArrayValue<T : Value<*>>(
 }
 
 abstract class CallableValue<T>(
-    val parametersDeclarations: List<DeclarationStatement> = listOf(),
+    val parametersDeclarations: List<String> = listOf(),
     value: T
 ) : Value<T>(value) {
     abstract fun call(parametersValues: List<IOperation> = listOf()): Value<*>
 }
 
 class FunctionValue(
-    parametersDeclarations: List<DeclarationStatement>,
+    parametersDeclarations: List<String>,
     value: BlockStatement
 ) : CallableValue<BlockStatement>(parametersDeclarations, value) {
     override fun call(parametersValues: List<IOperation>): Value<*> {
@@ -313,8 +254,10 @@ class FunctionValue(
             )
         }
         for (i in 0..parametersDeclarations.size - 1) {
-            parametersDeclarations[i].variableValue = parametersValues[i]
-            value.addStatement(i, parametersDeclarations[i])
+            value.addStatement(
+                i,
+                VariableAssignmentStatement(parametersDeclarations[i], parametersValues[i])
+            )
         }
         try {
             value.evaluate()
