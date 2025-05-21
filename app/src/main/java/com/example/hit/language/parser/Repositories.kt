@@ -3,6 +3,7 @@ package com.example.hit.language.parser
 import com.example.hit.language.getOperation
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.CreateArrayOperation
+import com.example.hit.language.parser.operations.GetLengthOperation
 import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.ValueOperation
 import com.example.hit.language.parser.operations.VariableOperation
@@ -59,6 +60,17 @@ class VariablesRepository : IRepository {
                 mutableListOf(
                     ReturnStatement(
                         CreateArrayOperation(getOperation("size"))
+                    )
+                ),
+                isFunctionBody = true
+            )
+        )
+        elements["len"] = FunctionValue(
+            listOf("arg"),
+            BlockStatement(
+                mutableListOf(
+                    ReturnStatement(
+                        GetLengthOperation(getOperation("arg"))
                     )
                 ),
                 isFunctionBody = true

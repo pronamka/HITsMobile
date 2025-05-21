@@ -6,6 +6,7 @@ import com.example.hit.language.parser.AssignmentStatement
 import com.example.hit.language.parser.BlockStatement
 import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.ForLoop
+import com.example.hit.language.parser.FunctionCallStatement
 import com.example.hit.language.parser.FunctionDeclarationStatement
 import com.example.hit.language.parser.IStatement
 import com.example.hit.language.parser.IfElseStatement
@@ -26,10 +27,13 @@ class Main {
             FunctionDeclarationStatement(
                 "bubbleSort",
                 listOf(
-                    "array_size", "arr"
+                    "arr"
                 ),
                 BlockStatement(
                     mutableListOf(
+                        VariableAssignmentStatement(
+                            "array_size", getOperation("len(arr)")
+                        ),
                         ForLoop(
                             VariableAssignmentStatement(
                                 "i", getOperation("0")
@@ -109,16 +113,14 @@ class Main {
                     )
                 )
             ),
-            VariableAssignmentStatement(
-                "sorted_array",
-                getOperation("bubbleSort(size, unsorted_array)")
+
+            FunctionCallStatement(
+                "bubbleSort",
+                listOf(getOperation("unsorted_array"))
             ),
             PrintStatement(
                 getOperation("unsorted_array")
             ),
-            PrintStatement(
-                getOperation("sorted_array")
-            )
         )
         for (statement in program) {
             println(statement)

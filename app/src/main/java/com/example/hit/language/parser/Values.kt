@@ -6,6 +6,7 @@ import com.example.hit.language.parser.exceptions.InvalidParametersAmountExcepti
 import com.example.hit.language.parser.exceptions.ReturnException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
+import com.example.hit.language.parser.operations.ValueOperation
 import kotlin.reflect.KClass
 
 interface IValue {}
@@ -254,9 +255,10 @@ class FunctionValue(
             )
         }
         for (i in 0..parametersDeclarations.size - 1) {
+            val parameterValue = ValueOperation(parametersValues[i].evaluate())
             value.addStatement(
                 i,
-                VariableAssignmentStatement(parametersDeclarations[i], parametersValues[i])
+                VariableAssignmentStatement(parametersDeclarations[i], parameterValue)
             )
         }
         try {

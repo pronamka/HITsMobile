@@ -4,6 +4,7 @@ import com.example.hit.language.parser.exceptions.ContinueIterationException
 import com.example.hit.language.parser.exceptions.ReturnException
 import com.example.hit.language.parser.exceptions.StopIterationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
+import com.example.hit.language.parser.operations.FunctionCallOperation
 import com.example.hit.language.parser.operations.IOperation
 
 interface IStatement {
@@ -190,5 +191,14 @@ class BreakStatement : IStatement {
 class ContinueStatement : IStatement {
     override fun evaluate() {
         throw ContinueIterationException()
+    }
+}
+
+class FunctionCallStatement(
+    val functionName: String,
+    val parametersValues: List<IOperation>
+): IStatement{
+    override fun evaluate() {
+        FunctionCallOperation(functionName, parametersValues).evaluate()
     }
 }

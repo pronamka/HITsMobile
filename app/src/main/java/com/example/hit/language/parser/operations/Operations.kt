@@ -6,6 +6,7 @@ import com.example.hit.language.parser.BoolValue
 import com.example.hit.language.parser.CallableValue
 import com.example.hit.language.parser.IntValue
 import com.example.hit.language.parser.Scopes
+import com.example.hit.language.parser.StringValue
 import com.example.hit.language.parser.SupportsArithmetic
 import com.example.hit.language.parser.SupportsComparison
 import com.example.hit.language.parser.TokenType
@@ -210,8 +211,23 @@ class FunctionCallOperation(
 
 class CreateArrayOperation(
     val arraySize: IOperation
-): IOperation{
+) : IOperation {
     override fun evaluate(): Value<*> {
         return ValueOperationFactory(ArrayToken(arraySize)).create().evaluate()
+    }
+}
+
+class GetLengthOperation(
+    val obj: IOperation
+) : IOperation {
+    override fun evaluate(): Value<*> {
+        val value = obj.evaluate()
+        return when (value) {
+            is ArrayValue -> IntValue(value.size)
+            is StringValue -> IntValue(value.value.length)
+            else -> throw UnexpectedTypeException(
+                "Cannot get length of variable with type ${value::class.java.simpleName}."
+            )
+        }
     }
 }
