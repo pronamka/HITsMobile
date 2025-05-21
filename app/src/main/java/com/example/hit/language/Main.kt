@@ -95,6 +95,20 @@ class Main {
                 "unsorted_array",
                 getOperation("array(size)")
             ),
+            ForLoop(
+                VariableAssignmentStatement("i", getOperation("0")),
+                getOperation("i<size"),
+                VariableAssignmentStatement("i", getOperation("i+1")),
+                BlockStatement(
+                    mutableListOf(
+                        ArrayElementAssignmentStatement(
+                            "unsorted_array",
+                            getOperation("size-i"),
+                            getOperation("i")
+                        )
+                    )
+                )
+            ),
             VariableAssignmentStatement(
                 "sorted_array",
                 getOperation("bubbleSort(size, unsorted_array)")

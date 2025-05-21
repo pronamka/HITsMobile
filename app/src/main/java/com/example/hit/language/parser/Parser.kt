@@ -45,8 +45,8 @@ class Parser(
                 values.add(ValueFactory(getCurrentToken()).create())
                 move()
             }
-            val collectionValue = CollectionValue(values)
-            return ValueOperation(collectionValue)
+            val arrayValue = ArrayValue(values.size, values)
+            return ValueOperation(arrayValue)
         }
         if (checkCurrentTokenType(TokenType.LEFT_PARENTHESIS)) {
             val result = atBottomLevel()

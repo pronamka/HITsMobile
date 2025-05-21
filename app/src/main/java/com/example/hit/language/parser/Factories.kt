@@ -30,7 +30,7 @@ class ValueFactory(
                 }
                 if (token.value == null){
                     var arrayValue = mutableListOf<Value<*>>()
-                    for (i in 0..arraySize.value){
+                    for (i in 0..arraySize.value-1){
                         arrayValue.add(IntValue(0))
                     }
                     return ArrayValue(arraySize.value, arrayValue)

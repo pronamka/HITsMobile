@@ -1,5 +1,9 @@
 package com.example.hit.language.parser
 
+import com.example.hit.language.getOperation
+import com.example.hit.language.parser.exceptions.UnexpectedTypeException
+import com.example.hit.language.parser.operations.CreateArrayOperation
+import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.ValueOperation
 import com.example.hit.language.parser.operations.VariableOperation
 
@@ -20,18 +24,44 @@ class VariablesRepository : IRepository {
         elements["PI"] = DoubleValue(Math.PI)
         elements["E"] = DoubleValue(Math.E)
         elements["GOLDEN_RATIO"] = DoubleValue(1.618)
+        elements["max"] = FunctionValue(
+            listOf("a", "b"),
+            BlockStatement(
+                mutableListOf(
+                    IfElseStatement(
+                        listOf(
+                            Pair(
+                                getOperation("a>=b"),
+                                BlockStatement(
+                                    mutableListOf(
+                                        ReturnStatement(
+                                            getOperation("a")
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        BlockStatement(
+                            mutableListOf(
+                                ReturnStatement(
+                                    getOperation("b")
+                                )
+                            )
+                        )
+                    )
+                ),
+                isFunctionBody = true
+            )
+        )
         elements["array"] = FunctionValue(
             listOf("size"),
             BlockStatement(
                 mutableListOf(
                     ReturnStatement(
-                        ValueOperationFactory(
-                            ArrayToken(
-                                VariableOperation("size"),
-                            )
-                        ).create()
+                        CreateArrayOperation(getOperation("size"))
                     )
-                )
+                ),
+                isFunctionBody = true
             )
         )
     }

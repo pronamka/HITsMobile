@@ -1,5 +1,6 @@
 package com.example.hit.language.parser.operations
 
+import com.example.hit.language.parser.ArrayToken
 import com.example.hit.language.parser.ArrayValue
 import com.example.hit.language.parser.BoolValue
 import com.example.hit.language.parser.CallableValue
@@ -9,6 +10,7 @@ import com.example.hit.language.parser.SupportsArithmetic
 import com.example.hit.language.parser.SupportsComparison
 import com.example.hit.language.parser.TokenType
 import com.example.hit.language.parser.Value
+import com.example.hit.language.parser.ValueOperationFactory
 import com.example.hit.language.parser.exceptions.IncompatibleTypesException
 import com.example.hit.language.parser.exceptions.InvalidOperationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
@@ -203,5 +205,13 @@ class FunctionCallOperation(
             )
         }
         return function.call(parameters)
+    }
+}
+
+class CreateArrayOperation(
+    val arraySize: IOperation
+): IOperation{
+    override fun evaluate(): Value<*> {
+        return ValueOperationFactory(ArrayToken(arraySize)).create().evaluate()
     }
 }
