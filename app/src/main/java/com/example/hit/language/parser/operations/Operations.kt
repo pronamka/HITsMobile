@@ -113,7 +113,7 @@ class ArrayElementOperation(
     override fun evaluate(): Value<*> {
         val array = VariableOperation(variableName).evaluate()
         val index = indexValue.evaluate()
-        if (array !is ArrayValue<*>) {
+        if (array !is ArrayValue) {
             throw InvalidOperationException("Cannot use get operator: $variableName is not an array.")
         }
         if (index !is IntValue) {

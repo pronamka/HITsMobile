@@ -10,39 +10,9 @@ interface IStatement {
     fun evaluate()
 }
 
-class DeclarationStatement(
-    val variableType: VariableType,
-    val variableName: String,
-    var variableValue: IOperation? = null
-) : IStatement {
-    override fun evaluate() {
-        if (Scopes.variableExists(variableName)) {
-            throw IllegalStateException("Variable $variableName has already been declared.")
-        }
-        val variable = Variable(variableType, variableValue)
-        val value: Value<*>
-        if (variableValue != null || variableType is VariableType.ARRAY) {
-            value = variable.toValue()
-        } else {
-            value = variable
-        }
-        Scopes.addVariable(variableName, value)
-    }
-
-    override fun toString(): String {
-        var s =
-            "Declaration Statement: Declaring variable of " +
-                    "type $variableType with name $variableName"
-        if (variableValue != null) {
-            s += " and value $variableValue"
-        }
-        return s
-    }
-}
-
 class FunctionDeclarationStatement(
     val name: String,
-    val parameters: List<DeclarationStatement> = listOf(),
+    val parameters: List<String> = listOf(),
     val body: BlockStatement
 ): IStatement{
     override fun evaluate() {
@@ -71,24 +41,7 @@ class VariableAssignmentStatement(
 ) : AssignmentStatement(variableName, variableValue) {
     override fun evaluate() {
         checkIfVariableDeclared()
-        val variable = Scopes.getVariable(variableName)
-
-        val value: Value<*>
-        if (variable is Variable) {
-            value = Variable(variable.type, variableValue).toValue()
-        } else {
-            val newValue = variableValue.evaluate()
-            if (newValue::class != variable::class &&
-                !(newValue is IntValue && variable is DoubleValue)
-            ) {
-                throw IllegalArgumentException(
-                    "Cannot assign a value of type ${newValue::class.simpleName} " +
-                            "to a variable of class ${variable::class.simpleName}"
-                )
-            }
-            value = newValue
-        }
-        Scopes.addVariable(variableName, value)
+        Scopes.addVariable(variableName, variableValue.evaluate())
     }
 
     override fun toString(): String {
@@ -104,7 +57,7 @@ class ArrayElementAssignmentStatement(
     override fun evaluate() {
         checkIfVariableDeclared()
         val variable = Scopes.getVariable(variableName)
-        if (variable !is ArrayValue<*>) {
+        if (variable !is ArrayValue) {
             throw RuntimeException("$variable is not an array.")
         }
         val index = indexValue.evaluate()
