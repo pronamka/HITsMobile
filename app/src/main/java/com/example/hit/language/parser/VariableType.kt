@@ -19,7 +19,7 @@ sealed class VariableType{
 
     class ARRAY(
         val elementType: VariableType,
-        val size: IOperation
+        val size: IOperation? = null
     ): VariableType()
 
     override fun toString(): String {
