@@ -13,7 +13,11 @@ interface IValue {}
 
 abstract class Value<T>(
     val value: T
-)
+) {
+    open fun asString(): String {
+        return value.toString()
+    }
+}
 
 class NullValue : Value<Any>(0)
 
@@ -201,7 +205,7 @@ class ArrayValue(
     value: MutableList<Value<*>>
 ) : Value<MutableList<Value<*>>>(value) {
 
-    fun checkIndexInBounds(index: Int){
+    fun checkIndexInBounds(index: Int) {
         if (index < 0 || index >= size) {
             throw IndexOutOfBoundsException(
                 "Array index out of " +
@@ -222,14 +226,19 @@ class ArrayValue(
     }
 
     override fun toString(): String {
+        return "Array Value: Size $size, Elements: ${asString()}"
+    }
+
+    override fun asString(): String {
         val stringRepresentation: StringBuilder = StringBuilder()
         for (element in value) {
             stringRepresentation.append(element.toString()).append(", ")
         }
-        return "Array Value: Size $size, Elements: [${
+        return "[${
             stringRepresentation.toString().trimEnd().trimEnd(',')
         }]"
     }
+
 
     fun toCollectionValue(): CollectionValue {
         return CollectionValue(value.toList())

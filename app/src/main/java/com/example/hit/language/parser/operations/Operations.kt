@@ -231,3 +231,12 @@ class GetLengthOperation(
         }
     }
 }
+
+class ToStringOperation(
+    val obj: IOperation
+): IOperation{
+    override fun evaluate(): Value<*> {
+        val value = obj.evaluate()
+        return StringValue(value.asString())
+    }
+}

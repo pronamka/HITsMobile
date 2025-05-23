@@ -5,6 +5,7 @@ import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.CreateArrayOperation
 import com.example.hit.language.parser.operations.GetLengthOperation
 import com.example.hit.language.parser.operations.IOperation
+import com.example.hit.language.parser.operations.ToStringOperation
 import com.example.hit.language.parser.operations.ValueOperation
 import com.example.hit.language.parser.operations.VariableOperation
 
@@ -72,6 +73,15 @@ class VariablesRepository : IRepository {
                     ReturnStatement(
                         GetLengthOperation(getOperation("arg"))
                     )
+                ),
+                isFunctionBody = true
+            )
+        )
+        elements["toString"] = FunctionValue(
+            listOf("arg"),
+            BlockStatement(
+                mutableListOf(
+                    ReturnStatement(ToStringOperation(getOperation("arg")))
                 ),
                 isFunctionBody = true
             )
