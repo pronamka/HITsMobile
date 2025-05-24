@@ -1,7 +1,6 @@
 package com.example.hit.blocks
 
 import androidx.compose.ui.graphics.Color
-import com.example.hit.BlockType
 import java.util.UUID
 
 object BlockData {
