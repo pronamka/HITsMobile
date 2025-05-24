@@ -30,7 +30,8 @@ fun Drag(
     active: Boolean,
     initID : () -> Unit,
     positionChange: (BlockPosition) -> Unit,
-    allBlockPositions: Map<UUID, BlockPosition>
+    allBlockPositions: Map<UUID, BlockPosition>,
+    blocksOnScreen: List<BasicBlock>
 ){
     var X by remember { mutableStateOf(position.posX) }
     var Y by remember { mutableStateOf(position.posY) }
@@ -47,19 +48,26 @@ fun Drag(
             stiffness = Spring.StiffnessLow
         ),
     )
-    fun check(draggableBlock : UUID, nearBlock: UUID): Boolean{
-        return true
+    fun compatible(draggedBlockId: UUID, possibleConnectedBlockId: UUID): Boolean {
+        val draggedBlock = blocksOnScreen.firstOrNull { it.id == draggedBlockId }
+        val possibleConnectedBlock = blocksOnScreen.firstOrNull { it.id == possibleConnectedBlockId }
+
+        return draggedBlock!!.compatibleBlocks.contains(possibleConnectedBlock!!.type) &&
+                possibleConnectedBlock.connectionCnt < 2
     }
 
+    fun createConnection(firstBlockId: UUID, secondBlockId: UUID) {
+        val firstBlock = blocksOnScreen.firstOrNull { it.id == firstBlockId }
+        val secondBlock = blocksOnScreen.firstOrNull { it.id == secondBlockId }
+        firstBlock!!.connectionCnt++
+        secondBlock!!.connectionCnt++
+    }
 
+    data class Snap(var position: Pair<Float, Float>?, var blockID : UUID?)
 
-
-
-
-
-    fun checkSnapTargets(currentY: Float, currentX: Float): Pair<Float, Float>? {
-        var closestSnap: Pair<Float, Float>? = null
+    fun checkSnapTargets(currentY: Float, currentX: Float): Snap {
         var minDistance = Float.MAX_VALUE
+        val closestSnap = Snap(null, null)
 
         allBlockPositions.forEach { (id, pos) ->
             if (id != block.id) {
@@ -68,17 +76,19 @@ fun Drag(
 
                 val bottomToTopDistance = abs((currentY + blockHeight) - blockTop)
                 if (bottomToTopDistance < 50 && bottomToTopDistance < minDistance && abs(currentX - pos.posX) < 50) {
-                    if (check(block.id, id)) {
+                    if (compatible(block.id, id)) {
                         minDistance = bottomToTopDistance
-                        closestSnap = Pair(pos.posX, blockTop - blockHeight)
+                        closestSnap.position = Pair(pos.posX, blockTop - blockHeight)
+                        closestSnap.blockID = id
                     }
                 }
 
                 val topToBottomDistance = abs(currentY - blockBottom)
                 if (topToBottomDistance < 50 && topToBottomDistance < minDistance && abs(currentX - pos.posX) < 50) {
-                    if (check(block.id, id)) {
+                    if (compatible(block.id, id)) {
                         minDistance = topToBottomDistance
-                        closestSnap = Pair(pos.posX, blockBottom)
+                        closestSnap.position = Pair(pos.posX, blockTop - blockHeight)
+                        closestSnap.blockID = id
                     }
                 }
             }
@@ -101,6 +111,7 @@ fun Drag(
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
+                        block.connectionCnt = 0
                         initID()
                         snapTarget = null
                     },
@@ -119,10 +130,12 @@ fun Drag(
                     },
                     onDragEnd = {
                         val final = checkSnapTargets(Y, X)
-                        if (final != null) {
-                            snapTarget = final
-                            X = final.first
-                            Y = final.second
+
+                        if (final.position != null) {
+                            createConnection(block.id, final.blockID!!)
+                            snapTarget = final.position
+                            X = final.position!!.first
+                            Y = final.position!!.second
                             position.posX = X
                             position.posY = Y
                             positionChange(position.copy(posX = X, posY = Y))
