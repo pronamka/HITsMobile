@@ -7,14 +7,18 @@ import com.example.hit.language.parser.Lexer
 import com.example.hit.language.parser.Parser
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.operations.IOperation
+import androidx.compose.runtime.mutableStateOf
 
-class StringInputField{
-    var value: String? = null
-    fun get(): String{
-        if (value == null){
-            throw NullInputFieldException()
-        }
-        return value as String
+
+class StringInputField(initialValue: String = "") {
+    private var _value = mutableStateOf(initialValue)
+
+    fun set(newValue: String) {
+        _value.value = newValue
+    }
+
+    fun get(): String {
+        return _value.value
     }
 }
 
@@ -43,6 +47,13 @@ class NameInputField{
         )
         return name !in keywords
     }
+    fun setName(newName : String) {
+        inputFiled.set(newName)
+    }
+
+    fun getInputField(): String {
+        return inputFiled.get()
+    }
 
     fun getName(): String {
         val name = inputFiled.get()
@@ -63,6 +74,14 @@ class TypeInputField{
         "Double" to VariableType.DOUBLE
     )
 
+    fun setType(newType : String) {
+        inputFiled.set(newType)
+    }
+
+    fun getInputField(): String {
+        return inputFiled.get()
+    }
+
     fun getType(): VariableType {
         val type = inputFiled.get()
         if (!stringToTypeMap.containsKey(type)) {
@@ -74,6 +93,14 @@ class TypeInputField{
 
 class OperationInputField{
     private val inputFiled: StringInputField = StringInputField()
+
+    fun setOperation(newOperation : String) {
+        inputFiled.set(newOperation)
+    }
+
+    fun getInputField(): String {
+        return inputFiled.get()
+    }
 
     fun getOperation(): IOperation {
         val s = inputFiled.get()
