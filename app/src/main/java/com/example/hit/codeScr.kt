@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -54,9 +55,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.hit.blocks.BasicBlock
+import com.example.hit.blocks.BlockData
 import com.example.hit.language.parser.IStatement
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 var font = FontFamily(Font(R.font.fredoka))
 
@@ -66,21 +70,15 @@ fun CodeScreen(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showConsole by remember { mutableStateOf(false) }
-    val listBlocks = remember { mutableStateListOf<CodeBlock>() }
-    val blockPositions = remember { mutableStateMapOf<Int, BlockPosition>() }
-    var blockId by remember { mutableStateOf<Int?>(null) }
-    var nextBlockId by remember { mutableStateOf(1000) }
+    val listBlocks = remember { mutableStateListOf<BasicBlock>() }
+    var blocksOnScreen = remember { mutableStateMapOf<UUID, BasicBlock>() }
+    val blockPositions = remember { mutableStateMapOf<UUID, BlockPosition>() }
+    var blockId by remember { mutableStateOf<UUID?>(null) }
     val consoleOutput = remember { mutableStateListOf<String>() }
 
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    fun generateUniqueId(): Int {
-        while (blockPositions.containsKey(nextBlockId)) {
-            nextBlockId++
-        }
-        return nextBlockId++
-    }
 
     fun runProgram(){
         val ourBlocks = listOf<BasicBlock>()
@@ -128,7 +126,9 @@ fun CodeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        onClick = { showConsole = !showConsole},
+                        onClick = {
+                            runProgram()
+                            showConsole = !showConsole},
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
                         shape = RoundedCornerShape(28.dp),
                         modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
@@ -362,16 +362,18 @@ fun CodeScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(defaultBlocks) { block ->
+                    var learnBlock : UUID
                     BlockItem(
                         showMenu = true,
                         block = block,
                         onClick = {
-                            val uniqueId = generateUniqueId()
-                            val newBlock = block.copy(id = uniqueId)
+                            val newBlock = block.deepCopy()
+                            blocksOnScreen[newBlock.id] = newBlock
+                            learnBlock = newBlock.id
                             listBlocks.add(newBlock)
 
-                            blockPositions[uniqueId] = BlockPosition(
-                                id = uniqueId,
+                            blockPositions[newBlock.id] = BlockPosition(
+                                id = newBlock.id,
                                 posX = 0f,
                                 posY = listBlocks.size * 60f
                             )
@@ -394,7 +396,7 @@ fun CodeScreen(
 @Composable
 fun BlockItem(
     showMenu : Boolean = false,
-    block: CodeBlock,
+    block: BasicBlock,
     onClick: () -> Unit
 ) {
     var variableName by remember { mutableStateOf("") }
@@ -433,7 +435,7 @@ fun BlockItem(
                     .height(124.dp)
                     .background(
                         color = block.color,
-                        shape = PuzzleShape()
+                        shape = RoundedCornerShape(24.dp)
                     )
                     .clickable(onClick = onClick)
             ) {
@@ -525,44 +527,76 @@ fun BlockItem(
             }
         }
 
-        BlockType.IF, BlockType.ELSE_IF -> {
+        BlockType.IF -> {
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .fillMaxWidth()
-                    .height(124.dp)
+                    .wrapContentHeight()
                     .background(
                         color = block.color,
-                        shape = PuzzleShape()
+                        shape = RoundedCornerShape(24.dp)
                     )
                     .clickable(onClick = onClick)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = block.type.value,
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = font,
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    OutlinedTextField(
-                        value = value,
-                        onValueChange = { value = it },
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .height(56.dp),
-                        enabled = !showMenu,
-                        singleLine = true,
-                        colors = textFieldColors
-                    )
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = block.type.value,
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font,
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        OutlinedTextField(
+                            value = value,
+                            onValueChange = { value = it },
+                            modifier = Modifier
+                                .fillMaxWidth(0.5f)
+                                .height(56.dp),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .background(
+                                color = block.color,
+                                shape = RoundedCornerShape(24.dp)
+                            )
+
+
+                    ){
+
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Button(onClick = {}) {
+                            Text("ELSE IF")
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Button(onClick = { }) {
+                            Text("ELSE")
+                        }
+                    }
                 }
             }
         }
@@ -575,7 +609,7 @@ fun BlockItem(
                     .height(124.dp)
                     .background(
                         color = block.color,
-                        shape = PuzzleShape()
+                        shape = RoundedCornerShape(24.dp)
                     )
                     .clickable(onClick = onClick)
             ) {
@@ -607,8 +641,7 @@ fun BlockItem(
                 }
             }
         }
-        BlockType.BREAK, BlockType.CONTINUE, BlockType.RETURN -> {
-
+        BlockType.BREAK, BlockType.CONTINUE, BlockType.RETURN, BlockType.PRINT, BlockType.BLOCK, BlockType.VARIABLE_ASSIGNMENT, BlockType.ARRAY_ELEMENT_ASSIGNMENT, BlockType.ARRAY_DECLARATION, BlockType.FUNCTION -> {
         }
     }
 }

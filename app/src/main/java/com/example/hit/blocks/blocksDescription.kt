@@ -1,4 +1,4 @@
-package com.example.hit.blocks.description
+package com.example.hit.blocks
 
 import androidx.compose.ui.graphics.Color
 import com.example.hit.BlockPosition
@@ -6,7 +6,6 @@ import com.example.hit.BlockType
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
 import com.example.hit.language.parser.AssignmentStatement
 import com.example.hit.language.parser.BlockStatement
-import com.example.hit.language.parser.BoolValue
 import com.example.hit.language.parser.BreakStatement
 import com.example.hit.language.parser.ContinueStatement
 import com.example.hit.language.parser.DeclarationStatement
@@ -14,20 +13,17 @@ import com.example.hit.language.parser.ForLoop
 import com.example.hit.language.parser.FunctionDeclarationStatement
 import com.example.hit.language.parser.IStatement
 import com.example.hit.language.parser.IfElseStatement
-import com.example.hit.language.parser.Lexer
-import com.example.hit.language.parser.Parser
 import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.ReturnStatement
 import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
-import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.ReturnOperation
 import java.util.UUID
 
 abstract class BasicBlock(
-    val id: UUID,
+    var id: UUID,
     val type: BlockType,
     val color: Color,
     val logicalPosition: Int? = null,
@@ -35,16 +31,17 @@ abstract class BasicBlock(
 ) {
     open var compatibleBlocks: List<BlockType> = BlockType.entries
     abstract fun execute(): IStatement
+    abstract fun deepCopy(): BasicBlock
 }
 
 abstract class DeclarationBlock(
-    type : BlockType,
+    type: BlockType,
     blockId: UUID,
 ) : BasicBlock(blockId, type = type, color = Color(0xFF45A3FF)) {
     private val nameInput = NameInputField()
     private val typeInput = TypeInputField()
 
-    fun getParameters(): Pair<String, VariableType>{
+    fun getParameters(): Pair<String, VariableType> {
         val name = nameInput.getName()
         val type = typeInput.getType()
         return Pair(name, type)
@@ -59,6 +56,10 @@ class VariableInitializationBlock(
         val parameters = getParameters()
         return DeclarationStatement(parameters.second, parameters.first)
     }
+
+    override fun deepCopy(): BasicBlock {
+        return VariableInitializationBlock(UUID.randomUUID())
+    }
 }
 
 class VariableDeclarationBlock(
@@ -71,6 +72,10 @@ class VariableDeclarationBlock(
         val value = valueInput.getOperation()
         val parameters = getParameters()
         return DeclarationStatement(parameters.second, parameters.first, value)
+    }
+
+    override fun deepCopy(): BasicBlock {
+        return VariableDeclarationBlock(UUID.randomUUID())
     }
 }
 
@@ -87,6 +92,10 @@ class ArrayDeclarationBlock(
         val parameters = getParameters()
         return DeclarationStatement(VariableType.ARRAY(parameters.second, size), parameters.first, value)
     }
+
+    override fun deepCopy(): BasicBlock {
+        return ArrayDeclarationBlock(UUID.randomUUID())
+    }
 }
 
 abstract class AssignmentBlock(
@@ -96,8 +105,7 @@ abstract class AssignmentBlock(
     private val nameInput = NameInputField()
     private val valueInput = OperationInputField()
 
-
-    fun getParameters(): Pair<String, IOperation>{
+    fun getParameters(): Pair<String, IOperation> {
         val name = nameInput.getName()
         val operation = valueInput.getOperation()
         return Pair(name, operation)
@@ -110,6 +118,10 @@ class VariableAssignmentBlock(
     override fun execute(): AssignmentStatement {
         val parameters = getParameters()
         return VariableAssignmentStatement(parameters.first, parameters.second)
+    }
+
+    override fun deepCopy(): BasicBlock {
+        return VariableAssignmentBlock(UUID.randomUUID())
     }
 }
 
@@ -124,6 +136,10 @@ class ArrayElementAssignmentBlock(
         val index = indexInput.getOperation()
         return ArrayElementAssignmentStatement(parameters.first, parameters.second, index)
     }
+
+    override fun deepCopy(): BasicBlock {
+        return ArrayElementAssignmentBlock(UUID.randomUUID())
+    }
 }
 
 class PrintBlock(
@@ -134,6 +150,10 @@ class PrintBlock(
     override fun execute(): PrintStatement {
         val operation = valueInput.getOperation()
         return PrintStatement(operation)
+    }
+
+    override fun deepCopy(): BasicBlock {
+        return PrintBlock(UUID.randomUUID())
     }
 }
 
@@ -148,6 +168,10 @@ class BodyBlock(
             statements.add(block.execute())
         }
         return BlockStatement(statements)
+    }
+
+    override fun deepCopy(): BasicBlock {
+        return BodyBlock(UUID.randomUUID())
     }
 }
 
@@ -191,6 +215,10 @@ class IfElseBlock(
 
         return IfElseStatement(blocks, defaultBlock)
     }
+
+    override fun deepCopy(): BasicBlock {
+        return IfElseBlock(UUID.randomUUID())
+    }
 }
 
 class ForBlock(
@@ -209,6 +237,10 @@ class ForBlock(
         }
         return ForLoop(initializer.execute(), operation, stateChange.execute(), BlockStatement(statements))
     }
+
+    override fun deepCopy(): BasicBlock {
+        return ForBlock(UUID.randomUUID())
+    }
 }
 
 
@@ -226,6 +258,10 @@ class WhileBlock(
         }
         return WhileLoop(operation, BlockStatement(statements))
     }
+
+    override fun deepCopy(): BasicBlock {
+        return WhileBlock(UUID.randomUUID())
+    }
 }
 
 class BreakBlock(
@@ -234,6 +270,10 @@ class BreakBlock(
     override fun execute(): BreakStatement {
         return BreakStatement()
     }
+
+    override fun deepCopy(): BasicBlock {
+        return BreakBlock(UUID.randomUUID())
+    }
 }
 
 class ContinueBlock(
@@ -241,6 +281,10 @@ class ContinueBlock(
 ) : BasicBlock(blockId, type = BlockType.CONTINUE, color = Color(0xFF45A3FF)) {
     override fun execute(): ContinueStatement {
         return ContinueStatement()
+    }
+
+    override fun deepCopy(): BasicBlock {
+        return ContinueBlock(UUID.randomUUID())
     }
 }
 
@@ -251,6 +295,10 @@ class ReturnBlock(
 
     override fun execute(): ReturnStatement {
         return ReturnStatement(ReturnOperation(valueInputField.getOperation()))
+    }
+
+    override fun deepCopy(): BasicBlock {
+        return ReturnBlock(UUID.randomUUID())
     }
 }
 
@@ -272,6 +320,10 @@ class FunctionBlock(
             parameters.add(inputParameter.execute())
         }
         return FunctionDeclarationStatement(name, parameters, BlockStatement(statements))
+    }
+
+    override fun deepCopy(): BasicBlock {
+        return FunctionBlock(UUID.randomUUID())
     }
 
     fun addParameter(initBlock: VariableInitializationBlock) {

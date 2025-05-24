@@ -1,13 +1,11 @@
-package com.example.hit.blocks.description
+package com.example.hit.blocks
 
 import com.example.hit.blocks.exeptions.InvalidNameException
 import com.example.hit.blocks.exeptions.InvalidTypeException
 import com.example.hit.blocks.exeptions.NullInputFieldException
 import com.example.hit.language.parser.Lexer
 import com.example.hit.language.parser.Parser
-import com.example.hit.language.parser.Value
 import com.example.hit.language.parser.VariableType
-import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
 
 class StringInputField{

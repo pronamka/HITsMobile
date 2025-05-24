@@ -16,19 +16,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import com.example.hit.blocks.BasicBlock
 import java.nio.file.WatchEvent
+import java.util.UUID
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
 
 @Composable
 fun Drag(
-    block: CodeBlock,
+    block: BasicBlock,
     position: BlockPosition,
     active: Boolean,
     initID : () -> Unit,
     positionChange: (BlockPosition) -> Unit,
-    allBlockPositions: Map<Int, BlockPosition>
+    allBlockPositions: Map<UUID, BlockPosition>
 ){
     var X by remember { mutableStateOf(position.posX) }
     var Y by remember { mutableStateOf(position.posY) }
@@ -45,6 +47,15 @@ fun Drag(
             stiffness = Spring.StiffnessLow
         ),
     )
+    fun check(draggableBlock : UUID, nearBlock: UUID): Boolean{
+        return true
+    }
+
+
+
+
+
+
 
     fun checkSnapTargets(currentY: Float, currentX: Float): Pair<Float, Float>? {
         var closestSnap: Pair<Float, Float>? = null
@@ -57,14 +68,18 @@ fun Drag(
 
                 val bottomToTopDistance = abs((currentY + blockHeight) - blockTop)
                 if (bottomToTopDistance < 50 && bottomToTopDistance < minDistance && abs(currentX - pos.posX) < 50) {
-                    minDistance = bottomToTopDistance
-                    closestSnap = Pair(pos.posX, blockTop - blockHeight)
+                    if (check(block.id, id)) {
+                        minDistance = bottomToTopDistance
+                        closestSnap = Pair(pos.posX, blockTop - blockHeight)
+                    }
                 }
 
                 val topToBottomDistance = abs(currentY - blockBottom)
                 if (topToBottomDistance < 50 && topToBottomDistance < minDistance && abs(currentX - pos.posX) < 50) {
-                    minDistance = topToBottomDistance
-                    closestSnap = Pair(pos.posX, blockBottom)
+                    if (check(block.id, id)) {
+                        minDistance = topToBottomDistance
+                        closestSnap = Pair(pos.posX, blockBottom)
+                    }
                 }
             }
         }
