@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -61,18 +61,28 @@ fun CodeScreen(
     navController: NavHostController,
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    var listBlocks = remember { mutableStateListOf<CodeBlock>() }
-    var blockPositions = remember { mutableStateMapOf<Int, BlockPosition>() }
+    var showConsole by remember { mutableStateOf(false) }
+    val listBlocks = remember { mutableStateListOf<CodeBlock>() }
+    val blockPositions = remember { mutableStateMapOf<Int, BlockPosition>() }
     var blockId by remember { mutableStateOf<Int?>(null) }
+    var nextBlockId by remember { mutableStateOf(1000) }
+    val consoleOutput = remember { mutableStateListOf<String>() }
+
+
+
+
 
 
     val menuOff by animateDpAsState(
         targetValue = if (showMenu) 0.dp else (-300).dp,
-        label = "menuAnimation"
     )
-    val Alpha by animateFloatAsState(
-        targetValue = if (showMenu) 0.5f else 0f,
-        label = "overlayAnimation"
+
+    val сonsoleOff by animateDpAsState(
+        targetValue = if (showConsole) 0.dp else (360).dp,
+    )
+
+    val alpha by animateFloatAsState(
+        targetValue = if (showMenu || showConsole) 0.5f else 0f,
     )
 
     val defaultBlocks = remember { BlockData.defaultBlocks }
@@ -89,7 +99,7 @@ fun CodeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        onClick = {},
+                        onClick = { showConsole = !showConsole},
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
                         shape = RoundedCornerShape(28.dp),
                         modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
@@ -186,10 +196,10 @@ fun CodeScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(listBlocks.size) { index ->
+                    items(listBlocks.size, key = { listBlocks[it].id }) { index ->
                         val block = listBlocks[index]
-                        val position = blockPositions[block.hashCode()] ?: BlockPosition(
-                            id = block.hashCode(),
+                        val position = blockPositions[block.id] ?: BlockPosition(
+                            id = block.id,
                             posX = 0f,
                             posY = 0f
                         )
@@ -204,7 +214,7 @@ fun CodeScreen(
                                 active = blockId == position.id,
                                 initID = { blockId = position.id },
                                 positionChange = { newPosition ->
-                                    blockPositions[block.hashCode()] = newPosition },
+                                    blockPositions[block.id] = newPosition },
                                 allBlockPositions = blockPositions
                             )
                         }
@@ -216,11 +226,92 @@ fun CodeScreen(
             }
         }
 
-        if(showMenu) {
+        if(showConsole) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = Alpha))
+                    .background(Color.Black.copy(alpha = alpha))
+                    .clickable { showConsole = false }
+            )
+        }
+        Box(
+            modifier = Modifier
+                .offset(y = сonsoleOff)
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(360.dp)
+                .navigationBarsPadding()
+                .background(
+                    color = Color(0xFFFFFFFF),
+                    shape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
+                )
+        ){
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Console Output",
+                        color = Color(0xFF7943DE),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = font
+                    )
+
+                    Button(
+                        onClick = { showConsole = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFA6294E),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Close", fontFamily = font)
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .background(
+                            color = Color.LightGray.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(8.dp)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(5) { index ->
+                            Text(
+                                text = "Console output line ${index + 1}",
+                                color = Color.DarkGray,
+                                fontFamily = font,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        if(showMenu && !showConsole) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = alpha))
                     .clickable { showMenu = false }
             )
         }
@@ -246,13 +337,14 @@ fun CodeScreen(
                         showMenu = true,
                         block = block,
                         onClick = {
-                            listBlocks.add(block.copy())
-                            val newBlock = block.copy()
-                            blockPositions[newBlock.hashCode()] = BlockPosition(
-                                id = newBlock.hashCode(),
+                            val newBlock = block.copy(id = nextBlockId)
+                            listBlocks.add(newBlock)
+                            blockPositions[newBlock.id] = BlockPosition(
+                                id = newBlock.id,
                                 posX = 0f,
-                                posY = listBlocks.size * 150f
+                                posY = listBlocks.size * 60f
                             )
+                            nextBlockId++
                         }
                     )
                 }
@@ -331,29 +423,35 @@ fun BlockItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        if(!showMenu) {
-                            OutlinedTextField(
-                                value = variableName,
-                                onValueChange = { variableName = it },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(40.dp),
-                                singleLine = true,
-                                colors = textFieldColors
+                        OutlinedTextField(
+                            value = variableName,
+                            onValueChange = { variableName = it },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
+                            singleLine = true,
+                            enabled = !showMenu,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 18.sp,
+                                fontFamily = font
                             )
-                        }
 
-                        Text(":")
+                        )
+
+
+                        Text(":", fontSize = 28.sp)
 
                         Box(modifier = Modifier.weight(1f)) {
                             ExposedDropdownMenuBox(
                                 expanded = isDataTypeDropdownExpanded,
-                                onExpandedChange = { isDataTypeDropdownExpanded = it }
+                                onExpandedChange = {if(!showMenu) isDataTypeDropdownExpanded = it }
                             ) {
                                 OutlinedTextField(
                                     value = dataType,
                                     onValueChange = { },
                                     readOnly = true,
+                                    enabled = !showMenu,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDataTypeDropdownExpanded) },
                                     modifier = Modifier.menuAnchor()
                                 )
@@ -374,39 +472,48 @@ fun BlockItem(
                             }
                         }
 
-                        Text(" = ")
+                        Text(" = ", fontSize = 28.sp)
 
                         OutlinedTextField(
                             value = value,
                             onValueChange = { value = it },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(40.dp),
+                                .height(56.dp),
                             singleLine = true,
-                            colors = textFieldColors
+                            enabled = !showMenu,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 18.sp,
+                                fontFamily = font
+                            )
                         )
                     }
                 }
 
                 BlockType.IF, BlockType.ELSE_IF, BlockType.WHILE -> {
+                    Spacer(modifier = Modifier.width(4.dp))
                     OutlinedTextField(
                         value = value,
                         onValueChange = { value = it },
                         modifier = Modifier
-                            .width(60.dp)
-                            .height(40.dp),
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        enabled = !showMenu,
                         singleLine = true,
                         colors = textFieldColors
                     )
                 }
 
                 BlockType.FOR -> {
+                    Spacer(modifier = Modifier.width(4.dp))
                     OutlinedTextField(
                         value = value,
                         onValueChange = { value = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(40.dp),
+                            .height(56.dp),
+                        enabled = !showMenu,
                         singleLine = true,
                         colors = textFieldColors
                     )

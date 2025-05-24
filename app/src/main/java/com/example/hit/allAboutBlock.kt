@@ -82,74 +82,83 @@ data class BlockPosition(
 )
 
 data class CodeBlock(
+    val id: Int,
     val type: BlockType,
     val color: Color,
 )
 
 object BlockData {
     val defaultBlocks = listOf(
-
         CodeBlock(
+            id = 1,
             type = BlockType.VARIABLE_INITIALIZATION,
             color = Color(0xFF2196F3)
         ),
-
         CodeBlock(
+            id = 2,
             type = BlockType.IF,
             color = Color(0xFFA5D6A7)
         ),
         CodeBlock(
+            id = 3,
             type = BlockType.ELSE,
             color = Color(0xFF81C784)
         ),
         CodeBlock(
+            id = 4,
             type = BlockType.ELSE_IF,
             color = Color(0xFF66BB6A)
         ),
-
         CodeBlock(
+            id = 5,
             type = BlockType.FOR,
             color = Color(0xFFFFCC80)
         ),
         CodeBlock(
+            id = 6,
             type = BlockType.WHILE,
             color = Color(0xFFFFB74D)
         ),
-
         CodeBlock(
+            id = 7,
             type = BlockType.AND,
             color = Color(0xFFC3A2FF)
         ),
         CodeBlock(
+            id = 8,
             type = BlockType.OR,
             color = Color(0xFFA06BF8)
         ),
         CodeBlock(
+            id = 9,
             type = BlockType.NOT,
             color = Color(0xFF8F52FF)
         ),
-
         CodeBlock(
+            id = 10,
             type = BlockType.RETURN,
             color = Color(0xFFDE30FF)
         ),
-
         CodeBlock(
+            id = 11,
             type = BlockType.PRINT,
-            color = Color(0xFFFF3C00)
+            color = Color(0xFF03A9F4)
         ),
         CodeBlock(
+            id = 12,
             type = BlockType.BREAK,
             color = Color(0xFF2D2F2A)
         ),
         CodeBlock(
+            id = 13,
             type = BlockType.FUNCTION,
             color = Color(0xFF257043)
         ),
         CodeBlock(
+            id = 14,
             type = BlockType.CONTINUE,
             color = Color(0xFFCFFF00)
-        ),
+        )
     )
 }
 

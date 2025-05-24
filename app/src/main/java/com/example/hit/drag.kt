@@ -29,9 +29,7 @@ fun Drag(
 ){
     var X by remember { mutableStateOf(position.posX) }
     var Y by remember { mutableStateOf(position.posY) }
-    
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+
     val blockHeight = 94f
 
     var isNearSnap by remember { mutableStateOf(false) }
@@ -43,7 +41,6 @@ fun Drag(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
         ),
-        label = "snapAnimation"
     )
 
     fun checkSnapTargets(currentY: Float, currentX: Float): Pair<Float, Float>? {
@@ -51,7 +48,7 @@ fun Drag(
         var minDistance = Float.MAX_VALUE
 
         allBlockPositions.forEach { (id, pos) ->
-            if (id != position.id) {
+            if (id != block.id) {
                 val blockBottom = pos.posY + blockHeight
                 val blockTop = pos.posY
 

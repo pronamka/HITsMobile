@@ -1,7 +1,8 @@
-package com.example.hit.blocks
+package com.example.hit.blocks.description
 
 import com.example.hit.blocks.exeptions.InvalidNameException
 import com.example.hit.blocks.exeptions.InvalidTypeException
+import com.example.hit.blocks.exeptions.NullInputFieldException
 import com.example.hit.language.parser.Lexer
 import com.example.hit.language.parser.Parser
 import com.example.hit.language.parser.Value
@@ -13,7 +14,7 @@ class StringInputField{
     var value: String? = null
     fun get(): String{
         if (value == null){
-            throw Exception("")
+            throw NullInputFieldException()
         }
         return value as String
     }
@@ -42,9 +43,7 @@ class NameInputField{
             "return", "super", "this", "throw", "true", "try", "typealias",
             "val", "var", "when", "while"
         )
-        if (name in keywords) return false
-
-        return true
+        return name !in keywords
     }
 
     fun getName(): String {

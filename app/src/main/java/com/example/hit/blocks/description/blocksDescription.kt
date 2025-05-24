@@ -1,4 +1,4 @@
-package com.example.hit.blocks
+package com.example.hit.blocks.description
 
 import androidx.compose.ui.graphics.Color
 import com.example.hit.BlockPosition
