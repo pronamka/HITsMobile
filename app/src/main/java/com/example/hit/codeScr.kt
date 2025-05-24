@@ -57,12 +57,18 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.hit.blocks.BasicBlock
 import com.example.hit.blocks.BlockData
+import com.example.hit.blocks.BlockType
+import com.example.hit.blocks.VariableDeclarationBlock
+import com.example.hit.blocks.VariableInitializationBlock
+import com.example.hit.blocks.container.Container
+import com.example.hit.codeRunner.CodeRunner
 import com.example.hit.language.parser.IStatement
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 
 var font = FontFamily(Font(R.font.fredoka))
+val container = Container()
 
 @Composable
 fun CodeScreen(
@@ -70,34 +76,13 @@ fun CodeScreen(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showConsole by remember { mutableStateOf(false) }
-    val listBlocks = remember { mutableStateListOf<BasicBlock>() }
-    var blocksOnScreen = remember { mutableStateMapOf<UUID, BasicBlock>() }
+    val blocksOnScreen = remember { container.blocks }
     val blockPositions = remember { mutableStateMapOf<UUID, BlockPosition>() }
     var blockId by remember { mutableStateOf<UUID?>(null) }
     val consoleOutput = remember { mutableStateListOf<String>() }
 
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-
-
-    fun runProgram(){
-        val ourBlocks = listOf<BasicBlock>()
-        val statements = mutableListOf<IStatement>()
-
-        consoleOutput.clear()
-        consoleOutput.add("Program execution started...")
-
-        try {
-            for (ourBlock in ourBlocks) {
-                val statement = ourBlock.execute()
-                statements.add(statement)
-                consoleOutput.add("Executed: ${statement.toString()}")
-            }
-            consoleOutput.add("Program execution completed successfully!")
-        } catch (e: Exception) {
-            consoleOutput.add("Error: ${e.message}")
-        }
-    }
 
 
     val menuOff by animateDpAsState(
@@ -127,7 +112,8 @@ fun CodeScreen(
                 ) {
                     Button(
                         onClick = {
-                            runProgram()
+                            val codeRunner = CodeRunner(container.getOrderedBlocks(), consoleOutput)
+                            codeRunner.run()
                             showConsole = !showConsole},
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
                         shape = RoundedCornerShape(28.dp),
@@ -144,7 +130,7 @@ fun CodeScreen(
 
                     Button(
                         onClick = {
-                            listBlocks.clear()
+                            blocksOnScreen.clear()
                             blockPositions.clear() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA6294E)),
                         shape = RoundedCornerShape(28.dp),
@@ -226,8 +212,8 @@ fun CodeScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(listBlocks.size, key = { listBlocks[it].id }) { index ->
-                        val block = listBlocks[index]
+                    items(blocksOnScreen.size, key = { blocksOnScreen[it].id }) { index ->
+                        val block = blocksOnScreen[index]
                         val position = blockPositions[block.id] ?: BlockPosition(
                             id = block.id,
                             posX = 0f,
@@ -244,7 +230,8 @@ fun CodeScreen(
                                 initID = { blockId = position.id },
                                 positionChange = { newPosition ->
                                     blockPositions[block.id] = newPosition },
-                                allBlockPositions = blockPositions
+                                allBlockPositions = blockPositions,
+                                blocksOnScreen = blocksOnScreen
                             )
                         }
                     }
@@ -368,18 +355,17 @@ fun CodeScreen(
                         block = block,
                         onClick = {
                             val newBlock = block.deepCopy()
-                            blocksOnScreen[newBlock.id] = newBlock
                             learnBlock = newBlock.id
-                            listBlocks.add(newBlock)
+                            blocksOnScreen.add(newBlock)
 
                             blockPositions[newBlock.id] = BlockPosition(
                                 id = newBlock.id,
                                 posX = 0f,
-                                posY = listBlocks.size * 60f
+                                posY = blocksOnScreen.size * 60f
                             )
                             coroutineScope.launch {
                                 delay(100)
-                                lazyListState.animateScrollToItem(listBlocks.size - 1)
+                                lazyListState.animateScrollToItem(blocksOnScreen.size - 1)
                             }
                         }
                     )
@@ -399,9 +385,7 @@ fun BlockItem(
     block: BasicBlock,
     onClick: () -> Unit
 ) {
-    var variableName by remember { mutableStateOf("") }
-    var dataType by remember { mutableStateOf("") }
-    var value by remember { mutableStateOf("") }
+
     var isDataTypeDropdownExpanded by remember { mutableStateOf(false) }
 
     val dataTypes = remember {
@@ -426,8 +410,8 @@ fun BlockItem(
         unfocusedContainerColor = Color.White.copy(alpha = 0.9f)
     )
 
-    when (block.type) {
-        BlockType.VARIABLE_INITIALIZATION, BlockType.VARIABLE_DECLARATION -> {
+    when (block) {
+        is VariableDeclarationBlock -> {
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
@@ -447,7 +431,7 @@ fun BlockItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = block.type.value,
+                        text = "",
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Medium,
@@ -459,8 +443,10 @@ fun BlockItem(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         OutlinedTextField(
-                            value = variableName,
-                            onValueChange = { variableName = it },
+                            value = block.nameInput.getInputField(),
+                            onValueChange = {
+                                block.nameInput.setName(it);
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(56.dp),
@@ -481,8 +467,8 @@ fun BlockItem(
                                 onExpandedChange = { if (!showMenu) isDataTypeDropdownExpanded = it }
                             ) {
                                 OutlinedTextField(
-                                    value = dataType,
-                                    onValueChange = { },
+                                    value = block.typeInput.getInputField(),
+                                    onValueChange = {},
                                     readOnly = true,
                                     enabled = !showMenu,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDataTypeDropdownExpanded) },
@@ -496,7 +482,7 @@ fun BlockItem(
                                         DropdownMenuItem(
                                             text = { Text(type) },
                                             onClick = {
-                                                dataType = type
+                                                block.typeInput.setType(type)
                                                 isDataTypeDropdownExpanded = false
                                             }
                                         )
@@ -508,8 +494,9 @@ fun BlockItem(
                         Text(" = ", fontSize = 28.sp)
 
                         OutlinedTextField(
-                            value = value,
-                            onValueChange = { value = it },
+                            value = block.valueInput.getInputField(),
+                            onValueChange = {
+                                block.valueInput.setOperation(it)},
                             modifier = Modifier
                                 .weight(1f)
                                 .height(56.dp),
@@ -523,125 +510,226 @@ fun BlockItem(
                         )
                     }
                 }
-
             }
         }
-
-        BlockType.IF -> {
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .background(
-                        color = block.color,
-                        shape = RoundedCornerShape(24.dp)
-                    )
-                    .clickable(onClick = onClick)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = block.type.value,
-                            color = Color.White,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = font,
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        OutlinedTextField(
-                            value = value,
-                            onValueChange = { value = it },
-                            modifier = Modifier
-                                .fillMaxWidth(0.5f)
-                                .height(56.dp),
-                            enabled = !showMenu,
-                            singleLine = true,
-                            colors = textFieldColors
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .background(
-                                color = block.color,
-                                shape = RoundedCornerShape(24.dp)
-                            )
-
-
-                    ){
-
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Button(onClick = {}) {
-                            Text("ELSE IF")
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Button(onClick = { }) {
-                            Text("ELSE")
-                        }
-                    }
-                }
-            }
-        }
-
-        BlockType.FOR, BlockType.WHILE -> {
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .fillMaxWidth()
-                    .height(124.dp)
-                    .background(
-                        color = block.color,
-                        shape = RoundedCornerShape(24.dp)
-                    )
-                    .clickable(onClick = onClick)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = block.type.value,
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = font,
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    OutlinedTextField(
-                        value = value,
-                        onValueChange = { value = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        enabled = !showMenu,
-                        singleLine = true,
-                        colors = textFieldColors
-                    )
-                }
-            }
-        }
-        BlockType.BREAK, BlockType.CONTINUE, BlockType.RETURN, BlockType.PRINT, BlockType.BLOCK, BlockType.VARIABLE_ASSIGNMENT, BlockType.ARRAY_ELEMENT_ASSIGNMENT, BlockType.ARRAY_DECLARATION, BlockType.FUNCTION -> {
-        }
+        else -> {}
+//        BlockType.VARIABLE_INITIALIZATION, BlockType.VARIABLE_DECLARATION -> {
+//            Box(
+//                modifier = Modifier
+//                    .padding(horizontal = 16.dp, vertical = 16.dp)
+//                    .fillMaxWidth()
+//                    .height(124.dp)
+//                    .background(
+//                        color = block.color,
+//                        shape = RoundedCornerShape(24.dp)
+//                    )
+//                    .clickable(onClick = onClick)
+//            ) {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(horizontal = 16.dp),
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text(
+//                        text = block.type.value,
+//                        color = Color.White,
+//                        fontSize = 26.sp,
+//                        fontWeight = FontWeight.Medium,
+//                        fontFamily = font,
+//                    )
+//                    Row(
+//                        horizontalArrangement = Arrangement.Center,
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        modifier = Modifier.fillMaxWidth()
+//                    ) {
+//                        OutlinedTextField(
+//                            value = variableName,
+//                            onValueChange = {
+//                                variableName = it
+//                            },
+//                            modifier = Modifier
+//                                .weight(1f)
+//                                .height(56.dp),
+//                            singleLine = true,
+//                            enabled = !showMenu,
+//                            colors = textFieldColors,
+//                            textStyle = TextStyle(
+//                                fontSize = 18.sp,
+//                                fontFamily = font
+//                            )
+//
+//                        )
+//                        Text(":", fontSize = 28.sp)
+//
+//                        Box(modifier = Modifier.weight(1f)) {
+//                            ExposedDropdownMenuBox(
+//                                expanded = isDataTypeDropdownExpanded,
+//                                onExpandedChange = { if (!showMenu) isDataTypeDropdownExpanded = it }
+//                            ) {
+//                                OutlinedTextField(
+//                                    value = dataType,
+//                                    onValueChange = { },
+//                                    readOnly = true,
+//                                    enabled = !showMenu,
+//                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDataTypeDropdownExpanded) },
+//                                    modifier = Modifier.menuAnchor()
+//                                )
+//                                ExposedDropdownMenu(
+//                                    expanded = isDataTypeDropdownExpanded,
+//                                    onDismissRequest = { isDataTypeDropdownExpanded = false }
+//                                ) {
+//                                    dataTypes.forEach { type ->
+//                                        DropdownMenuItem(
+//                                            text = { Text(type) },
+//                                            onClick = {
+//                                                dataType = type
+//                                                isDataTypeDropdownExpanded = false
+//                                            }
+//                                        )
+//                                    }
+//                                }
+//                            }
+//                        }
+//
+//                        Text(" = ", fontSize = 28.sp)
+//
+//                        OutlinedTextField(
+//                            value = value,
+//                            onValueChange = { value = it },
+//                            modifier = Modifier
+//                                .weight(1f)
+//                                .height(56.dp),
+//                            singleLine = true,
+//                            enabled = !showMenu,
+//                            colors = textFieldColors,
+//                            textStyle = TextStyle(
+//                                fontSize = 18.sp,
+//                                fontFamily = font
+//                            )
+//                        )
+//                    }
+//                }
+//
+//            }
+//        }
+//
+//        BlockType.IF -> {
+//            Box(
+//                modifier = Modifier
+//                    .padding(horizontal = 16.dp, vertical = 16.dp)
+//                    .fillMaxWidth()
+//                    .wrapContentHeight()
+//                    .background(
+//                        color = block.color,
+//                        shape = RoundedCornerShape(24.dp)
+//                    )
+//                    .clickable(onClick = onClick)
+//            ) {
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(16.dp),
+//                    verticalArrangement = Arrangement.SpaceBetween
+//                ) {
+//
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.SpaceBetween,
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Text(
+//                            text = block.type.value,
+//                            color = Color.White,
+//                            fontSize = 26.sp,
+//                            fontWeight = FontWeight.Medium,
+//                            fontFamily = font,
+//                        )
+//                        Spacer(modifier = Modifier.width(4.dp))
+//                        OutlinedTextField(
+//                            value = value,
+//                            onValueChange = { value = it },
+//                            modifier = Modifier
+//                                .fillMaxWidth(0.5f)
+//                                .height(56.dp),
+//                            enabled = !showMenu,
+//                            singleLine = true,
+//                            colors = textFieldColors
+//                        )
+//                    }
+//
+//                    Box(
+//                        modifier = Modifier
+//                            .padding(8.dp)
+//                            .fillMaxWidth()
+//                            .wrapContentHeight()
+//                            .background(
+//                                color = block.color,
+//                                shape = RoundedCornerShape(24.dp)
+//                            )
+//
+//
+//                    ){
+//
+//                    }
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        Button(onClick = {}) {
+//                            Text("ELSE IF")
+//                        }
+//                        Spacer(modifier = Modifier.width(12.dp))
+//                        Button(onClick = { }) {
+//                            Text("ELSE")
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        BlockType.FOR, BlockType.WHILE -> {
+//            Box(
+//                modifier = Modifier
+//                    .padding(horizontal = 16.dp, vertical = 16.dp)
+//                    .fillMaxWidth()
+//                    .height(124.dp)
+//                    .background(
+//                        color = block.color,
+//                        shape = RoundedCornerShape(24.dp)
+//                    )
+//                    .clickable(onClick = onClick)
+//            ) {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(horizontal = 16.dp),
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text(
+//                        text = block.type.value,
+//                        color = Color.White,
+//                        fontSize = 26.sp,
+//                        fontWeight = FontWeight.Medium,
+//                        fontFamily = font,
+//                    )
+//                    Spacer(modifier = Modifier.width(4.dp))
+//                    OutlinedTextField(
+//                        value = value,
+//                        onValueChange = { value = it },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(56.dp),
+//                        enabled = !showMenu,
+//                        singleLine = true,
+//                        colors = textFieldColors
+//                    )
+//                }
+//            }
+//        }
+//        BlockType.BREAK, BlockType.CONTINUE, BlockType.RETURN, BlockType.PRINT, BlockType.BLOCK, BlockType.VARIABLE_ASSIGNMENT, BlockType.ARRAY_ELEMENT_ASSIGNMENT, BlockType.ARRAY_DECLARATION, BlockType.FUNCTION -> {
+//        }
     }
 }
