@@ -11,22 +11,9 @@ enum class BlockType(val value: String) {
     ARRAY_ELEMENT_ASSIGNMENT("array_elem_as"),
 
     IF("if"),
-    ELSE("else"),
-    ELSE_IF("else if"),
-
 
     FOR("for"),
     WHILE("while"),
-
-    PLUS("+"),
-    MINUS("-"),
-    DIVISION("/"),
-    MULTY("*"),
-    MOD("%"),
-
-    AND("and"),
-    OR("or"),
-    NOT("not"),
 
     RETURN("return"),
 
