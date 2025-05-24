@@ -11,11 +11,14 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import java.nio.file.WatchEvent
 import kotlin.math.abs
 import kotlin.math.roundToInt
-
 
 
 @Composable
@@ -30,7 +33,7 @@ fun Drag(
     var X by remember { mutableStateOf(position.posX) }
     var Y by remember { mutableStateOf(position.posY) }
 
-    val blockHeight = 94f
+    val blockHeight = 124f
 
     var isNearSnap by remember { mutableStateOf(false) }
     var snapTarget by remember { mutableStateOf<Pair<Float, Float>?>(null) }
@@ -67,7 +70,7 @@ fun Drag(
         }
         return closestSnap
     }
-    
+
     Box(
         modifier = Modifier
             .offset { IntOffset(X.roundToInt(), if (snapTarget != null) animatedY.roundToInt() else Y.roundToInt()) }
@@ -82,21 +85,22 @@ fun Drag(
             }
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragStart = { 
+                    onDragStart = {
                         initID()
-                        snapTarget = null 
+                        snapTarget = null
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
                         val newX = (X + dragAmount.x).coerceAtLeast(0f)
                         val newY = Y + dragAmount.y
 
-                        val potentialSnap = checkSnapTargets(newY, newX)
-                        isNearSnap = potentialSnap != null
-                        
                         X = newX
                         Y = newY
+                        position.posX = newX
+                        position.posY = newY
                         positionChange(position.copy(posX = X, posY = Y))
+                        val potentialSnap = checkSnapTargets(newY, newX)
+                        isNearSnap = potentialSnap != null
                     },
                     onDragEnd = {
                         val final = checkSnapTargets(Y, X)
@@ -104,6 +108,8 @@ fun Drag(
                             snapTarget = final
                             X = final.first
                             Y = final.second
+                            position.posX = X
+                            position.posY = Y
                             positionChange(position.copy(posX = X, posY = Y))
                         }
                         isNearSnap = false
