@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
@@ -41,6 +42,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +55,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.hit.language.parser.IStatement
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 var font = FontFamily(Font(R.font.fredoka))
 
@@ -68,7 +72,15 @@ fun CodeScreen(
     var nextBlockId by remember { mutableStateOf(1000) }
     val consoleOutput = remember { mutableStateListOf<String>() }
 
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
+    fun generateUniqueId(): Int {
+        while (blockPositions.containsKey(nextBlockId)) {
+            nextBlockId++
+        }
+        return nextBlockId++
+    }
 
     fun runProgram(){
         val ourBlocks = listOf<BasicBlock>()
@@ -208,6 +220,7 @@ fun CodeScreen(
                 }
 
                 LazyColumn(
+                    state = lazyListState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp),
@@ -223,7 +236,6 @@ fun CodeScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(150.dp)
                         ) {
                             Drag(
                                 block = block,
@@ -237,7 +249,8 @@ fun CodeScreen(
                         }
                     }
                     item {
-                        Spacer(modifier = Modifier.height(100.dp))
+                        // Extra space at the bottom to ensure the last block is fully visible
+                        Spacer(modifier = Modifier.height(150.dp))
                     }
                 }
             }
@@ -260,7 +273,7 @@ fun CodeScreen(
                 .navigationBarsPadding()
                 .background(
                     color = Color(0xFFFFFFFF),
-                    shape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
+                    shape = RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp, )
                 )
         ){
             Column(
@@ -308,9 +321,9 @@ fun CodeScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(5) { index ->
+                        items(consoleOutput.size) { index ->
                             Text(
-                                text = "Console output line ${index + 1}",
+                                text = consoleOutput[index],
                                 color = Color.DarkGray,
                                 fontFamily = font,
                                 fontSize = 16.sp,
@@ -321,7 +334,6 @@ fun CodeScreen(
                 }
             }
         }
-
 
 
         if(showMenu && !showConsole) {
@@ -354,14 +366,19 @@ fun CodeScreen(
                         showMenu = true,
                         block = block,
                         onClick = {
-                            val newBlock = block.copy(id = nextBlockId)
+                            val uniqueId = generateUniqueId()
+                            val newBlock = block.copy(id = uniqueId)
                             listBlocks.add(newBlock)
-                            blockPositions[newBlock.id] = BlockPosition(
-                                id = newBlock.id,
+
+                            blockPositions[uniqueId] = BlockPosition(
+                                id = uniqueId,
                                 posX = 0f,
                                 posY = listBlocks.size * 60f
                             )
-                            nextBlockId++
+                            coroutineScope.launch {
+                                delay(100)
+                                lazyListState.animateScrollToItem(listBlocks.size - 1)
+                            }
                         }
                     )
                 }
@@ -407,34 +424,33 @@ fun BlockItem(
         unfocusedContainerColor = Color.White.copy(alpha = 0.9f)
     )
 
-    Box(
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 16.dp)
-            .fillMaxWidth()
-            .height(124.dp)
-            .background(
-                color = block.color,
-                shape = PuzzleShape()
-            )
-            .clickable(onClick = onClick)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = block.type.value,
-                color = Color.White,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = font,
-            )
-
-            when (block.type) {
-                BlockType.VARIABLE_INITIALIZATION, BlockType.VARIABLE_DECLARATION -> {
+    when (block.type) {
+        BlockType.VARIABLE_INITIALIZATION, BlockType.VARIABLE_DECLARATION -> {
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .fillMaxWidth()
+                    .height(124.dp)
+                    .background(
+                        color = block.color,
+                        shape = PuzzleShape()
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = block.type.value,
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font,
+                    )
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
@@ -455,14 +471,12 @@ fun BlockItem(
                             )
 
                         )
-
-
                         Text(":", fontSize = 28.sp)
 
                         Box(modifier = Modifier.weight(1f)) {
                             ExposedDropdownMenuBox(
                                 expanded = isDataTypeDropdownExpanded,
-                                onExpandedChange = {if(!showMenu) isDataTypeDropdownExpanded = it }
+                                onExpandedChange = { if (!showMenu) isDataTypeDropdownExpanded = it }
                             ) {
                                 OutlinedTextField(
                                     value = dataType,
@@ -508,38 +522,93 @@ fun BlockItem(
                     }
                 }
 
-                BlockType.IF, BlockType.ELSE_IF, BlockType.WHILE -> {
+            }
+        }
+
+        BlockType.IF, BlockType.ELSE_IF -> {
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .fillMaxWidth()
+                    .height(124.dp)
+                    .background(
+                        color = block.color,
+                        shape = PuzzleShape()
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = block.type.value,
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font,
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     OutlinedTextField(
                         value = value,
                         onValueChange = { value = it },
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth(0.5f)
                             .height(56.dp),
                         enabled = !showMenu,
                         singleLine = true,
                         colors = textFieldColors
                     )
-                }
 
-                BlockType.FOR -> {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    OutlinedTextField(
-                        value = value,
-                        onValueChange = { value = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        enabled = !showMenu,
-                        singleLine = true,
-                        colors = textFieldColors
-                    )
-                }
-
-                else -> {
-                    // Для остальных типов блоков показываем только название
                 }
             }
+        }
+
+        BlockType.FOR, BlockType.WHILE -> {
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .fillMaxWidth()
+                    .height(124.dp)
+                    .background(
+                        color = block.color,
+                        shape = PuzzleShape()
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = block.type.value,
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font,
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = { value = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        enabled = !showMenu,
+                        singleLine = true,
+                        colors = textFieldColors
+                    )
+                }
+            }
+        }
+        BlockType.BREAK, BlockType.CONTINUE, BlockType.RETURN -> {
+
         }
     }
 }

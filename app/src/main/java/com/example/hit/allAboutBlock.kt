@@ -121,16 +121,6 @@ object BlockData {
             color = Color(0xFFFFB74D)
         ),
         CodeBlock(
-            id = 7,
-            type = BlockType.AND,
-            color = Color(0xFFC3A2FF)
-        ),
-        CodeBlock(
-            id = 8,
-            type = BlockType.OR,
-            color = Color(0xFFA06BF8)
-        ),
-        CodeBlock(
             id = 9,
             type = BlockType.NOT,
             color = Color(0xFF8F52FF)
