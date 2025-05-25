@@ -118,7 +118,7 @@ fun Drag(
                     onDrag = { change, dragAmount ->
                         change.consume()
                         val newX = (X + dragAmount.x).coerceAtLeast(0f)
-                        val newY = Y + dragAmount.y
+                        val newY = (Y + dragAmount.y).coerceIn(88f, Float.POSITIVE_INFINITY)
 
                         X = newX
                         Y = newY

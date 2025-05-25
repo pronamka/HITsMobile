@@ -38,7 +38,8 @@ abstract class BasicBlock(
 abstract class AssignmentBlock(
     blockId: UUID,
     type: BlockType,
-) : BasicBlock(id = blockId, type = type, color = Color(0xFF45A3FF)) {
+    color: Color = Color(0xFF45A3FF),
+) : BasicBlock(id = blockId, type = type, color = color) {
     val nameInput = NameInputField()
     val valueInput = OperationInputField()
 
@@ -53,7 +54,8 @@ abstract class AssignmentBlock(
 abstract class DeclarationBlock(
     type: BlockType,
     blockId: UUID,
-) : BasicBlock(blockId, type = type, color = Color(0xFF45A3FF)) {
+    color: Color = Color(0xFF45A3FF),
+) : BasicBlock(blockId, type = type, color = color) {
     val nameInput = NameInputField()
     val typeInput = TypeInputField()
 
@@ -102,7 +104,7 @@ class VariableDeclarationBlock(
 
 class ArrayDeclarationBlock(
     blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.ARRAY_DECLARATION) {
+) : DeclarationBlock(blockId = blockId, type = BlockType.ARRAY_DECLARATION, color = Color(0xFF009688)) {
 
     val valueInput = OperationInputField()
     val sizeInput = OperationInputField()
@@ -136,7 +138,7 @@ class VariableAssignmentBlock(
 
 class ArrayElementAssignmentBlock(
     blockId: UUID
-) : AssignmentBlock(blockId = blockId, type = BlockType.ARRAY_ELEMENT_ASSIGNMENT) {
+) : AssignmentBlock(blockId = blockId, type = BlockType.ARRAY_ELEMENT_ASSIGNMENT, color = Color(0xFF009688)) {
 
     val indexInput = OperationInputField()
 
@@ -186,7 +188,7 @@ class BodyBlock(
 
 class IfElseBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.IF, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.IF, color = Color(0xFFBD3FCB)) {
 
     val blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
     private var defaultBlockInput: BodyBlock? = null
@@ -232,7 +234,7 @@ class IfElseBlock(
 
 class ForBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.FOR, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.FOR, color = Color(0xFF7745FF)) {
     val initializer = VariableAssignmentBlock(blockId = UUID.randomUUID())
     val conditionInput = OperationInputField()
     val stateChange = VariableAssignmentBlock(blockId = UUID.randomUUID())
@@ -255,7 +257,7 @@ class ForBlock(
 
 class WhileBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.WHILE, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.WHILE, color = Color(0xFF7745FF)) {
     val conditionInput = OperationInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
@@ -275,7 +277,7 @@ class WhileBlock(
 
 class BreakBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.BREAK, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.BREAK, color = Color(0xFFFF9645)) {
     override fun execute(): BreakStatement {
         return BreakStatement()
     }
@@ -287,7 +289,7 @@ class BreakBlock(
 
 class ContinueBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.CONTINUE, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.CONTINUE, color = Color(0xFFFF9645)) {
     override fun execute(): ContinueStatement {
         return ContinueStatement()
     }
@@ -299,7 +301,7 @@ class ContinueBlock(
 
 class ReturnBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.RETURN, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.RETURN, color = Color(0xFFFF9645)) {
     val valueInputField = OperationInputField()
 
     override fun execute(): ReturnStatement {
