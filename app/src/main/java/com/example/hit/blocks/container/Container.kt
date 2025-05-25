@@ -1,9 +1,10 @@
 package com.example.hit.blocks.container
 
+import androidx.compose.runtime.mutableStateListOf
 import com.example.hit.blocks.BasicBlock
 
 class Container {
-    val blocks = mutableListOf<BasicBlock>()
+    val blocks = mutableStateListOf<BasicBlock>()
 
     fun addBlock(block : BasicBlock) {
         blocks.add(block)
