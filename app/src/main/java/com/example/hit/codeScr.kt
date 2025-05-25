@@ -89,7 +89,7 @@ fun CodeScreen(
         targetValue = if (showMenu) 0.dp else (-300).dp,
     )
 
-    val сonsoleOff by animateDpAsState(
+    val consoleOff by animateDpAsState(
         targetValue = if (showConsole) 0.dp else (360).dp,
     )
 
@@ -114,7 +114,7 @@ fun CodeScreen(
                         onClick = {
                             val codeRunner = CodeRunner(container.getOrderedBlocks(), consoleOutput)
                             codeRunner.run()
-                            showConsole = !showConsole},
+                            showConsole = !showConsole },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
                         shape = RoundedCornerShape(28.dp),
                         modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
@@ -236,7 +236,6 @@ fun CodeScreen(
                         }
                     }
                     item {
-                        // Extra space at the bottom to ensure the last block is fully visible
                         Spacer(modifier = Modifier.height(150.dp))
                     }
                 }
@@ -253,7 +252,7 @@ fun CodeScreen(
         }
         Box(
             modifier = Modifier
-                .offset(y = сonsoleOff)
+                .offset(y = consoleOff)
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(360.dp)
@@ -349,13 +348,11 @@ fun CodeScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(defaultBlocks) { block ->
-                    var learnBlock : UUID
                     BlockItem(
                         showMenu = true,
                         block = block,
                         onClick = {
                             val newBlock = block.deepCopy()
-                            learnBlock = newBlock.id
                             blocksOnScreen.add(newBlock)
 
                             blockPositions[newBlock.id] = BlockPosition(
@@ -468,7 +465,7 @@ fun BlockItem(
                             ) {
                                 OutlinedTextField(
                                     value = block.typeInput.getInputField(),
-                                    onValueChange = {},
+                                    onValueChange = { block.typeInput.setType(it) },
                                     readOnly = true,
                                     enabled = !showMenu,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDataTypeDropdownExpanded) },
@@ -513,6 +510,9 @@ fun BlockItem(
             }
         }
         else -> {}
+    }
+}
+
 //        BlockType.VARIABLE_INITIALIZATION, BlockType.VARIABLE_DECLARATION -> {
 //            Box(
 //                modifier = Modifier
@@ -731,5 +731,3 @@ fun BlockItem(
 //        }
 //        BlockType.BREAK, BlockType.CONTINUE, BlockType.RETURN, BlockType.PRINT, BlockType.BLOCK, BlockType.VARIABLE_ASSIGNMENT, BlockType.ARRAY_ELEMENT_ASSIGNMENT, BlockType.ARRAY_DECLARATION, BlockType.FUNCTION -> {
 //        }
-    }
-}
