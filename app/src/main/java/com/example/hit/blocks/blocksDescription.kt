@@ -59,6 +59,22 @@ abstract class BasicBlock(
     abstract fun deepCopy(): BasicBlock
 }
 
+
+abstract class AssignmentBlock(
+    blockId: UUID,
+    type: BlockType,
+) : BasicBlock(id = blockId, type = type, color = Color(0xFF45A3FF)) {
+    val nameInput = NameInputField()
+    val valueInput = OperationInputField()
+
+    fun getParameters(): Pair<String, IOperation> {
+        val name = nameInput.getName()
+        val operation = valueInput.getOperation()
+        return Pair(name, operation)
+    }
+}
+
+
 abstract class DeclarationBlock(
     type: BlockType,
     blockId: UUID,
@@ -72,6 +88,11 @@ abstract class DeclarationBlock(
         return Pair(name, type)
     }
 }
+
+
+
+
+
 
 class VariableInitializationBlock(
     blockId: UUID,
@@ -123,19 +144,7 @@ class ArrayDeclarationBlock(
     }
 }
 
-abstract class AssignmentBlock(
-    blockId: UUID,
-    type: BlockType,
-) : BasicBlock(id = blockId, type = type, color = Color(0xFF45A3FF)) {
-    val nameInput = NameInputField()
-    val valueInput = OperationInputField()
 
-    fun getParameters(): Pair<String, IOperation> {
-        val name = nameInput.getName()
-        val operation = valueInput.getOperation()
-        return Pair(name, operation)
-    }
-}
 
 class VariableAssignmentBlock(
     blockId: UUID

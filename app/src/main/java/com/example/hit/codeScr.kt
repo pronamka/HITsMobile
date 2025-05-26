@@ -88,7 +88,7 @@ fun CodeScreen(
         targetValue = if (showMenu) 0.dp else (-300).dp,
     )
 
-    val сonsoleOff by animateDpAsState(
+    val consoleOff by animateDpAsState(
         targetValue = if (showConsole) 0.dp else (360).dp,
     )
 
@@ -114,7 +114,7 @@ fun CodeScreen(
                             val container = Container(listOfBlocks)
                             val codeRunner = CodeRunner(container, consoleOutput)
                             codeRunner.run()
-                            showConsole = !showConsole},
+                            showConsole = !showConsole },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
                         shape = RoundedCornerShape(28.dp),
                         modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
@@ -236,7 +236,6 @@ fun CodeScreen(
                         }
                     }
                     item {
-                        // Extra space at the bottom to ensure the last block is fully visible
                         Spacer(modifier = Modifier.height(150.dp))
                     }
                 }
@@ -253,7 +252,7 @@ fun CodeScreen(
         }
         Box(
             modifier = Modifier
-                .offset(y = сonsoleOff)
+                .offset(y = consoleOff)
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(360.dp)
@@ -466,7 +465,7 @@ fun BlockItem(
                             ) {
                                 OutlinedTextField(
                                     value = block.typeInput.getInputField(),
-                                    onValueChange = {},
+                                    onValueChange = { block.typeInput.setType(it) },
                                     readOnly = true,
                                     enabled = !showMenu,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDataTypeDropdownExpanded) },
