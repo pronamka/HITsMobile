@@ -25,11 +25,36 @@ abstract class BasicBlock(
     var id: UUID,
     val type: BlockType,
     val color: Color,
-    val logicalPosition: Int? = null,
-    val position: BlockPosition? = null,
-    var connectionCnt: Int = 0
+    var topConnection: BasicBlock? = null,
+    var bottomConnection: BasicBlock? = null,
 ) {
-    open var compatibleBlocks: List<BlockType> = BlockType.entries
+    fun move() {
+        if (topConnection != null) {
+            topConnection!!.bottomConnection = null
+            topConnection = null
+        }
+        if (bottomConnection != null) {
+            bottomConnection!!.topConnection = null
+            bottomConnection = null
+        }
+    }
+    fun isBottomCompatible(topBlock : BasicBlock) : Boolean{
+        return topBlock.bottomConnection == null
+    }
+
+    fun isTopCompatible(bottomBlock : BasicBlock) : Boolean{
+        return bottomBlock.topConnection == null
+    }
+
+    fun connectTopBlock(topBlock : BasicBlock) {
+        topConnection = topBlock
+        topBlock.bottomConnection = this
+    }
+    fun connectBottomBlock(bottomBlock : BasicBlock) {
+        bottomConnection = bottomBlock
+        bottomBlock.topConnection = this
+    }
+
     abstract fun execute(): IStatement
     abstract fun deepCopy(): BasicBlock
 }
