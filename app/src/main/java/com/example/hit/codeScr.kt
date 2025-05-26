@@ -68,7 +68,6 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 var font = FontFamily(Font(R.font.fredoka))
-val container = Container()
 
 @Composable
 fun CodeScreen(
@@ -76,7 +75,7 @@ fun CodeScreen(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showConsole by remember { mutableStateOf(false) }
-    val blocksOnScreen = remember { container.blocks }
+    val listOfBlocks = remember { mutableStateListOf<BasicBlock>() }
     val blockPositions = remember { mutableStateMapOf<UUID, BlockPosition>() }
     var blockId by remember { mutableStateOf<UUID?>(null) }
     val consoleOutput = remember { mutableStateListOf<String>() }
@@ -112,7 +111,8 @@ fun CodeScreen(
                 ) {
                     Button(
                         onClick = {
-                            val codeRunner = CodeRunner(container.getOrderedBlocks(), consoleOutput)
+                            val container = Container(listOfBlocks)
+                            val codeRunner = CodeRunner(container, consoleOutput)
                             codeRunner.run()
                             showConsole = !showConsole},
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
@@ -130,7 +130,7 @@ fun CodeScreen(
 
                     Button(
                         onClick = {
-                            blocksOnScreen.clear()
+                            listOfBlocks.clear()
                             blockPositions.clear() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA6294E)),
                         shape = RoundedCornerShape(28.dp),
@@ -212,8 +212,8 @@ fun CodeScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(blocksOnScreen.size, key = { blocksOnScreen[it].id }) { index ->
-                        val block = blocksOnScreen[index]
+                    items(listOfBlocks.size, key = { listOfBlocks[it].id }) { index ->
+                        val block = listOfBlocks[index]
                         val position = blockPositions[block.id] ?: BlockPosition(
                             id = block.id,
                             posX = 0f,
@@ -231,7 +231,7 @@ fun CodeScreen(
                                 positionChange = { newPosition ->
                                     blockPositions[block.id] = newPosition },
                                 allBlockPositions = blockPositions,
-                                blocksOnScreen = blocksOnScreen
+                                listOfBlocks = listOfBlocks,
                             )
                         }
                     }
@@ -349,23 +349,21 @@ fun CodeScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(defaultBlocks) { block ->
-                    var learnBlock : UUID
                     BlockItem(
                         showMenu = true,
                         block = block,
                         onClick = {
                             val newBlock = block.deepCopy()
-                            learnBlock = newBlock.id
-                            blocksOnScreen.add(newBlock)
+                            listOfBlocks.add(newBlock)
 
                             blockPositions[newBlock.id] = BlockPosition(
                                 id = newBlock.id,
                                 posX = 0f,
-                                posY = blocksOnScreen.size * 60f
+                                posY = listOfBlocks.size * 60f
                             )
                             coroutineScope.launch {
                                 delay(100)
-                                lazyListState.animateScrollToItem(blocksOnScreen.size - 1)
+                                lazyListState.animateScrollToItem(listOfBlocks.size - 1)
                             }
                         }
                     )

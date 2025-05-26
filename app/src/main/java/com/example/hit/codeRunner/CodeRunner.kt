@@ -1,13 +1,15 @@
 package com.example.hit.codeRunner
 import androidx.compose.runtime.snapshots.Snapshot
 import com.example.hit.blocks.BasicBlock
+import com.example.hit.blocks.container.Container
 import com.example.hit.language.parser.IStatement
 
-class CodeRunner(private val blocks : List<BasicBlock>, private val console: MutableList<String>) {
-    fun run(){
+class CodeRunner(private val container: Container, private val console: MutableList<String>) {
+    fun run() {
         console.clear()
         console.add("Program execution started...")
         try {
+            val blocks = container.getOrderedBlocks()
             val statements = mutableListOf<IStatement>()
             for (block in blocks) {
                 statements.add(block.execute())
