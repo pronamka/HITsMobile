@@ -2,6 +2,7 @@ package com.example.hit.blocks
 
 import androidx.compose.ui.graphics.Color
 import com.example.hit.BlockPosition
+import com.example.hit.blocks.container.Container
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
 import com.example.hit.language.parser.AssignmentStatement
 import com.example.hit.language.parser.BlockStatement
@@ -195,10 +196,15 @@ class BodyBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.BLOCK, color = Color(0xFF45A3FF)) {
     val blocks = mutableListOf<BasicBlock>()
+    fun addBlock(block : BasicBlock) {
+        blocks.add(block)
+    }
 
     override fun execute(): BlockStatement {
+        val container = Container(blocks)
+        val orderedBlocks = container.getOrderedBlocks()
         val statements = mutableListOf<IStatement>()
-        for (block in blocks){
+        for (block in orderedBlocks){
             statements.add(block.execute())
         }
         return BlockStatement(statements)
