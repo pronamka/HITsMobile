@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import com.example.hit.blocks.BasicBlock
+import com.example.hit.blocks.BlockType
 import java.nio.file.WatchEvent
 import java.util.UUID
 import kotlin.math.abs
@@ -31,7 +32,7 @@ fun Drag(
     initID : () -> Unit,
     positionChange: (BlockPosition) -> Unit,
     allBlockPositions: Map<UUID, BlockPosition>,
-    blocksOnScreen: List<BasicBlock>
+    listOfBlocks: List<BasicBlock>,
 ){
     var X by remember { mutableStateOf(position.posX) }
     var Y by remember { mutableStateOf(position.posY) }
@@ -48,26 +49,37 @@ fun Drag(
             stiffness = Spring.StiffnessLow
         ),
     )
-    fun compatible(draggedBlockId: UUID, possibleConnectedBlockId: UUID): Boolean {
-        val draggedBlock = blocksOnScreen.firstOrNull { it.id == draggedBlockId }
-        val possibleConnectedBlock = blocksOnScreen.firstOrNull { it.id == possibleConnectedBlockId }
-
-        return draggedBlock!!.compatibleBlocks.contains(possibleConnectedBlock!!.type) &&
-                possibleConnectedBlock.connectionCnt < 2
+    fun compatible(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop : Boolean): Boolean {
+        val draggedBlock = listOfBlocks.first { it.id == draggedBlockId }
+        val possibleConnectedBlock = listOfBlocks.first{ it.id == possibleConnectedBlockId }
+        return if (isTop) {
+            draggedBlock.isBottomCompatible(possibleConnectedBlock)
+        } else {
+            draggedBlock.isTopCompatible(possibleConnectedBlock)
+        }
     }
 
-    fun createConnection(firstBlockId: UUID, secondBlockId: UUID) {
-        val firstBlock = blocksOnScreen.firstOrNull { it.id == firstBlockId }
-        val secondBlock = blocksOnScreen.firstOrNull { it.id == secondBlockId }
-        firstBlock!!.connectionCnt++
-        secondBlock!!.connectionCnt++
+    fun createConnection(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop : Boolean) {
+        val draggedBlock = listOfBlocks.first { it.id == draggedBlockId }
+        val possibleConnectedBlock = listOfBlocks.first{ it.id == possibleConnectedBlockId }
+
+        if (isTop) {
+            draggedBlock.connectTopBlock(possibleConnectedBlock)
+        } else {
+            draggedBlock.connectBottomBlock(possibleConnectedBlock)
+        }
+
     }
 
-    data class Snap(var position: Pair<Float, Float>?, var blockID : UUID?)
+    data class Snap(
+        var position: Pair<Float, Float>?,
+        var blockID : UUID?,
+        var isTop : Boolean,
+        )
 
     fun checkSnapTargets(currentY: Float, currentX: Float): Snap {
         var minDistance = Float.MAX_VALUE
-        val closestSnap = Snap(null, null)
+        val closestSnap = Snap(null, null, false)
 
         allBlockPositions.forEach { (id, pos) ->
             if (id != block.id) {
@@ -76,19 +88,21 @@ fun Drag(
 
                 val bottomToTopDistance = abs((currentY + blockHeight) - blockTop)
                 if (bottomToTopDistance < 50 && bottomToTopDistance < minDistance && abs(currentX - pos.posX) < 50) {
-                    if (compatible(block.id, id)) {
+                    if (compatible(block.id, id, true)) {
                         minDistance = bottomToTopDistance
                         closestSnap.position = Pair(pos.posX, blockTop - blockHeight)
                         closestSnap.blockID = id
+                        closestSnap.isTop = true
                     }
                 }
 
                 val topToBottomDistance = abs(currentY - blockBottom)
                 if (topToBottomDistance < 50 && topToBottomDistance < minDistance && abs(currentX - pos.posX) < 50) {
-                    if (compatible(block.id, id)) {
+                    if (compatible(block.id, id, false)) {
                         minDistance = topToBottomDistance
                         closestSnap.position = Pair(pos.posX, blockTop - blockHeight)
                         closestSnap.blockID = id
+                        closestSnap.isTop = false
                     }
                 }
             }
@@ -111,7 +125,7 @@ fun Drag(
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
-                        block.connectionCnt = 0
+                        block.move()
                         initID()
                         snapTarget = null
                     },
@@ -126,13 +140,13 @@ fun Drag(
                         position.posY = newY
                         positionChange(position.copy(posX = X, posY = Y))
                         val potentialSnap = checkSnapTargets(newY, newX)
-                        isNearSnap = potentialSnap != null
+                        isNearSnap = potentialSnap.blockID != null
                     },
                     onDragEnd = {
                         val final = checkSnapTargets(Y, X)
 
                         if (final.position != null) {
-                            createConnection(block.id, final.blockID!!)
+                            createConnection(block.id, final.blockID!!, final.isTop)
                             snapTarget = final.position
                             X = final.position!!.first
                             Y = final.position!!.second
