@@ -9,11 +9,20 @@ import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.ValueOperation
 import kotlin.reflect.KClass
 
-interface IValue {}
-
 abstract class Value<T>(
     val value: T
-)
+) {
+    open fun asString(): String {
+        return value.toString()
+    }
+
+    open fun callMethod(methodName: String, parameters: List<IOperation>): Value<*> {
+        throw InvalidOperationException(
+            "Error when calling method $methodName of ${this::class.java.simpleName}:" +
+                    "method does not exist."
+        )
+    }
+}
 
 class NullValue : Value<Any>(0)
 
@@ -209,6 +218,13 @@ class StringValue(value: String) : SupportsArithmetic<String>(value) {
             else -> throw IncompatibleTypesException("comparison", listOf(this, other))
         }
     }
+
+    override fun callMethod(methodName: String, parameters: List<IOperation>): Value<*> {
+        return when (methodName) {
+            "length" -> IntValue(value.length)
+            else -> super.callMethod(methodName, parameters)
+        }
+    }
 }
 
 class BoolValue(value: Boolean) : Value<Boolean>(value) {
@@ -275,7 +291,7 @@ class ArrayValue<T : Value<*>>(
         return value[index]
     }
 
-    override fun toString(): String {
+    private fun getElementsString(): String {
         val stringRepresentation: StringBuilder = StringBuilder()
         for (element in value) {
             if (element == null) {
@@ -284,13 +300,27 @@ class ArrayValue<T : Value<*>>(
             }
             stringRepresentation.append(element.toString()).append(", ")
         }
-        return "Array Value: Size $size, Elements: [${
-            stringRepresentation.toString().trimEnd().trimEnd(',')
-        }]"
+        return "[${stringRepresentation.toString().trimEnd().trimEnd(',')}]"
+    }
+
+    override fun toString(): String {
+
+        return "Array Value: Size $size, Elements: ${getElementsString()}"
+    }
+
+    override fun asString(): String {
+        return getElementsString()
     }
 
     fun toCollectionValue(): CollectionValue {
         return CollectionValue(value.toList())
+    }
+
+    override fun callMethod(methodName: String, parameters: List<IOperation>): Value<*> {
+        return when (methodName) {
+            "size" -> IntValue(value.size)
+            else -> super.callMethod(methodName, parameters)
+        }
     }
 }
 
