@@ -1,6 +1,9 @@
 package com.example.hit.blocks
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.example.hit.BlockPosition
 import com.example.hit.blocks.container.Container
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
@@ -28,6 +31,8 @@ abstract class BasicBlock(
     val color: Color,
     var topConnection: BasicBlock? = null,
     var bottomConnection: BasicBlock? = null,
+    var heightDP: Dp = 80.dp,
+    var connectionCnt: Int = 0
 ) {
     fun move() {
         if (topConnection != null) {
@@ -58,13 +63,18 @@ abstract class BasicBlock(
 
     abstract fun execute(): IStatement
     abstract fun deepCopy(): BasicBlock
+
+    open fun getDynamicHeightPx(density: Density): Float {
+        return with(density) { heightDP.toPx() }
+    }
 }
 
 
 abstract class AssignmentBlock(
     blockId: UUID,
     type: BlockType,
-) : BasicBlock(id = blockId, type = type, color = Color(0xFF45A3FF)) {
+    color: Color = Color(0xFF45A3FF),
+) : BasicBlock(id = blockId, type = type, color = color) {
     val nameInput = NameInputField()
     val valueInput = OperationInputField()
 
@@ -79,7 +89,8 @@ abstract class AssignmentBlock(
 abstract class DeclarationBlock(
     type: BlockType,
     blockId: UUID,
-) : BasicBlock(blockId, type = type, color = Color(0xFF45A3FF)) {
+    color: Color = Color(0xFF45A3FF),
+) : BasicBlock(blockId, type = type, color = color) {
     val nameInput = NameInputField()
     val typeInput = TypeInputField()
 
@@ -128,7 +139,7 @@ class VariableDeclarationBlock(
 
 class ArrayDeclarationBlock(
     blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.ARRAY_DECLARATION) {
+) : DeclarationBlock(blockId = blockId, type = BlockType.ARRAY_DECLARATION, color = Color(0xFF009688)) {
 
     val valueInput = OperationInputField()
     val sizeInput = OperationInputField()
@@ -162,7 +173,7 @@ class VariableAssignmentBlock(
 
 class ArrayElementAssignmentBlock(
     blockId: UUID
-) : AssignmentBlock(blockId = blockId, type = BlockType.ARRAY_ELEMENT_ASSIGNMENT) {
+) : AssignmentBlock(blockId = blockId, type = BlockType.ARRAY_ELEMENT_ASSIGNMENT, color = Color(0xFF009688)) {
 
     val indexInput = OperationInputField()
 
@@ -217,10 +228,20 @@ class BodyBlock(
 
 class IfElseBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.IF, color = Color(0xFF45A3FF)) {
-
+) : BasicBlock(blockId, type = BlockType.IF, color = Color(0xFFBD3FCB)) {
     val blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
     private var defaultBlockInput: BodyBlock? = null
+
+
+    fun getDynamicHeightPx(density: Density,hasElse: Boolean, elseIfCounts: Int): Float {
+        val base = 120.dp
+        val elseIfBlockHeight = 160.dp * elseIfCounts
+        val elseBlockHeight = if (hasElse) 100.dp else 0.dp
+
+        return with(density) {
+            (base + elseIfBlockHeight + elseBlockHeight).toPx()
+        }
+    }
 
     fun addElseIfBlock() {
         val conditionInput = OperationInputField()
@@ -263,7 +284,7 @@ class IfElseBlock(
 
 class ForBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.FOR, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.FOR, color = Color(0xFF7745FF)) {
     val initializer = VariableAssignmentBlock(blockId = UUID.randomUUID())
     val conditionInput = OperationInputField()
     val stateChange = VariableAssignmentBlock(blockId = UUID.randomUUID())
@@ -286,7 +307,7 @@ class ForBlock(
 
 class WhileBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.WHILE, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.WHILE, color = Color(0xFF7745FF)) {
     val conditionInput = OperationInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
@@ -306,7 +327,7 @@ class WhileBlock(
 
 class BreakBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.BREAK, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.BREAK, color = Color(0xFFFF9645)) {
     override fun execute(): BreakStatement {
         return BreakStatement()
     }
@@ -318,7 +339,7 @@ class BreakBlock(
 
 class ContinueBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.CONTINUE, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.CONTINUE, color = Color(0xFFFF9645)) {
     override fun execute(): ContinueStatement {
         return ContinueStatement()
     }
@@ -330,7 +351,7 @@ class ContinueBlock(
 
 class ReturnBlock(
     blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.RETURN, color = Color(0xFF45A3FF)) {
+) : BasicBlock(blockId, type = BlockType.RETURN, color = Color(0xFFFF9645)) {
     val valueInputField = OperationInputField()
 
     override fun execute(): ReturnStatement {

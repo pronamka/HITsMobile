@@ -8,12 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.dp
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import com.example.hit.blocks.BasicBlock
@@ -22,6 +17,8 @@ import java.nio.file.WatchEvent
 import java.util.UUID
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 
 
 @Composable
@@ -33,11 +30,12 @@ fun Drag(
     positionChange: (BlockPosition) -> Unit,
     allBlockPositions: Map<UUID, BlockPosition>,
     listOfBlocks: List<BasicBlock>,
+    topPanelHeight: Float
 ){
     var X by remember { mutableStateOf(position.posX) }
     var Y by remember { mutableStateOf(position.posY) }
 
-    val blockHeight = 124f
+    val blockHeight = with (LocalDensity.current) { block.heightDP.toPx() }
 
     var isNearSnap by remember { mutableStateOf(false) }
     var snapTarget by remember { mutableStateOf<Pair<Float, Float>?>(null) }
@@ -61,15 +59,15 @@ fun Drag(
 
     fun createConnection(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop : Boolean) {
         val draggedBlock = listOfBlocks.first { it.id == draggedBlockId }
-        val possibleConnectedBlock = listOfBlocks.first{ it.id == possibleConnectedBlockId }
+        val possibleConnectedBlock = listOfBlocks.first { it.id == possibleConnectedBlockId }
 
         if (isTop) {
             draggedBlock.connectTopBlock(possibleConnectedBlock)
         } else {
             draggedBlock.connectBottomBlock(possibleConnectedBlock)
         }
-
     }
+
 
     data class Snap(
         var position: Pair<Float, Float>?,
@@ -132,7 +130,7 @@ fun Drag(
                     onDrag = { change, dragAmount ->
                         change.consume()
                         val newX = (X + dragAmount.x).coerceAtLeast(0f)
-                        val newY = Y + dragAmount.y
+                        val newY = (Y + dragAmount.y)
 
                         X = newX
                         Y = newY
