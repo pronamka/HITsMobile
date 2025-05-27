@@ -34,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -69,8 +71,8 @@ fun BlockItem(
     block: BasicBlock,
     onClick: () -> Unit
 ) {
-
     var isDataTypeDropdownExpanded by remember { mutableStateOf(false) }
+
 
     val dataTypes = remember {
         listOf(
@@ -96,11 +98,12 @@ fun BlockItem(
 
     when (block) {
         is VariableDeclarationBlock -> {
+            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
-                    .height(72.dp)
+                    .height(80.dp)
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -116,9 +119,7 @@ fun BlockItem(
                 ) {
                     OutlinedTextField(
                         value = block.nameInput.getInputField(),
-                        onValueChange = {
-                            block.nameInput.setName(it);
-                        },
+                        onValueChange = { block.nameInput.setName(it)},
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp),
@@ -203,14 +204,21 @@ fun BlockItem(
         }
 
         is IfElseBlock -> {
+            val density = LocalDensity.current
+            var curHeight by remember { mutableStateOf(0) }
             var hasElse by remember { mutableStateOf(false) }
             var elseIfCounts by remember { mutableStateOf(listOf<String>()) }
 
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .onGloballyPositioned { coordinates ->
+                        curHeight = coordinates.size.height
+                        block.heightDP = with(density) { curHeight.toDp() }
+                    }
                     .wrapContentWidth()
                     .wrapContentHeight()
+                    .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp)
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -253,7 +261,7 @@ fun BlockItem(
                             .wrapContentWidth()
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                             .wrapContentHeight(unbounded = true)
-                            .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
+                            .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp)
                             .background(
                                 color = Color.White.copy(alpha = 0.2f),
                                 shape = RoundedCornerShape(16.dp)
@@ -326,13 +334,9 @@ fun BlockItem(
 
                     if (hasElse) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(
-                                    width = 1.dp,
-                                    color = Color.White.copy(alpha = 0.3f),
-                                    shape = RoundedCornerShape(20.dp)
-                                ),
+                            modifier = Modifier.fillMaxWidth()
+                                .wrapContentHeight(unbounded = true)
+                                .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
@@ -371,9 +375,7 @@ fun BlockItem(
                                 modifier = Modifier
                                     .width(104.dp)
                                     .height(48.dp),
-                                onClick = {
-                                    elseIfCounts = elseIfCounts + ""
-                                },
+                                onClick = { elseIfCounts = elseIfCounts + "" },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7943DE))
                             ){
                                 Text("ELSE IF", color = Color.White, fontFamily = font, fontSize = 18.sp)
@@ -397,11 +399,12 @@ fun BlockItem(
         }
 
         is VariableInitializationBlock ->{
+            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
-                    .height(72.dp)
+                    .height(80.dp)
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -481,10 +484,12 @@ fun BlockItem(
         }
 
         is VariableAssignmentBlock -> {
+            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
-                    .height(72.dp)
+                    .height(80.dp)
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -542,11 +547,17 @@ fun BlockItem(
             }
         }
         is ForBlock -> {
+            val density = LocalDensity.current
+            var curHeight by remember { mutableStateOf(0) }
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .wrapContentWidth()
                     .wrapContentHeight()
+                    .onGloballyPositioned { coordinates ->
+                        curHeight = coordinates.size.height
+                        block.heightDP = with(density) { curHeight.toDp() }
+                    }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -666,11 +677,17 @@ fun BlockItem(
             }
         }
         is WhileBlock -> {
+            val density = LocalDensity.current
+            var curHeight by remember { mutableStateOf(0) }
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .wrapContentWidth()
                     .wrapContentHeight()
+                    .onGloballyPositioned { coordinates ->
+                        curHeight = coordinates.size.height
+                        block.heightDP = with(density) { curHeight.toDp() }
+                    }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -746,11 +763,12 @@ fun BlockItem(
             }
         }
         is ReturnBlock, is ContinueBlock, is BreakBlock ->{
+            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
-                    .height(72.dp)
+                    .height(80.dp)
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -773,11 +791,12 @@ fun BlockItem(
             }
         }
         is PrintBlock -> {
+            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .wrapContentWidth()
-                    .wrapContentHeight()
+                    .width(252.dp)
+                    .height(80.dp)
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -836,11 +855,12 @@ fun BlockItem(
             }
         }
         is ArrayDeclarationBlock ->{
+            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
-                    .height(72.dp)
+                    .height(80.dp)
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -948,11 +968,12 @@ fun BlockItem(
             }
         }
         is ArrayElementAssignmentBlock -> {
+            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
-                    .height(72.dp)
+                    .height(80.dp)
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)

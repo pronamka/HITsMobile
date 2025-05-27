@@ -51,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -85,6 +86,8 @@ fun CodeScreen(
     val blockPositions = remember { mutableStateMapOf<UUID, BlockPosition>() }
     var blockId by remember { mutableStateOf<UUID?>(null) }
     val consoleOutput = remember { mutableStateListOf<String>() }
+    val density = LocalDensity.current
+    val topPanelHeightPx = with(density) { (52.dp).toPx() }
 
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -222,7 +225,7 @@ fun CodeScreen(
                         val position = blockPositions[block.id] ?: BlockPosition(
                             id = block.id,
                             posX = 0f,
-                            posY = 0f
+                            posY = topPanelHeightPx + 20f
                         )
                         Box(
                             modifier = Modifier
@@ -236,7 +239,8 @@ fun CodeScreen(
                                 positionChange = { newPosition ->
                                     blockPositions[block.id] = newPosition },
                                 allBlockPositions = blockPositions,
-                                blocksOnScreen = blocksOnScreen
+                                blocksOnScreen = blocksOnScreen,
+                                topPanelHeight = topPanelHeightPx
                             )
                         }
                     }
@@ -363,7 +367,7 @@ fun CodeScreen(
                             blockPositions[newBlock.id] = BlockPosition(
                                 id = newBlock.id,
                                 posX = 0f,
-                                posY = blocksOnScreen.size * 60f
+                                posY = topPanelHeightPx + 20f
                             )
                             coroutineScope.launch {
                                 delay(100)

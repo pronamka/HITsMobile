@@ -1,6 +1,9 @@
 package com.example.hit.blocks
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.example.hit.BlockPosition
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
 import com.example.hit.language.parser.AssignmentStatement
@@ -27,11 +30,16 @@ abstract class BasicBlock(
     val color: Color,
     val logicalPosition: Int? = null,
     val position: BlockPosition? = null,
+    var heightDP: Dp = 80.dp,
     var connectionCnt: Int = 0
 ) {
     open var compatibleBlocks: List<BlockType> = BlockType.entries
     abstract fun execute(): IStatement
     abstract fun deepCopy(): BasicBlock
+
+    open fun getDynamicHeightPx(density: Density): Float {
+        return with(density) { heightDP.toPx() }
+    }
 }
 
 
@@ -189,9 +197,19 @@ class BodyBlock(
 class IfElseBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.IF, color = Color(0xFFBD3FCB)) {
-
     val blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
     private var defaultBlockInput: BodyBlock? = null
+
+
+    fun getDynamicHeightPx(density: Density,hasElse: Boolean, elseIfCounts: Int): Float {
+        val base = 120.dp
+        val elseIfBlockHeight = 160.dp * elseIfCounts
+        val elseBlockHeight = if (hasElse) 100.dp else 0.dp
+
+        return with(density) {
+            (base + elseIfBlockHeight + elseBlockHeight).toPx()
+        }
+    }
 
     fun addElseIfBlock() {
         val conditionInput = OperationInputField()
