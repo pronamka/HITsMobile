@@ -6,6 +6,7 @@ import com.example.hit.language.parser.exceptions.InvalidParametersAmountExcepti
 import com.example.hit.language.parser.exceptions.ReturnException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.IOperation
+import com.example.hit.language.parser.operations.ValueOperation
 import kotlin.reflect.KClass
 
 interface IValue {}
@@ -34,8 +35,7 @@ class Variable(
             throw InvalidOperationException("Cannot initialize a variable with an empty value.")
         }
         val variableValue: Value<*> = value.evaluate()
-        val desiredType = VariableType.classMap[type]!!
-        if (desiredType.isInstance(variableValue)) {
+        if (TypesManager.valueTypeCorresponds(type, variableValue)) {
             return variableValue
         }
         throw UnexpectedTypeException(
@@ -296,15 +296,17 @@ class ArrayValue<T : Value<*>>(
 
 abstract class CallableValue<T>(
     val parametersDeclarations: List<DeclarationStatement> = listOf(),
-    value: T
+    value: T,
+    val returnType: VariableType
 ) : Value<T>(value) {
     abstract fun call(parametersValues: List<IOperation> = listOf()): Value<*>
 }
 
 class FunctionValue(
     parametersDeclarations: List<DeclarationStatement>,
-    value: BlockStatement
-) : CallableValue<BlockStatement>(parametersDeclarations, value) {
+    value: BlockStatement,
+    returnType: VariableType
+) : CallableValue<BlockStatement>(parametersDeclarations, value, returnType) {
     override fun call(parametersValues: List<IOperation>): Value<*> {
         if (parametersDeclarations.size != parametersValues.size) {
             throw InvalidParametersAmountException(
@@ -313,13 +315,25 @@ class FunctionValue(
             )
         }
         for (i in 0..parametersDeclarations.size - 1) {
-            parametersDeclarations[i].variableValue = parametersValues[i]
+            val parameterValue = ValueOperation(parametersValues[i].evaluate())
+            parametersDeclarations[i].variableValue = parameterValue
             value.addStatement(i, parametersDeclarations[i])
         }
         try {
             value.evaluate()
+            if (returnType !is VariableType.NULL) {
+                throw UnexpectedTypeException(
+                    "The function returned null, but ${returnType::class.java.simpleName} was expected."
+                )
+            }
             return NullValue()
         } catch (e: ReturnException) {
+            if (!TypesManager.valueTypeCorresponds(returnType, e.returnValue)) {
+                throw UnexpectedTypeException(
+                    "The function returned a value of type ${e.returnValue::class.java.simpleName}," +
+                            "but a value of type $returnType was expected."
+                )
+            }
             return e.returnValue
         }
     }
