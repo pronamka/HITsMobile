@@ -38,6 +38,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hit.blocks.ArrayDeclarationBlock
@@ -69,10 +70,10 @@ data class BlockPosition(
 fun BlockItem(
     showMenu : Boolean = false,
     block: BasicBlock,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onHeightChanged: (Dp) -> Unit,
 ) {
     var isDataTypeDropdownExpanded by remember { mutableStateOf(false) }
-
 
     val dataTypes = remember {
         listOf(
@@ -81,7 +82,6 @@ fun BlockItem(
             "Boolean",
             "Float",
             "Double",
-            "Array"
         )
     }
 
@@ -108,7 +108,7 @@ fun BlockItem(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick)
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Row(
                     modifier = Modifier
@@ -205,7 +205,6 @@ fun BlockItem(
 
         is IfElseBlock -> {
             val density = LocalDensity.current
-            var curHeight by remember { mutableStateOf(0) }
             var hasElse by remember { mutableStateOf(false) }
             var elseIfCounts by remember { mutableStateOf(listOf<String>()) }
 
@@ -213,8 +212,9 @@ fun BlockItem(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .onGloballyPositioned { coordinates ->
-                        curHeight = coordinates.size.height
-                        block.heightDP = with(density) { curHeight.toDp() }
+                        val newHeight = with(density) { coordinates.size.height.toDp() }
+                        block.heightDP = newHeight
+                        onHeightChanged(newHeight)
                     }
                     .wrapContentWidth()
                     .wrapContentHeight()
@@ -223,7 +223,7 @@ fun BlockItem(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick)
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Column(
                     modifier = Modifier
@@ -409,8 +409,7 @@ fun BlockItem(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick),
-                contentAlignment = Alignment.Center
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Row(
                     modifier = Modifier
@@ -494,8 +493,7 @@ fun BlockItem(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick),
-                contentAlignment = Alignment.Center
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -548,21 +546,21 @@ fun BlockItem(
         }
         is ForBlock -> {
             val density = LocalDensity.current
-            var curHeight by remember { mutableStateOf(0) }
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        curHeight = coordinates.size.height
-                        block.heightDP = with(density) { curHeight.toDp() }
+                        val newHeight = with(density) { coordinates.size.height.toDp() }
+                        block.heightDP = newHeight
+                        onHeightChanged(newHeight)
                     }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick)
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Column(
                     modifier = Modifier
@@ -678,21 +676,21 @@ fun BlockItem(
         }
         is WhileBlock -> {
             val density = LocalDensity.current
-            var curHeight by remember { mutableStateOf(0) }
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        curHeight = coordinates.size.height
-                        block.heightDP = with(density) { curHeight.toDp() }
+                        val newHeight = with(density) { coordinates.size.height.toDp() }
+                        block.heightDP = newHeight
+                        onHeightChanged(newHeight)
                     }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick)
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Column(
                     modifier = Modifier
@@ -773,7 +771,7 @@ fun BlockItem(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick)
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
@@ -801,7 +799,7 @@ fun BlockItem(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick)
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Column(
                     modifier = Modifier
@@ -865,7 +863,7 @@ fun BlockItem(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick)
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Row(
                     modifier = Modifier
@@ -978,7 +976,7 @@ fun BlockItem(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
                     )
-                    .clickable(onClick = onClick)
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Row(
                     modifier = Modifier

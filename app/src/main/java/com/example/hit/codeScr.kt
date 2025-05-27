@@ -240,7 +240,9 @@ fun CodeScreen(
                                     blockPositions[block.id] = newPosition },
                                 allBlockPositions = blockPositions,
                                 blocksOnScreen = blocksOnScreen,
-                                topPanelHeight = topPanelHeightPx
+                                topPanelHeight = topPanelHeightPx,
+                                onHeightChanged = {},
+                                del = { blocksOnScreen.remove(block) }
                             )
                         }
                     }
@@ -373,7 +375,8 @@ fun CodeScreen(
                                 delay(100)
                                 lazyListState.animateScrollToItem(blocksOnScreen.size - 1)
                             }
-                        }
+                        },
+                        onHeightChanged = {}
                     )
                 }
             }

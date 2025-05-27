@@ -9,6 +9,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import com.example.hit.blocks.BasicBlock
@@ -16,9 +21,11 @@ import java.util.UUID
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Drag(
     block: BasicBlock,
@@ -28,12 +35,16 @@ fun Drag(
     positionChange: (BlockPosition) -> Unit,
     allBlockPositions: Map<UUID, BlockPosition>,
     blocksOnScreen: List<BasicBlock>,
-    topPanelHeight: Float
+    topPanelHeight: Float,
+    onHeightChanged: (Dp) -> Unit,
+    del: ()-> Unit
 ){
+    val density = LocalDensity.current
     var X by remember { mutableStateOf(position.posX) }
     var Y by remember { mutableStateOf(position.posY) }
 
-    val blockHeight = with (LocalDensity.current) { block.heightDP.toPx() }
+    var blockHeight by remember { mutableStateOf(with(density) { block.heightDP.toPx() }) }
+    var showDelete by remember { mutableStateOf(false) }
 
     var isNearSnap by remember { mutableStateOf(false) }
     var snapTarget by remember { mutableStateOf<Pair<Float, Float>?>(null) }
@@ -63,41 +74,48 @@ fun Drag(
 
     data class Snap(var position: Pair<Float, Float>?, var blockID : UUID?)
 
-    fun checkSnapTargets(currentY: Float, currentX: Float): Snap {
+    fun findSnapTarget(
+        currentBlockId: UUID,
+        currentX: Float,
+        currentY: Float,
+        blockHeight: Float,
+        blockPositions: Map<UUID, BlockPosition>
+    ): Pair<Float, Float>? {
+        val snapThreshold = 50f
         var minDistance = Float.MAX_VALUE
-        val closestSnap = Snap(null, null)
+        var snapPosition: Pair<Float, Float>? = null
 
-        allBlockPositions.forEach { (id, pos) ->
-            if (id != block.id) {
-                val blockBottom = pos.posY + blockHeight
-                val blockTop = pos.posY
+        for ((id, pos) in blockPositions) {
+            if (id == currentBlockId) continue
 
-                val bottomToTopDistance = abs((currentY + blockHeight) - blockTop)
-                if (bottomToTopDistance < 50 && bottomToTopDistance < minDistance && abs(currentX - pos.posX) < 50) {
-                    if (compatible(block.id, id)) {
-                        minDistance = bottomToTopDistance
-                        closestSnap.position = Pair(pos.posX, blockTop - blockHeight)
-                        closestSnap.blockID = id
-                    }
-                }
+            val otherTop = pos.posY
+            val otherBottom = pos.posY + blockHeight
 
-                val topToBottomDistance = abs(currentY - blockBottom)
-                if (topToBottomDistance < 50 && topToBottomDistance < minDistance && abs(currentX - pos.posX) < 50) {
-                    if (compatible(block.id, id)) {
-                        minDistance = topToBottomDistance
-                        closestSnap.position = Pair(pos.posX, blockTop - blockHeight)
-                        closestSnap.blockID = id
-                    }
-                }
+            val distanceToTop = Math.abs((currentY + blockHeight) - otherTop)
+            if (distanceToTop < snapThreshold && distanceToTop < minDistance && Math.abs(currentX - pos.posX) < snapThreshold) {
+                minDistance = distanceToTop
+                snapPosition = Pair(pos.posX, otherTop - blockHeight)
+            }
+
+
+            val distanceToBottom = Math.abs(currentY - (pos.posY + blockHeight))
+            if (distanceToBottom < snapThreshold && distanceToBottom < minDistance && Math.abs(currentX - pos.posX) < snapThreshold) {
+                minDistance = distanceToBottom
+                snapPosition = Pair(pos.posX, pos.posY + blockHeight)
             }
         }
-        return closestSnap
+
+        return snapPosition
     }
 
     Box(
         modifier = Modifier
             .offset { IntOffset(X.roundToInt(), if (snapTarget != null) animatedY.roundToInt() else Y.roundToInt()) }
             .zIndex(if (active) 1f else 0f)
+            .combinedClickable(
+                onClick = {},
+                onLongClick = { showDelete = true }
+            )
             .drawBehind {
                 if (isNearSnap) {
                     drawRect(
@@ -123,21 +141,20 @@ fun Drag(
                         position.posX = newX
                         position.posY = newY
                         positionChange(position.copy(posX = X, posY = Y))
-                        val potentialSnap = checkSnapTargets(newY, newX)
+                        val potentialSnap = findSnapTarget(block.id, newX, newY, blockHeight, allBlockPositions)
+                        snapTarget = potentialSnap
                         isNearSnap = potentialSnap != null
                     },
                     onDragEnd = {
-                        val final = checkSnapTargets(Y, X)
-
-                        if (final.position != null) {
-                            createConnection(block.id, final.blockID!!)
-                            snapTarget = final.position
-                            X = final.position!!.first
-                            Y = final.position!!.second
+                        val finalSnap = findSnapTarget(block.id, X, Y, blockHeight, allBlockPositions)
+                        if (finalSnap != null) {
+                            X = finalSnap.first
+                            Y = finalSnap.second
                             position.posX = X
                             position.posY = Y
                             positionChange(position.copy(posX = X, posY = Y))
                         }
+                        snapTarget = null
                         isNearSnap = false
                     }
                 )
@@ -145,7 +162,21 @@ fun Drag(
     ) {
         BlockItem(
             block = block,
-            onClick = { }
+            onClick = { },
+            onHeightChanged = { newHeightDp -> blockHeight = with(density) { newHeightDp.toPx() } }
         )
+        if(showDelete){
+            Button(
+                onClick = { del() },
+                modifier = Modifier.align(Alignment.TopEnd)
+            ) {
+                Text(text = "Delete",
+                    color = Color.White,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = font
+                )
+            }
+        }
     }
 }
