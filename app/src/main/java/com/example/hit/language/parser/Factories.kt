@@ -3,25 +3,10 @@ package com.example.hit.language.parser
 import com.example.hit.language.parser.exceptions.ArrayInitializationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.ValueOperation
-import kotlin.reflect.KClass
 
 class ArrayFactory(
     val token: ArrayToken
 ) {
-    fun checkArrayElements(
-        elements: List<Value<*>>,
-        targetClass: KClass<out Value<out Any>>
-    ): Boolean {
-        for (element in elements) {
-            if (!targetClass.isInstance(element)) {
-                throw ArrayInitializationException(
-                    "Failed to initialize array: Array element type was ${targetClass.java.simpleName}," +
-                            "but the element $element has different type."
-                )
-            }
-        }
-        return true
-    }
 
     fun getArraySize(): Int {
         val arraySize = token.size!!.evaluate()
@@ -35,7 +20,7 @@ class ArrayFactory(
     }
 
     fun create(): Value<*> {
-        val desiredClass = VariableType.classMap[token.elementType]!!
+        val desiredClass = TypesManager.getCorrespondingValue(token.elementType)
         if (token.value == null) {
             if (token.size == null) {
                 throw ArrayInitializationException(
@@ -57,7 +42,8 @@ class ArrayFactory(
         }
 
         val elements: MutableList<Value<*>> = arrayValue.toList().toMutableList()
-        checkArrayElements(elements, desiredClass)
+        TypesManager.checkElementTypes(token.elementType, elements, true)
+
         val arraySize = if (token.size == null) {
             elements.size
         } else {
