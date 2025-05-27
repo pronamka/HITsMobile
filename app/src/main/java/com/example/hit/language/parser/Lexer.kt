@@ -27,7 +27,8 @@ class Lexer(
         "!" to TokenType.NOT,
         "&" to TokenType.AMPERSAND,
         "|" to TokenType.VERTICAL_BAR,
-        )
+        "." to TokenType.DOT
+    )
 
     private val keywords: Map<String, TokenType> = mapOf(
         "true" to TokenType.TRUE,
@@ -58,13 +59,13 @@ class Lexer(
         return tokens
     }
 
-    fun tokenizeOperator(){
+    fun tokenizeOperator() {
         var currentCharacter = peekAtIndex(0)
         var operatorString = currentCharacter.toString()
         while (operators.containsKey(operatorString)) {
             operatorString += getNextChar()
         }
-        operatorString = operatorString.substring(0, operatorString.length-1)
+        operatorString = operatorString.substring(0, operatorString.length - 1)
         addToken(operators[operatorString]!!, "")
     }
 
