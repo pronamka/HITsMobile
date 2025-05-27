@@ -1,5 +1,6 @@
 package com.example.hit.language.parser
 
+import com.example.hit.language.parser.exceptions.InvalidSyntaxException
 import com.example.hit.language.parser.operations.ArrayElementOperation
 import com.example.hit.language.parser.operations.BinaryOperation
 import com.example.hit.language.parser.operations.ComparisonOperation
@@ -7,6 +8,7 @@ import com.example.hit.language.parser.operations.FunctionCallOperation
 import com.example.hit.language.parser.operations.IOperation
 import com.example.hit.language.parser.operations.LogicalNotOperation
 import com.example.hit.language.parser.operations.LogicalOperation
+import com.example.hit.language.parser.operations.MethodCallOperation
 import com.example.hit.language.parser.operations.UnaryOperation
 import com.example.hit.language.parser.operations.ValueOperation
 import com.example.hit.language.parser.operations.VariableOperation
@@ -53,25 +55,6 @@ class Parser(
             move()
             return result
         }
-        if (checkTokenType(0, TokenType.WORD) && checkTokenType(1, TokenType.LEFT_BRACKET)) {
-            val arrayName = getCurrentToken().tokenValue
-            move(2)
-            val operation = ArrayElementOperation(arrayName, atBottomLevel())
-            move()
-            return operation
-        }
-        if (checkTokenType(0, TokenType.WORD) && checkTokenType(1, TokenType.LEFT_PARENTHESIS)) {
-            val functionName = getCurrentToken().tokenValue
-            move(2)
-            val values: MutableList<IOperation> = mutableListOf()
-            while (!checkCurrentTokenType(TokenType.RIGHT_PARENTHESIS)) {
-                if (checkCurrentTokenType(TokenType.COMMA)) {
-                    continue
-                }
-                values.add(atBottomLevel())
-            }
-            return FunctionCallOperation(functionName, values)
-        }
         if (checkCurrentTokenType(TokenType.WORD)) {
             return VariableOperation(currentToken.tokenValue)
         }
@@ -87,15 +70,51 @@ class Parser(
         ) {
             return ValueOperationFactory(currentToken).create()
         }
-        throw RuntimeException("Something went wrong")
+        throw InvalidSyntaxException("Unexpected $currentToken")
+    }
+
+    private fun atLevelVariableOperation(): IOperation {
+        var result = atTopLevel()
+        while (true) {
+            if (checkCurrentTokenType(TokenType.LEFT_BRACKET)) {
+                result = ArrayElementOperation(result, atBottomLevel())
+                if (!checkCurrentTokenType(TokenType.RIGHT_BRACKET)) {
+                    throw InvalidSyntaxException("Bracket not closed when getting array element.")
+                }
+                continue
+            }
+            if (checkCurrentTokenType(TokenType.LEFT_PARENTHESIS)) {
+                val values = getParameters()
+                result = FunctionCallOperation(result, values)
+                continue
+            }
+            if (checkCurrentTokenType(TokenType.DOT)) {
+                val methodName = getCurrentToken()
+                if (!checkCurrentTokenType(TokenType.WORD)) {
+                    throw InvalidSyntaxException(
+                        "Expected method name after method call operator '.'"
+                    )
+                }
+                if (!checkCurrentTokenType(TokenType.LEFT_PARENTHESIS)) {
+                    throw InvalidSyntaxException(
+                        "Method ${methodName.tokenValue} must be invoked using ()."
+                    )
+                }
+                val values = getParameters()
+                result = MethodCallOperation(result, methodName.tokenValue, values)
+                continue
+            }
+            break
+        }
+        return result
     }
 
     private fun atLevelUnary(): IOperation {
         val tokenType = getCurrentToken().tokenType
         if (checkCurrentTokenTypeIn(UnaryOperation.availableTokenTypes)) {
-            return UnaryOperation(atTopLevel(), tokenType)
+            return UnaryOperation(atLevelVariableOperation(), tokenType)
         }
-        return atTopLevel()
+        return atLevelVariableOperation()
     }
 
     private fun atLevelMultiplicationDivision(): IOperation {
@@ -171,6 +190,22 @@ class Parser(
 
     private fun atBottomLevel(): IOperation {
         return atLevelLogical()
+    }
+
+    private fun getParameters(): List<IOperation> {
+        val values: MutableList<IOperation> = mutableListOf()
+        while (!checkCurrentTokenType(TokenType.RIGHT_PARENTHESIS)) {
+            if (checkCurrentTokenType(TokenType.COMMA)) {
+                continue
+            }
+            if (checkCurrentTokenType(TokenType.EOF)) {
+                throw InvalidSyntaxException(
+                    "Parenthesis not closed."
+                )
+            }
+            values.add(atBottomLevel())
+        }
+        return values
     }
 
     private fun checkTokenType(index: Int, targetType: TokenType): Boolean {
