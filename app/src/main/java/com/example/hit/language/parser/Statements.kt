@@ -105,7 +105,7 @@ class ArrayElementAssignmentStatement(
 ) : AssignmentStatement(variableName, variableValue) {
     override fun evaluate() {
         checkIfVariableDeclared()
-        val variable = Scopes.getVariable(variableName)
+        val variable = Scopes.getInitializedValue(variableName)
         if (variable !is ArrayValue<*>) {
             throw RuntimeException("$variable is not an array.")
         }
@@ -241,7 +241,7 @@ class ContinueStatement : IStatement {
 }
 
 class FunctionCallStatement(
-    val functionName: String,
+    val functionName: IOperation,
     val parametersValues: List<IOperation>
 ) : IStatement {
     override fun evaluate() {
