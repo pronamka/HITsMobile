@@ -38,4 +38,8 @@ class ContinueIterationException() : Exception()
 
 class ReturnException(
     val returnValue: Value<*>
-): Exception()
+) : Exception()
+
+class InvalidSyntaxException(
+    message: String
+) : Exception(message)

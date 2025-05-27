@@ -40,5 +40,7 @@ enum class TokenType {
     AMPERSAND,
     VERTICAL_BAR,
 
+    DOT,
+
     EOF;
 }
