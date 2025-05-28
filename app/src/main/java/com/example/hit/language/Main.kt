@@ -3,7 +3,6 @@ package com.example.hit.language
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
 import com.example.hit.language.parser.AssignmentStatement
 import com.example.hit.language.parser.BlockStatement
-import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.DeclarationStatement
 import com.example.hit.language.parser.ForLoop
 import com.example.hit.language.parser.FunctionDeclarationStatement
@@ -30,16 +29,16 @@ fun getAssignmentStatement(input: String): AssignmentStatement{
     return StatementsParser(Lexer(input).tokenize()).parseAssignment()
 }
 
+fun getStatementsParser(input: String): StatementsParser{
+    return StatementsParser(Lexer(input).tokenize())
+}
+
 class Main {
     fun main() {
         val program: List<IStatement> = listOf(
             FunctionDeclarationStatement(
                 "printArray",
-                listOf(
-                    DeclarationStatement(
-                        VariableType.ARRAY(VariableType.INT), "arr"
-                    ),
-                ),
+                getStatementsParser("arr Int[]").parseFunctionParameters(),
                 BlockStatement(
                     mutableListOf(
                         ForLoop(
@@ -60,7 +59,7 @@ class Main {
                         ReturnStatement(getOperation("arr"))
                     )
                 ),
-                VariableType.ARRAY(VariableType.INT)
+                getStatementsParser("Int[]").parseType(),
             ),
             getDeclarationStatement("a Int[5] = [5, 4, 3, 2, 1]"),
             DeclarationStatement(

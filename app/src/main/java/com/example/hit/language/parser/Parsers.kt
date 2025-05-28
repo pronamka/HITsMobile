@@ -294,7 +294,7 @@ class StatementsParser(
         return Pair(isArray, arrayLength)
     }
 
-    private fun parseType(): VariableType {
+    fun parseType(): VariableType {
         val variableType = getCurrentToken()
         if (!checkCurrentTokenTypeIn(typeKeywords)) {
             throw InvalidSyntaxException("Expected variable type, but got ${getCurrentToken()}")
@@ -348,5 +348,16 @@ class StatementsParser(
         }
 
         return DeclarationStatement(type, variableName.tokenValue, variableValue)
+    }
+
+    fun parseFunctionParameters(): List<DeclarationStatement> {
+        val results: MutableList<DeclarationStatement> = mutableListOf()
+        while (currentIndex < tokens.size) {
+            results.add(parseDeclaration())
+            if (getCurrentToken() != EOF_TOKEN && !checkCurrentTokenType(TokenType.COMMA)) {
+                throw InvalidSyntaxException("Expected comma after function parameter declaration, but got ${getCurrentToken()}")
+            }
+        }
+        return results
     }
 }
