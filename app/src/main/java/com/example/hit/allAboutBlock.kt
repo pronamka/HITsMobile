@@ -10,24 +10,18 @@ import com.example.hit.language.parser.ContinueStatement
 import com.example.hit.language.parser.DeclarationStatement
 import com.example.hit.language.parser.ForLoop
 import com.example.hit.language.parser.FunctionDeclarationStatement
-import com.example.hit.language.parser.FunctionValue
 import com.example.hit.language.parser.IStatement
 import com.example.hit.language.parser.IfElseStatement
 import com.example.hit.language.parser.Lexer
-import com.example.hit.language.parser.Parser
+import com.example.hit.language.parser.OperationsParser
 import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.ReturnStatement
-import com.example.hit.language.parser.Scopes
 import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
-import com.example.hit.language.parser.exceptions.ContinueIterationException
-import com.example.hit.language.parser.exceptions.StopIterationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
-import com.example.hit.language.parser.operations.ComparisonOperation
 import com.example.hit.language.parser.operations.IOperation
 import java.util.UUID
-import kotlin.uuid.Uuid
 
 enum class BlockType(string: String) {
     VARIABLE_INITIALIZATION("variable_initialization"),
@@ -216,7 +210,7 @@ class OperationInputField {
 
     fun getOperation(): IOperation {
         val s = inputFiled.get()
-        return Parser(Lexer(s).tokenize()).parse()[0]
+        return OperationsParser(Lexer(s).tokenize()).parse()[0]
     }
 }
 

@@ -42,5 +42,11 @@ enum class TokenType {
 
     DOT,
 
+    INT_KEYWORD,
+    DOUBLE_KEYWORD,
+    STRING_KEYWORD,
+    BOOL_KEYWORD,
+    ARRAY_KEYWORD,
+
     EOF;
 }

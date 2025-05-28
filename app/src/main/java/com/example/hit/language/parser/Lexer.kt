@@ -36,6 +36,14 @@ class Lexer(
         "return" to TokenType.RETURN,
     )
 
+    private val typeKeywords: Map<String, TokenType> = mapOf(
+        "Int" to TokenType.INT_KEYWORD,
+        "Double" to TokenType.DOUBLE_KEYWORD,
+        "String" to TokenType.STRING_KEYWORD,
+        "Bool" to TokenType.BOOL_KEYWORD,
+        "Array" to TokenType.ARRAY_KEYWORD
+    )
+
     private val tokens: MutableList<Token> = mutableListOf()
 
     private var currentIndex = 0
@@ -103,6 +111,10 @@ class Lexer(
         val word = inputString.substring(startIndex..currentIndex - 1)
         if (keywords.containsKey(word)) {
             addToken(keywords[word]!!, word)
+            return
+        }
+        if (typeKeywords.containsKey(word)) {
+            addToken(typeKeywords[word]!!, word)
             return
         }
         addToken(TokenType.WORD, word)

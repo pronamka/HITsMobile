@@ -1,27 +1,11 @@
 package com.example.hit
 
-import androidx.annotation.RestrictTo
-import com.example.hit.language.parser.AssignmentStatement
-import com.example.hit.language.parser.DeclarationStatement
-import com.example.hit.language.parser.IStatement
-import com.example.hit.language.parser.Lexer
-import com.example.hit.language.parser.Parser
 import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.Scopes
-import com.example.hit.language.parser.TokenType
-import com.example.hit.language.parser.Variable
 import com.example.hit.language.parser.VariableType
-import com.example.hit.language.parser.operations.BinaryOperation
-import org.jetbrains.annotations.TestOnly
 import org.junit.After
 import org.junit.BeforeClass
 import org.junit.Test
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 
 

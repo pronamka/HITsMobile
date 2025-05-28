@@ -13,17 +13,64 @@ import com.example.hit.language.parser.operations.UnaryOperation
 import com.example.hit.language.parser.operations.ValueOperation
 import com.example.hit.language.parser.operations.VariableOperation
 
-class Parser(
-    private val tokens: List<Token>,
+abstract class Parser(
+    protected val tokens: List<Token>,
 ) {
+    protected val EOF_TOKEN = Token(TokenType.EOF, "")
+    var currentIndex = 0
+
+    protected fun checkTokenType(index: Int, targetType: TokenType): Boolean {
+        val targetToken = getToken(index)
+        if (targetToken.tokenTypeEquals(targetType)) {
+            return true
+        }
+        return false
+    }
+
+    protected fun checkCurrentTokenType(targetType: TokenType): Boolean {
+        val currentToken = getCurrentToken()
+        if (currentToken.tokenTypeEquals(targetType)) {
+            currentIndex++
+            return true
+        }
+        return false
+    }
+
+    protected fun checkCurrentTokenTypeIn(targetTypes: List<TokenType>): Boolean {
+        val currentToken = getCurrentToken()
+        for (tokenType in targetTypes) {
+            if (currentToken.tokenTypeEquals(tokenType)) {
+                currentIndex++
+                return true
+            }
+        }
+        return false
+    }
+
+    protected fun getToken(index: Int): Token {
+        if (currentIndex + index >= tokens.size) return EOF_TOKEN
+        return tokens[currentIndex + index]
+    }
+
+    protected fun getCurrentToken(): Token {
+        if (currentIndex >= tokens.size) return EOF_TOKEN
+        return tokens[currentIndex]
+    }
+
+    protected fun move(n: Int = 1) {
+        currentIndex += n
+    }
+}
+
+class OperationsParser(
+    tokens: List<Token>,
+) : Parser(tokens) {
 
     private val comparisonOperators = listOf(
         TokenType.EQUAL, TokenType.NOT_EQUAL,
         TokenType.LESS, TokenType.GREATER,
         TokenType.LESS_OR_EQUAL, TokenType.GREATER_OR_EQUAL
     )
-    private val EOF_TOKEN = Token(TokenType.EOF, "")
-    private var currentIndex = 0
 
     fun parse(): List<IOperation> {
         val results: MutableList<IOperation> = mutableListOf()
@@ -188,7 +235,7 @@ class Parser(
         return result
     }
 
-    private fun atBottomLevel(): IOperation {
+    fun atBottomLevel(): IOperation {
         return atLevelLogical()
     }
 
@@ -208,50 +255,98 @@ class Parser(
         return values
     }
 
-    private fun checkTokenType(index: Int, targetType: TokenType): Boolean {
-        val targetToken = getToken(index)
-        if (targetToken.tokenTypeEquals(targetType)) {
-            return true
-        }
-        return false
-    }
 
-    private fun checkCurrentTokenType(targetType: TokenType): Boolean {
-        val currentToken = getCurrentToken()
-        if (currentToken.tokenTypeEquals(targetType)) {
-            currentIndex++
-            return true
-        }
-        return false
-    }
-
-    private fun checkCurrentTokenTypeIn(targetTypes: List<TokenType>): Boolean {
-        val currentToken = getCurrentToken()
-        for (tokenType in targetTypes) {
-            if (currentToken.tokenTypeEquals(tokenType)) {
-                currentIndex++
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun getToken(index: Int): Token {
-        if (currentIndex + index >= tokens.size) return EOF_TOKEN
-        return tokens[currentIndex + index]
-    }
-
-    private fun getCurrentToken(): Token {
-        if (currentIndex >= tokens.size) return EOF_TOKEN
-        return tokens[currentIndex]
-    }
-
-    private fun move(n: Int = 1) {
-        currentIndex += n
-    }
 }
 
-interface ITreeLevel {
-    val allowedTokenTypes: List<TokenType>
-    fun execute(): IOperation
+class StatementsParser(
+    tokens: List<Token>
+) : Parser(tokens) {
+    private val typeKeywords = listOf(
+        TokenType.INT_KEYWORD, TokenType.DOUBLE_KEYWORD,
+        TokenType.STRING_KEYWORD, TokenType.BOOL_KEYWORD
+    )
+
+    private val typesMap = mapOf(
+        TokenType.INT_KEYWORD to VariableType.INT,
+        TokenType.DOUBLE_KEYWORD to VariableType.DOUBLE,
+        TokenType.STRING_KEYWORD to VariableType.STRING,
+        TokenType.BOOL_KEYWORD to VariableType.BOOL
+    )
+
+    private fun parseOperation(): IOperation {
+        val parser = OperationsParser(tokens.subList(currentIndex, tokens.size))
+        val result = parser.atBottomLevel()
+        currentIndex += parser.currentIndex
+        return result
+    }
+
+    private fun parseArrayIndex(): Pair<Boolean, IOperation?> {
+        val isArray = checkCurrentTokenType(TokenType.LEFT_BRACKET)
+        var arrayLength: IOperation? = null
+        if (isArray) {
+            if (!checkCurrentTokenType(TokenType.RIGHT_BRACKET)) {
+                arrayLength = parseOperation()
+                if (!checkCurrentTokenType(TokenType.RIGHT_BRACKET)) {
+                    throw InvalidSyntaxException("Expected ], but got ${getCurrentToken()}")
+                }
+            }
+        }
+        return Pair(isArray, arrayLength)
+    }
+
+    private fun parseType(): VariableType {
+        val variableType = getCurrentToken()
+        if (!checkCurrentTokenTypeIn(typeKeywords)) {
+            throw InvalidSyntaxException("Expected variable type, but got ${getCurrentToken()}")
+        }
+
+        val isArray = parseArrayIndex()
+        if (isArray.first) {
+            return VariableType.ARRAY(typesMap[variableType.tokenType]!!, isArray.second)
+        }
+
+        return typesMap[variableType.tokenType]!!
+    }
+
+    fun parseAssignment(): AssignmentStatement {
+        val variableName = getCurrentToken()
+        if (!checkCurrentTokenType(TokenType.WORD)) {
+            throw InvalidSyntaxException("Expected variable name, but got ${getCurrentToken()}")
+        }
+
+        val isArrayIndex = parseArrayIndex()
+        if (!checkCurrentTokenType(TokenType.EQUALS)) {
+            throw InvalidSyntaxException("Expected equals operator(=), but got ${getCurrentToken()}")
+        }
+
+        val value = parseOperation()
+        if (isArrayIndex.first) {
+            if (isArrayIndex.second == null) {
+                throw InvalidSyntaxException("Expected an integer index when assigning to array element, but got empty brackets.s")
+            }
+            return ArrayElementAssignmentStatement(
+                variableName.tokenValue,
+                value,
+                isArrayIndex.second!!
+            )
+        }
+
+        return VariableAssignmentStatement(variableName.tokenValue, value)
+    }
+
+    fun parseDeclaration(): DeclarationStatement {
+        val variableName = getCurrentToken()
+        if (!checkCurrentTokenType(TokenType.WORD)) {
+            throw InvalidSyntaxException("Expected variable name, but got ${getCurrentToken()}")
+        }
+
+        val type = parseType()
+
+        var variableValue: IOperation? = null
+        if (checkCurrentTokenType(TokenType.EQUALS)) {
+            variableValue = parseOperation()
+        }
+
+        return DeclarationStatement(type, variableName.tokenValue, variableValue)
+    }
 }
