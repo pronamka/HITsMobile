@@ -4,16 +4,12 @@ import com.example.hit.blocks.BasicBlock
 
 class Container(private val blocks : MutableList<BasicBlock>) {
 
-    fun getOrderedBlocks(): List<BasicBlock> {
-        if (blocks.isEmpty()) return emptyList()
-
-        // Find root (exactly one block with no top connection)
+    fun isValidBlockArrangement() : Boolean {
         val roots = blocks.filter { it.topConnection == null }
         if (roots.size != 1) {
-            throw IllegalStateException("Incorrect block arrangement")
+            return false
         }
 
-        // Traverse the chain
         val orderedBlocks = mutableListOf<BasicBlock>()
         var current: BasicBlock? = roots.first()
 
@@ -22,9 +18,23 @@ class Container(private val blocks : MutableList<BasicBlock>) {
             current = current.bottomConnection
         }
 
-        // Verify all blocks were visited
         if (orderedBlocks.size != blocks.size) {
-            throw IllegalStateException("Incorrect block arrangement")
+            return false
+        }
+        return true
+    }
+
+    fun getOrderedBlocks(): List<BasicBlock> {
+        if (blocks.isEmpty()) return emptyList()
+
+        val roots = blocks.filter { it.topConnection == null }
+
+        val orderedBlocks = mutableListOf<BasicBlock>()
+        var current: BasicBlock? = roots.first()
+
+        while (current != null) {
+            orderedBlocks.add(current)
+            current = current.bottomConnection
         }
 
         return orderedBlocks
