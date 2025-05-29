@@ -3,6 +3,7 @@ import androidx.compose.runtime.snapshots.Snapshot
 import com.example.hit.blocks.BasicBlock
 import com.example.hit.blocks.container.Container
 import com.example.hit.language.parser.IStatement
+import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.Scopes
 
 class CodeRunner(private val container: Container, private val console: MutableList<String>) {
@@ -17,6 +18,9 @@ class CodeRunner(private val container: Container, private val console: MutableL
             }
             for (statement in statements) {
                 statement.evaluate()
+                if (statement is PrintStatement){
+                    console.add(statement.outputValue!!)
+                }
             }
             console.add("Program execution completed successfully!")
             Scopes.reset()
