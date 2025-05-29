@@ -23,9 +23,11 @@ class CodeRunner(private val container: Container, private val console: MutableL
                 }
             }
             console.add("Program execution completed successfully!")
-            Scopes.reset()
         } catch (e: Exception) {
             console.add("Error: ${e.message}")
+        }
+        finally{
+            Scopes.reset()
         }
     }
 }

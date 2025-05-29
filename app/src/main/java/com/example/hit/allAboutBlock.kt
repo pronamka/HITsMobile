@@ -40,18 +40,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.hit.blocks.ArrayDeclarationBlock
-import com.example.hit.blocks.ArrayElementAssignmentBlock
+import com.example.hit.blocks.AssignmentBlock
 import com.example.hit.blocks.BasicBlock
 import com.example.hit.blocks.BreakBlock
 import com.example.hit.blocks.ContinueBlock
+import com.example.hit.blocks.DeclarationBlock
 import com.example.hit.blocks.ForBlock
 import com.example.hit.blocks.IfElseBlock
+import com.example.hit.blocks.InitializationBlock
 import com.example.hit.blocks.PrintBlock
 import com.example.hit.blocks.ReturnBlock
-import com.example.hit.blocks.VariableAssignmentBlock
-import com.example.hit.blocks.VariableDeclarationBlock
-import com.example.hit.blocks.VariableInitializationBlock
 import com.example.hit.blocks.WhileBlock
 import java.util.UUID
 
@@ -73,18 +71,6 @@ fun BlockItem(
 ) {
     var isDataTypeDropdownExpanded by remember { mutableStateOf(false) }
 
-
-    val dataTypes = remember {
-        listOf(
-            "Int",
-            "String",
-            "Boolean",
-            "Float",
-            "Double",
-            "Array"
-        )
-    }
-
     val textFieldColors = TextFieldDefaults.colors(
         focusedTextColor = Color.DarkGray,
         unfocusedTextColor = Color.DarkGray,
@@ -97,7 +83,7 @@ fun BlockItem(
     )
 
     when (block) {
-        is VariableDeclarationBlock -> {
+        is InitializationBlock -> {
             block.heightDP = 80.dp
             Box(
                 modifier = Modifier
@@ -119,7 +105,7 @@ fun BlockItem(
                 ) {
                     OutlinedTextField(
                         value = block.nameInput.getInputField(),
-                        onValueChange = { block.nameInput.setName(it)},
+                        onValueChange = { block.nameInput.set(it)},
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp),
@@ -130,7 +116,6 @@ fun BlockItem(
                             fontSize = 18.sp,
                             fontFamily = font
                         )
-
                     )
                     Text(text = ":",
                         color = Color.White,
@@ -139,41 +124,20 @@ fun BlockItem(
                         fontFamily = font
                     )
 
-                    Box(modifier = Modifier.weight(1f)) {
-                        ExposedDropdownMenuBox(
-                            expanded = isDataTypeDropdownExpanded,
-                            onExpandedChange = {
-                                if (!showMenu) isDataTypeDropdownExpanded = it
-                            }
-                        ) {
-                            OutlinedTextField(
-                                value = block.typeInput.getInputField(),
-                                onValueChange = { block.typeInput.setType(it) },
-                                readOnly = true,
-                                enabled = !showMenu,
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = isDataTypeDropdownExpanded
-                                    )
-                                },
-                                modifier = Modifier.menuAnchor()
-                            )
-                            ExposedDropdownMenu(
-                                expanded = isDataTypeDropdownExpanded,
-                                onDismissRequest = { isDataTypeDropdownExpanded = false }
-                            ) {
-                                dataTypes.forEach { type ->
-                                    DropdownMenuItem(
-                                        text = { Text(type) },
-                                        onClick = {
-                                            block.typeInput.setType(type)
-                                            isDataTypeDropdownExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    OutlinedTextField(
+                        value = block.typeInput.getInputField(),
+                        onValueChange = { block.typeInput.set(it)},
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+                    )
 
                     Text(text = "=",
                         color = Color.White,
@@ -185,7 +149,7 @@ fun BlockItem(
                     OutlinedTextField(
                         value = block.valueInput.getInputField(),
                         onValueChange = {
-                            block.valueInput.setOperation(it)
+                            block.valueInput.set(it)
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -198,7 +162,6 @@ fun BlockItem(
                             fontFamily = font
                         )
                     )
-
                 }
             }
         }
@@ -405,7 +368,7 @@ fun BlockItem(
             }
         }
 
-        is VariableInitializationBlock ->{
+        is DeclarationBlock ->{
             block.heightDP = 80.dp
             Box(
                 modifier = Modifier
@@ -429,7 +392,7 @@ fun BlockItem(
                     OutlinedTextField(
                         value = block.nameInput.getInputField(),
                         onValueChange = {
-                            block.nameInput.setName(it);
+                            block.nameInput.set(it);
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -441,7 +404,6 @@ fun BlockItem(
                             fontSize = 18.sp,
                             fontFamily = font
                         )
-
                     )
                     Text(
                         text = ":",
@@ -450,47 +412,27 @@ fun BlockItem(
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
-
-                    Box(modifier = Modifier.weight(1f)) {
-                        ExposedDropdownMenuBox(
-                            expanded = isDataTypeDropdownExpanded,
-                            onExpandedChange = {
-                                if (!showMenu) isDataTypeDropdownExpanded = it
-                            }
-                        ) {
-                            OutlinedTextField(
-                                value = block.typeInput.getInputField(),
-                                onValueChange = { block.typeInput.setType(it) },
-                                readOnly = true,
-                                enabled = !showMenu,
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = isDataTypeDropdownExpanded
-                                    )
-                                },
-                                modifier = Modifier.menuAnchor()
-                            )
-                            ExposedDropdownMenu(
-                                expanded = isDataTypeDropdownExpanded,
-                                onDismissRequest = { isDataTypeDropdownExpanded = false }
-                            ) {
-                                dataTypes.forEach { type ->
-                                    DropdownMenuItem(
-                                        text = { Text(type) },
-                                        onClick = {
-                                            block.typeInput.setType(type)
-                                            isDataTypeDropdownExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    OutlinedTextField(
+                        value = block.typeInput.getInputField(),
+                        onValueChange = {
+                            block.typeInput.set(it);
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+                    )
                 }
             }
         }
 
-        is VariableAssignmentBlock -> {
+        is AssignmentBlock -> {
             block.heightDP = 80.dp
             Box(
                 modifier = Modifier
@@ -510,9 +452,9 @@ fun BlockItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
-                        value = block.nameInput.getInputField(),
+                        value = block.nameInput.get(),
                         onValueChange = {
-                            block.nameInput.setName(it);
+                            block.nameInput.set(it);
                         },
                         modifier = Modifier
                             .width(84.dp)
@@ -536,7 +478,7 @@ fun BlockItem(
 
                     OutlinedTextField(
                         value = block.valueInput.getInputField(),
-                        onValueChange = { block.valueInput.setOperation(it) },
+                        onValueChange = { block.valueInput.set(it) },
                         modifier = Modifier
                             .width(84.dp)
                             .height(56.dp),
@@ -598,8 +540,8 @@ fun BlockItem(
                         )
 
                         OutlinedTextField(
-                            value = "",
-                            onValueChange = { },
+                            value = block.initializerInput.getInputField(),
+                            onValueChange = { block.initializerInput.set(it) },
                             modifier = Modifier
                                 .width(72.dp)
                                 .height(56.dp),
@@ -621,7 +563,7 @@ fun BlockItem(
 
                         OutlinedTextField(
                             value = block.conditionInput.getInputField(),
-                            onValueChange = { block.conditionInput.setOperation(it)},
+                            onValueChange = { block.conditionInput.set(it)},
                             modifier = Modifier
                                 .width(72.dp)
                                 .height(56.dp),
@@ -642,8 +584,8 @@ fun BlockItem(
                         )
 
                         OutlinedTextField(
-                            value = "",
-                            onValueChange = { },
+                            value = block.stateChangeInput.getInputField(),
+                            onValueChange = { block.stateChangeInput.set(it) },
                             modifier = Modifier
                                 .width(72.dp)
                                 .height(56.dp),
@@ -729,7 +671,7 @@ fun BlockItem(
 
                         OutlinedTextField(
                             value = block.conditionInput.getInputField(),
-                            onValueChange = { block.conditionInput.setOperation(it) },
+                            onValueChange = { block.conditionInput.set(it) },
                             modifier = Modifier
                                 .width(146.dp)
                                 .height(56.dp),
@@ -838,7 +780,7 @@ fun BlockItem(
 
                         OutlinedTextField(
                             value = block.valueInput.getInputField(),
-                            onValueChange = { block.valueInput.setOperation(it) },
+                            onValueChange = { block.valueInput.set(it) },
                             modifier = Modifier
                                 .width(126.dp)
                                 .height(56.dp),
@@ -858,216 +800,6 @@ fun BlockItem(
                             fontFamily = font
                         )
                     }
-                }
-            }
-        }
-        is ArrayDeclarationBlock ->{
-            block.heightDP = 80.dp
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .width(252.dp)
-                    .height(80.dp)
-                    .background(
-                        color = block.color,
-                        shape = RoundedCornerShape(24.dp)
-                    )
-                    .clickable(onClick = onClick)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = block.nameInput.getInputField(),
-                        onValueChange = {
-                            block.nameInput.setName(it);
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        singleLine = true,
-                        enabled = !showMenu,
-                        colors = textFieldColors,
-                        textStyle = TextStyle(
-                            fontSize = 18.sp,
-                            fontFamily = font
-                        )
-
-                    )
-                    Text(text = ":",
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = font
-                    )
-
-                    Box(modifier = Modifier.weight(1f)) {
-                        ExposedDropdownMenuBox(
-                            expanded = isDataTypeDropdownExpanded,
-                            onExpandedChange = {
-                                if (!showMenu) isDataTypeDropdownExpanded = it
-                            }
-                        ) {
-                            OutlinedTextField(
-                                value = block.typeInput.getInputField(),
-                                onValueChange = { block.typeInput.setType(it) },
-                                readOnly = true,
-                                enabled = !showMenu,
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = isDataTypeDropdownExpanded
-                                    )
-                                },
-                                modifier = Modifier.menuAnchor()
-                            )
-                            ExposedDropdownMenu(
-                                expanded = isDataTypeDropdownExpanded,
-                                onDismissRequest = { isDataTypeDropdownExpanded = false }
-                            ) {
-                                dataTypes.forEach { type ->
-                                    DropdownMenuItem(
-                                        text = { Text(type) },
-                                        onClick = {
-                                            block.typeInput.setType(type)
-                                            isDataTypeDropdownExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Text(text = "[",
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = font
-                    )
-
-                    OutlinedTextField(
-                        value = block.sizeInput.getInputField(),
-                        onValueChange = {
-                            block.sizeInput.setOperation(it)
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        singleLine = true,
-                        enabled = !showMenu,
-                        colors = textFieldColors,
-                        textStyle = TextStyle(
-                            fontSize = 18.sp,
-                            fontFamily = font
-                        )
-                    )
-
-                    Text(text = "]",
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = font
-                    )
-                }
-            }
-        }
-        is ArrayElementAssignmentBlock -> {
-            block.heightDP = 80.dp
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .width(252.dp)
-                    .height(80.dp)
-                    .background(
-                        color = block.color,
-                        shape = RoundedCornerShape(24.dp)
-                    )
-                    .clickable(onClick = onClick)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = block.nameInput.getInputField(),
-                        onValueChange = {
-                            block.nameInput.setName(it);
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        singleLine = true,
-                        enabled = !showMenu,
-                        colors = textFieldColors,
-                        textStyle = TextStyle(
-                            fontSize = 18.sp,
-                            fontFamily = font
-                        )
-
-                    )
-
-                    Text(text = "[",
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = font
-                    )
-
-                    OutlinedTextField(
-                        value = block.indexInput.getInputField(),
-                        onValueChange = {
-                            block.indexInput.setOperation(it)
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        singleLine = true,
-                        enabled = !showMenu,
-                        colors = textFieldColors,
-                        textStyle = TextStyle(
-                            fontSize = 18.sp,
-                            fontFamily = font
-                        )
-                    )
-
-                    Text(
-                        text = "]",
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = font
-                    )
-
-                    Text(
-                        text = "=",
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = font
-                    )
-
-                    OutlinedTextField(
-                        value = block.valueInput.getInputField(),
-                        onValueChange = {
-                            block.valueInput.setOperation(it)
-                        },
-                        modifier = Modifier
-                            .width(92.dp)
-                            .height(56.dp),
-                        singleLine = true,
-                        enabled = !showMenu,
-                        colors = textFieldColors,
-                        textStyle = TextStyle(
-                            fontSize = 18.sp,
-                            fontFamily = font
-                        )
-                    )
                 }
             }
         }

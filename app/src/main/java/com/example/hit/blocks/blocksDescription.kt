@@ -16,12 +16,15 @@ import com.example.hit.language.parser.ForLoop
 import com.example.hit.language.parser.FunctionDeclarationStatement
 import com.example.hit.language.parser.IStatement
 import com.example.hit.language.parser.IfElseStatement
+import com.example.hit.language.parser.Lexer
 import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.ReturnStatement
+import com.example.hit.language.parser.StatementsParser
 import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
 import com.example.hit.language.parser.operations.IOperation
+import java.security.Policy.Parameters
 import java.util.UUID
 
 abstract class BasicBlock(
@@ -69,121 +72,60 @@ abstract class BasicBlock(
 }
 
 
-abstract class AssignmentBlock(
+class AssignmentBlock (
     blockId: UUID,
-    type: BlockType,
     color: Color = Color(0xFF45A3FF),
-) : BasicBlock(id = blockId, type = type, color = color) {
-    val nameInput = NameInputField()
+) : BasicBlock(id = blockId, type = BlockType.ASSIGNMENT, color = color) {
+    val nameInput = StringInputField()
     val valueInput = OperationInputField()
 
-    fun getParameters(): Pair<String, IOperation> {
-        val name = nameInput.getName()
-        val operation = valueInput.getOperation()
-        return Pair(name, operation)
+    override fun execute(): AssignmentStatement {
+        val name = nameInput.get()
+        val value = valueInput.getInputField()
+        val statement = "$name = $value"
+        return StatementsParser(Lexer(statement).tokenize()).parseAssignment()
+    }
+
+    override fun deepCopy(): BasicBlock {
+        return AssignmentBlock(UUID.randomUUID())
     }
 }
 
-
-abstract class DeclarationBlock(
-    type: BlockType,
+class DeclarationBlock(
     blockId: UUID,
     color: Color = Color(0xFF45A3FF),
-) : BasicBlock(blockId, type = type, color = color) {
+) : BasicBlock(blockId, type = BlockType.DECLARATION, color = color) {
     val nameInput = NameInputField()
     val typeInput = TypeInputField()
 
-    fun getParameters(): Pair<String, VariableType> {
+    override fun execute(): DeclarationStatement {
         val name = nameInput.getName()
         val type = typeInput.getType()
-        return Pair(name, type)
-    }
-}
-
-
-
-
-
-
-class VariableInitializationBlock(
-    blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.VARIABLE_INITIALIZATION) {
-
-    override fun execute(): DeclarationStatement {
-        val parameters = getParameters()
-        return DeclarationStatement(parameters.second, parameters.first)
+        return DeclarationStatement(type, name)
     }
 
     override fun deepCopy(): BasicBlock {
-        return VariableInitializationBlock(UUID.randomUUID())
+        return DeclarationBlock(UUID.randomUUID())
     }
 }
 
-class VariableDeclarationBlock(
+class InitializationBlock(
     blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.VARIABLE_DECLARATION) {
-
+    color: Color = Color(0xFF45A3FF),
+) : BasicBlock(blockId, type = BlockType.INITIALIZATION, color = color) {
+    val nameInput = NameInputField()
+    val typeInput = TypeInputField()
     val valueInput = OperationInputField()
 
     override fun execute(): DeclarationStatement {
+        val name = nameInput.getName()
+        val type = typeInput.getType()
         val value = valueInput.getOperation()
-        val parameters = getParameters()
-        return DeclarationStatement(parameters.second, parameters.first, value)
+        return DeclarationStatement(type, name, value)
     }
 
     override fun deepCopy(): BasicBlock {
-        return VariableDeclarationBlock(UUID.randomUUID())
-    }
-}
-
-class ArrayDeclarationBlock(
-    blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.ARRAY_DECLARATION, color = Color(0xFF009688)) {
-
-    val valueInput = OperationInputField()
-    val sizeInput = OperationInputField()
-
-    override fun execute(): DeclarationStatement {
-        val size = sizeInput.getOperation()
-        val value = valueInput.getOperation()
-        val parameters = getParameters()
-        return DeclarationStatement(VariableType.ARRAY(parameters.second, size), parameters.first, value)
-    }
-
-    override fun deepCopy(): BasicBlock {
-        return ArrayDeclarationBlock(UUID.randomUUID())
-    }
-}
-
-
-
-class VariableAssignmentBlock(
-    blockId: UUID
-) : AssignmentBlock(blockId = blockId, type = BlockType.VARIABLE_ASSIGNMENT) {
-    override fun execute(): AssignmentStatement {
-        val parameters = getParameters()
-        return VariableAssignmentStatement(parameters.first, parameters.second)
-    }
-
-    override fun deepCopy(): BasicBlock {
-        return VariableAssignmentBlock(UUID.randomUUID())
-    }
-}
-
-class ArrayElementAssignmentBlock(
-    blockId: UUID
-) : AssignmentBlock(blockId = blockId, type = BlockType.ARRAY_ELEMENT_ASSIGNMENT, color = Color(0xFF009688)) {
-
-    val indexInput = OperationInputField()
-
-    override fun execute(): ArrayElementAssignmentStatement {
-        val parameters = getParameters()
-        val index = indexInput.getOperation()
-        return ArrayElementAssignmentStatement(parameters.first, parameters.second, index)
-    }
-
-    override fun deepCopy(): BasicBlock {
-        return ArrayElementAssignmentBlock(UUID.randomUUID())
+        return InitializationBlock(UUID.randomUUID())
     }
 }
 
@@ -249,7 +191,7 @@ class IfElseBlock(
 
     fun addElseIfBlock(condition : String) {
         val conditionInput = OperationInputField()
-        conditionInput.setOperation(condition)
+        conditionInput.set(condition)
         val block = BodyBlock(blockId = UUID.randomUUID())
         blocksInput.add(Pair(conditionInput, block))
     }
@@ -257,7 +199,7 @@ class IfElseBlock(
 
     fun setNewCondition(condition : String, index : Int) {
         val conditionInput = OperationInputField()
-        conditionInput.setOperation(condition)
+        conditionInput.set(condition)
         blocksInput[index] = Pair(conditionInput, blocksInput[index].second)
     }
 
@@ -297,18 +239,20 @@ class IfElseBlock(
 class ForBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.FOR, color = Color(0xFF7745FF)) {
-    val initializer = VariableAssignmentBlock(blockId = UUID.randomUUID())
+    val initializerInput = DeclarationStatementInputField()
     val conditionInput = OperationInputField()
-    val stateChange = VariableAssignmentBlock(blockId = UUID.randomUUID())
+    val stateChangeInput = AssignmentStatementInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     override fun execute(): ForLoop {
+        val initializer = initializerInput.getDeclarationStatement()
         val operation = conditionInput.getOperation()
+        val stateChange = stateChangeInput.getAssignmentStatement()
         val statements = mutableListOf<IStatement>()
         for (block in blocks.blocks){
             statements.add(block.execute())
         }
-        return ForLoop(initializer.execute(), operation, stateChange.execute(), BlockStatement(statements))
+        return ForLoop(initializer, operation, stateChange, BlockStatement(statements))
     }
 
     override fun deepCopy(): BasicBlock {
@@ -380,28 +324,21 @@ class FunctionBlock(
 ) : BasicBlock(blockId, type = BlockType.FUNCTION, color = Color(0xFF45A3FF)) {
     val nameInput = NameInputField()
     val returnValueTypeInput = TypeInputField()
-    val inputParameters = mutableListOf<VariableInitializationBlock>()
+    val inputParameters = FunctionParametersInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     override fun execute(): FunctionDeclarationStatement {
         val name = nameInput.getName()
         val returnValueType = returnValueTypeInput.getType()
         val statements = mutableListOf<IStatement>()
-        val parameters = mutableListOf<DeclarationStatement>()
+        val parameters = inputParameters.getFunctionParametersInputField()
         for (block in blocks.blocks){
             statements.add(block.execute())
-        }
-        for (inputParameter in inputParameters){
-            parameters.add(inputParameter.execute())
         }
         return FunctionDeclarationStatement(name, parameters, BlockStatement(statements), returnValueType)
     }
 
     override fun deepCopy(): BasicBlock {
         return FunctionBlock(UUID.randomUUID())
-    }
-
-    fun addParameter(initBlock: VariableInitializationBlock) {
-        inputParameters.add(initBlock)
     }
 }
