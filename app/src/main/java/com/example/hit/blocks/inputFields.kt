@@ -8,6 +8,10 @@ import com.example.hit.language.parser.Parser
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.operations.IOperation
 import androidx.compose.runtime.mutableStateOf
+import com.example.hit.language.parser.AssignmentStatement
+import com.example.hit.language.parser.DeclarationStatement
+import com.example.hit.language.parser.OperationsParser
+import com.example.hit.language.parser.StatementsParser
 
 
 class StringInputField(initialValue: String = "") {
@@ -22,10 +26,20 @@ class StringInputField(initialValue: String = "") {
     }
 }
 
+abstract class BasicInputField {
+    val inputFiled: StringInputField = StringInputField()
 
-class NameInputField{
-    private val inputFiled: StringInputField = StringInputField()
+    fun set(newName : String) {
+        inputFiled.set(newName)
+    }
 
+    fun getInputField(): String {
+        return inputFiled.get()
+    }
+}
+
+
+class NameInputField : BasicInputField() {
     private fun isValidName(name: String): Boolean {
         if (name.isEmpty()) return false
         val firstChar = name[0]
@@ -47,13 +61,6 @@ class NameInputField{
         )
         return name !in keywords
     }
-    fun setName(newName : String) {
-        inputFiled.set(newName)
-    }
-
-    fun getInputField(): String {
-        return inputFiled.get()
-    }
 
     fun getName(): String {
         val name = inputFiled.get()
@@ -64,46 +71,37 @@ class NameInputField{
     }
 }
 
-class TypeInputField{
-    private val inputFiled: StringInputField = StringInputField()
-
-    private val stringToTypeMap = mapOf(
-        "Int" to VariableType.INT,
-        "String" to VariableType.STRING,
-        "Bool" to VariableType.BOOL,
-        "Double" to VariableType.DOUBLE
-    )
-
-    fun setType(newType : String) {
-        inputFiled.set(newType)
-    }
-
-    fun getInputField(): String {
-        return inputFiled.get()
-    }
-
+class TypeInputField : BasicInputField(){
     fun getType(): VariableType {
-        val type = inputFiled.get()
-        if (!stringToTypeMap.containsKey(type)) {
-            throw InvalidTypeException(type)
-        }
-        return stringToTypeMap[type]!!
+        val s = inputFiled.get()
+        return StatementsParser(Lexer(s).tokenize()).parseType()
     }
 }
 
-class OperationInputField{
-    private val inputFiled: StringInputField = StringInputField()
-
-    fun setOperation(newOperation : String) {
-        inputFiled.set(newOperation)
-    }
-
-    fun getInputField(): String {
-        return inputFiled.get()
-    }
-
+class OperationInputField : BasicInputField() {
     fun getOperation(): IOperation {
         val s = inputFiled.get()
-        return Parser(Lexer(s).tokenize()).parse()[0]
+        return OperationsParser(Lexer(s).tokenize()).parse()[0]
+    }
+}
+
+class DeclarationStatementInputField : BasicInputField(){
+    fun getDeclarationStatement(): DeclarationStatement {
+        val s = inputFiled.get()
+        return StatementsParser(Lexer(s).tokenize()).parseDeclaration()
+    }
+}
+
+class AssignmentStatementInputField : BasicInputField(){
+    fun getAssignmentStatement(): AssignmentStatement {
+        val s = inputFiled.get()
+        return StatementsParser(Lexer(s).tokenize()).parseAssignment()
+    }
+}
+
+class FunctionParametersInputField : BasicInputField(){
+    fun getFunctionParametersInputField(): List<DeclarationStatement> {
+        val s = inputFiled.get()
+        return StatementsParser(Lexer(s).tokenize()).parseFunctionParameters()
     }
 }

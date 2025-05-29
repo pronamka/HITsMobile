@@ -119,7 +119,7 @@ class ArrayElementAssignmentStatement(
 }
 
 class PrintStatement(
-    val toPrint: IOperation
+    val toPrint: IOperation,
 ) : IStatement {
     var outputValue: String? = null
     override fun evaluate() {
