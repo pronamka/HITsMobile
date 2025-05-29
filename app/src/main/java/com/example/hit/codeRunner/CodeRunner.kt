@@ -3,6 +3,7 @@ import androidx.compose.runtime.snapshots.Snapshot
 import com.example.hit.blocks.BasicBlock
 import com.example.hit.blocks.container.Container
 import com.example.hit.language.parser.IStatement
+import com.example.hit.language.parser.Scopes
 
 class CodeRunner(private val container: Container, private val console: MutableList<String>) {
     fun run() {
@@ -18,6 +19,7 @@ class CodeRunner(private val container: Container, private val console: MutableL
                 statement.evaluate()
             }
             console.add("Program execution completed successfully!")
+            Scopes.reset()
         } catch (e: Exception) {
             console.add("Error: ${e.message}")
         }
