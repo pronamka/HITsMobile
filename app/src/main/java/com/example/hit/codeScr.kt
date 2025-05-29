@@ -22,7 +22,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBack
@@ -62,6 +64,7 @@ import java.util.UUID
 
 var font = FontFamily(Font(R.font.fredoka))
 
+
 @Composable
 fun CodeScreen(
     navController: NavHostController,
@@ -77,6 +80,8 @@ fun CodeScreen(
 
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+
+    val scrollState = rememberScrollState()
 
     var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
 
@@ -132,10 +137,13 @@ fun CodeScreen(
                             } else {
                                 showDialog = true
                             }
-                                  },
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
                         shape = RoundedCornerShape(28.dp),
-                        modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
+                        modifier = Modifier
+                            .padding(bottom = 24.dp)
+                            .width(158.dp)
+                            .height(58.dp)
                     ) {
                         Text(
                             "Launch code",
@@ -148,10 +156,14 @@ fun CodeScreen(
 
                     Button(
                         onClick = {
-                            listOfBlocks.clear() },
+                            listOfBlocks.clear()
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA6294E)),
                         shape = RoundedCornerShape(28.dp),
-                        modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
+                        modifier = Modifier
+                            .padding(bottom = 24.dp)
+                            .width(158.dp)
+                            .height(58.dp)
                     ) {
                         Text(
                             "Clear",
@@ -226,29 +238,37 @@ fun CodeScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp)
+                        .verticalScroll(scrollState)
                         .clickable { blockWithDeleteShownId = null },
                 ) {
-                    listOfBlocks.forEach{block ->
-                        Box(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Drag(
-                                block = block,
-                                active = blockId == block.id,
-                                initID = {blockId = block.id},
-                                blocksOnScreen = listOfBlocks,
-                                del = { listOfBlocks.remove(block) },
-                                blockWithDeleteShownId = blockWithDeleteShownId,
-                                onShowDeleteChange = { id -> blockWithDeleteShownId = id }
-                            )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .height(2000.dp)
+                    ) {
+                        listOfBlocks.forEach { block ->
+                            Box(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Drag(
+                                    block = block,
+                                    active = blockId == block.id,
+                                    initID = { blockId = block.id },
+                                    blocksOnScreen = listOfBlocks,
+                                    del = { listOfBlocks.remove(block) },
+                                    blockWithDeleteShownId = blockWithDeleteShownId,
+                                    onShowDeleteChange = { id -> blockWithDeleteShownId = id }
+                                )
+                            }
                         }
+                        Spacer(modifier = Modifier.height(150.dp))
                     }
-                    Spacer(modifier = Modifier.height(150.dp))
                 }
+
             }
         }
 
-        if(showConsole) {
+        if (showConsole) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -265,9 +285,9 @@ fun CodeScreen(
                 .navigationBarsPadding()
                 .background(
                     color = Color(0xFFFFFFFF),
-                    shape = RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp, )
+                    shape = RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp)
                 )
-        ){
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -328,7 +348,7 @@ fun CodeScreen(
         }
 
 
-        if(showMenu && !showConsole) {
+        if (showMenu && !showConsole) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -350,7 +370,12 @@ fun CodeScreen(
                 )
         ) {
             LazyColumn(
-                modifier = Modifier.padding(top = 52.dp, bottom = 52.dp, start = 12.dp, end = 12.dp),
+                modifier = Modifier.padding(
+                    top = 52.dp,
+                    bottom = 52.dp,
+                    start = 12.dp,
+                    end = 12.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(defaultBlocks) { block ->
