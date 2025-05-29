@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -39,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -76,6 +78,7 @@ var font = FontFamily(Font(R.font.fredoka))
 fun CodeScreen(
     navController: NavHostController,
 ) {
+    var showDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showConsole by remember { mutableStateOf(false) }
     val listOfBlocks = remember { mutableStateListOf<BasicBlock>() }
@@ -104,6 +107,23 @@ fun CodeScreen(
     val defaultBlocks = remember { BlockData.defaultBlocks }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("Error", fontFamily = font) },
+                text = {
+                    Text(
+                        "Invalid block position",
+                        fontFamily = font
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { showDialog = false }) {
+                        Text("OK", fontFamily = font)
+                    }
+                }
+            )
+        }
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             bottomBar = {
@@ -117,9 +137,14 @@ fun CodeScreen(
                     Button(
                         onClick = {
                             val container = Container(listOfBlocks)
-                            val codeRunner = CodeRunner(container, consoleOutput)
-                            codeRunner.run()
-                            showConsole = !showConsole },
+                            if (container.isValidBlockArrangement()) {
+                                val codeRunner = CodeRunner(container, consoleOutput)
+                                codeRunner.run()
+                                showConsole = !showConsole
+                            } else {
+                                showDialog = true
+                            }
+                                  },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
                         shape = RoundedCornerShape(28.dp),
                         modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
