@@ -1,5 +1,6 @@
 package com.example.hit
 
+import Drag
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -86,11 +87,12 @@ fun CodeScreen(
     var blockId by remember { mutableStateOf<UUID?>(null) }
     val consoleOutput = remember { mutableStateListOf<String>() }
     val density = LocalDensity.current
-    val topPanelHeightPx = with(density) { (52.dp).toPx() }
+    val topPanelHeightPx = with(density) { (20.dp).toPx() }
 
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
+    var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
 
     val menuOff by animateDpAsState(
         targetValue = if (showMenu) 0.dp else (-300).dp,
@@ -239,7 +241,8 @@ fun CodeScreen(
                     state = lazyListState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .clickable { blockWithDeleteShownId = null },
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(listOfBlocks.size, key = { listOfBlocks[it].id }) { index ->
@@ -247,7 +250,9 @@ fun CodeScreen(
                         val position = blockPositions[block.id] ?: BlockPosition(
                             id = block.id,
                             posX = 0f,
-                            posY = topPanelHeightPx + 20f
+                            posY = topPanelHeightPx + 20f,
+                            heightPx = 0f,
+                            widthPx = 0f
                         )
                         Box(
                             modifier = Modifier
@@ -259,10 +264,18 @@ fun CodeScreen(
                                 active = blockId == position.id,
                                 initID = { blockId = position.id },
                                 positionChange = { newPosition ->
-                                    blockPositions[block.id] = newPosition },
+                                    blockPositions[block.id] = newPosition
+                                },
                                 allBlockPositions = blockPositions,
-                                listOfBlocks = listOfBlocks,
-                                topPanelHeight = topPanelHeightPx,
+                                blocksOnScreen = listOfBlocks,
+                                onSizeChanged = { id, newWidthPx, newHeightPx ->
+                                    blockPositions[id]?.let { currentPosition ->
+                                        blockPositions[id] = currentPosition.copy(heightPx = newHeightPx, widthPx = newWidthPx)
+                                    }
+                                },
+                                del = { listOfBlocks.remove(block) },
+                                blockWithDeleteShownId = blockWithDeleteShownId,
+                                onShowDeleteChange = { id -> blockWithDeleteShownId = id }
                             )
                         }
                     }
@@ -389,13 +402,16 @@ fun CodeScreen(
                             blockPositions[newBlock.id] = BlockPosition(
                                 id = newBlock.id,
                                 posX = 0f,
-                                posY = topPanelHeightPx + 20f
+                                posY = topPanelHeightPx + 20f,
+                                heightPx = 0f,
+                                widthPx = 0f
                             )
                             coroutineScope.launch {
                                 delay(100)
                                 lazyListState.animateScrollToItem(listOfBlocks.size - 1)
                             }
-                        }
+                        },
+                        onSizeChanged = { _, _ -> }
                     )
                 }
             }
