@@ -30,7 +30,7 @@ import java.util.UUID
 abstract class BasicBlock(
     var id: UUID,
     val type: BlockType,
-    val color: Color,
+    var color: Color,
     var topConnection: BasicBlock? = null,
     var bottomConnection: BasicBlock? = null,
     var heightDP: Dp = 80.dp,
