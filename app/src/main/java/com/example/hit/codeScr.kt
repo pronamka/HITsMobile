@@ -4,14 +4,12 @@ import Drag
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,30 +19,25 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -64,9 +56,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.hit.blocks.BasicBlock
 import com.example.hit.blocks.BlockData
-import com.example.hit.blocks.ForBlock
-import com.example.hit.blocks.IfElseBlock
-import com.example.hit.blocks.WhileBlock
 import com.example.hit.blocks.container.Container
 import com.example.hit.codeRunner.CodeRunner
 import kotlinx.coroutines.delay
@@ -75,22 +64,24 @@ import java.util.UUID
 
 var font = FontFamily(Font(R.font.fredoka))
 
+
 @Composable
 fun CodeScreen(
     navController: NavHostController,
 ) {
+    var nextBlockPosition by remember { mutableFloatStateOf(0f) }
     var showDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showConsole by remember { mutableStateOf(false) }
     val listOfBlocks = remember { mutableStateListOf<BasicBlock>() }
-    val blockPositions = remember { mutableStateMapOf<UUID, BlockPosition>() }
     var blockId by remember { mutableStateOf<UUID?>(null) }
     val consoleOutput = remember { mutableStateListOf<String>() }
     val density = LocalDensity.current
-    val topPanelHeightPx = with(density) { (20.dp).toPx() }
 
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+
+    val scrollState = rememberScrollState()
 
     var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
 
@@ -146,10 +137,13 @@ fun CodeScreen(
                             } else {
                                 showDialog = true
                             }
-                                  },
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
                         shape = RoundedCornerShape(28.dp),
-                        modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
+                        modifier = Modifier
+                            .padding(bottom = 24.dp)
+                            .width(158.dp)
+                            .height(58.dp)
                     ) {
                         Text(
                             "Launch code",
@@ -163,10 +157,13 @@ fun CodeScreen(
                     Button(
                         onClick = {
                             listOfBlocks.clear()
-                            blockPositions.clear() },
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA6294E)),
                         shape = RoundedCornerShape(28.dp),
-                        modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
+                        modifier = Modifier
+                            .padding(bottom = 24.dp)
+                            .width(158.dp)
+                            .height(58.dp)
                     ) {
                         Text(
                             "Clear",
@@ -237,56 +234,41 @@ fun CodeScreen(
                     }
                 }
 
-                LazyColumn(
-                    state = lazyListState,
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp)
+                        .verticalScroll(scrollState)
                         .clickable { blockWithDeleteShownId = null },
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(listOfBlocks.size, key = { listOfBlocks[it].id }) { index ->
-                        val block = listOfBlocks[index]
-                        val position = blockPositions[block.id] ?: BlockPosition(
-                            id = block.id,
-                            posX = 0f,
-                            posY = topPanelHeightPx + 20f,
-                            heightPx = 0f,
-                            widthPx = 0f
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        ) {
-                            Drag(
-                                block = block,
-                                position = position,
-                                active = blockId == position.id,
-                                initID = { blockId = position.id },
-                                positionChange = { newPosition ->
-                                    blockPositions[block.id] = newPosition
-                                },
-                                allBlockPositions = blockPositions,
-                                blocksOnScreen = listOfBlocks,
-                                onSizeChanged = { id, newWidthPx, newHeightPx ->
-                                    blockPositions[id]?.let { currentPosition ->
-                                        blockPositions[id] = currentPosition.copy(heightPx = newHeightPx, widthPx = newWidthPx)
-                                    }
-                                },
-                                del = { listOfBlocks.remove(block) },
-                                blockWithDeleteShownId = blockWithDeleteShownId,
-                                onShowDeleteChange = { id -> blockWithDeleteShownId = id }
-                            )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .height(2000.dp)
+                    ) {
+                        listOfBlocks.forEach { block ->
+                            Box(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Drag(
+                                    block = block,
+                                    active = blockId == block.id,
+                                    initID = { blockId = block.id },
+                                    blocksOnScreen = listOfBlocks,
+                                    del = { listOfBlocks.remove(block) },
+                                    blockWithDeleteShownId = blockWithDeleteShownId,
+                                    onShowDeleteChange = { id -> blockWithDeleteShownId = id }
+                                )
+                            }
                         }
-                    }
-                    item {
                         Spacer(modifier = Modifier.height(150.dp))
                     }
                 }
+
             }
         }
 
-        if(showConsole) {
+        if (showConsole) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -303,9 +285,9 @@ fun CodeScreen(
                 .navigationBarsPadding()
                 .background(
                     color = Color(0xFFFFFFFF),
-                    shape = RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp, )
+                    shape = RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp)
                 )
-        ){
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -366,7 +348,7 @@ fun CodeScreen(
         }
 
 
-        if(showMenu && !showConsole) {
+        if (showMenu && !showConsole) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -388,7 +370,12 @@ fun CodeScreen(
                 )
         ) {
             LazyColumn(
-                modifier = Modifier.padding(top = 52.dp, bottom = 52.dp, start = 12.dp, end = 12.dp),
+                modifier = Modifier.padding(
+                    top = 52.dp,
+                    bottom = 52.dp,
+                    start = 12.dp,
+                    end = 12.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(defaultBlocks) { block ->
@@ -398,20 +385,11 @@ fun CodeScreen(
                         onClick = {
                             val newBlock = block.deepCopy()
                             listOfBlocks.add(newBlock)
-
-                            blockPositions[newBlock.id] = BlockPosition(
-                                id = newBlock.id,
-                                posX = 0f,
-                                posY = topPanelHeightPx + 20f,
-                                heightPx = 0f,
-                                widthPx = 0f
-                            )
                             coroutineScope.launch {
                                 delay(100)
                                 lazyListState.animateScrollToItem(listOfBlocks.size - 1)
                             }
-                        },
-                        onSizeChanged = { _, _ -> }
+                        }
                     )
                 }
             }

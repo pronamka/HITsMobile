@@ -1,5 +1,6 @@
 package com.example.hit
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,7 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -55,21 +58,26 @@ import java.util.UUID
 
 
 data class BlockPosition(
-    var id : UUID,
-    var posX : Float = 0f,
-    var posY : Float = 0f,
+    var id: UUID,
+    var posX: Float = 0f,
+    var posY: Float = 0f,
     var heightPx: Float = 0f,
     var widthPx: Float = 0f
 )
 
+fun onChange(block : BasicBlock, coordinates : LayoutCoordinates) {
+//    block.x = coordinates.positionOnScreen().x
+//    block.y = coordinates.positionOnScreen().y
+//    block.heightDP = coordinates.size.height.dp
+//    block.widthDP = coordinates.size.width.dp
+}
 
 
 @Composable
 fun BlockItem(
-    showMenu : Boolean = false,
+    showMenu: Boolean = false,
     block: BasicBlock,
     onClick: () -> Unit,
-    onSizeChanged: (Float, Float) -> Unit,
 ) {
 
     val textFieldColors = TextFieldDefaults.colors(
@@ -92,7 +100,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                        onChange(block, coordinates)
                     }
                     .background(
                         color = block.color,
@@ -109,7 +117,7 @@ fun BlockItem(
                 ) {
                     OutlinedTextField(
                         value = block.nameInput.getInputField(),
-                        onValueChange = { block.nameInput.set(it)},
+                        onValueChange = { block.nameInput.set(it) },
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp),
@@ -121,7 +129,8 @@ fun BlockItem(
                             fontFamily = font
                         )
                     )
-                    Text(text = ":",
+                    Text(
+                        text = ":",
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Medium,
@@ -130,7 +139,7 @@ fun BlockItem(
 
                     OutlinedTextField(
                         value = block.typeInput.getInputField(),
-                        onValueChange = { block.typeInput.set(it)},
+                        onValueChange = { block.typeInput.set(it) },
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp),
@@ -143,7 +152,8 @@ fun BlockItem(
                         )
                     )
 
-                    Text(text = "=",
+                    Text(
+                        text = "=",
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Medium,
@@ -180,7 +190,7 @@ fun BlockItem(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .onGloballyPositioned { coordinates ->
-                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                        onChange(block, coordinates)
                     }
                     .wrapContentWidth()
                     .wrapContentHeight()
@@ -213,7 +223,8 @@ fun BlockItem(
                             value = ifCondition,
                             onValueChange = {
                                 ifCondition = it
-                                block.setNewCondition(ifCondition, 0) },
+                                block.setNewCondition(ifCondition, 0)
+                            },
                             modifier = Modifier
                                 .fillMaxWidth(0.7f)
                                 .height(56.dp),
@@ -271,7 +282,7 @@ fun BlockItem(
                                         elseIfCounts = elseIfCounts.toMutableList().also {
                                             it[index] = newCondition
                                         }
-                                        block.setNewCondition(condition, index+1)
+                                        block.setNewCondition(condition, index + 1)
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth(0.5f)
@@ -303,7 +314,8 @@ fun BlockItem(
 
                     if (hasElse) {
                         Column(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .wrapContentHeight(unbounded = true)
                                 .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -333,9 +345,7 @@ fun BlockItem(
                                     )
                             )
                         }
-                    }
-
-                    else {
+                    } else {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center
@@ -344,25 +354,42 @@ fun BlockItem(
                                 modifier = Modifier
                                     .width(104.dp)
                                     .height(48.dp),
-                                onClick = { elseIfCounts = elseIfCounts + "";
-                                            block.addElseIfBlock("")
-                                          },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7943DE))
-                            ){
-                                Text("ELSE IF", color = Color.White, fontFamily = font, fontSize = 18.sp)
+                                onClick = {
+                                    elseIfCounts = elseIfCounts + "";
+                                    block.addElseIfBlock("")
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(
+                                        0xFF7943DE
+                                    )
+                                )
+                            ) {
+                                Text(
+                                    "ELSE IF",
+                                    color = Color.White,
+                                    fontFamily = font,
+                                    fontSize = 18.sp
+                                )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Button(
                                 modifier = Modifier
                                     .width(104.dp)
                                     .height(48.dp),
-                                onClick = { hasElse = true;
-                                          block.addElseBlock()},
+                                onClick = {
+                                    hasElse = true;
+                                    block.addElseBlock()
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF7943DE)
                                 )
                             ) {
-                                Text("ELSE", color = Color.White, fontFamily = font, fontSize = 18.sp)
+                                Text(
+                                    "ELSE",
+                                    color = Color.White,
+                                    fontFamily = font,
+                                    fontSize = 18.sp
+                                )
                             }
                         }
                     }
@@ -370,7 +397,7 @@ fun BlockItem(
             }
         }
 
-        is DeclarationBlock ->{
+        is DeclarationBlock -> {
             block.heightDP = 80.dp
             Box(
                 modifier = Modifier
@@ -378,7 +405,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                        onChange(block, coordinates)
                     }
                     .background(
                         color = block.color,
@@ -444,7 +471,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                        onChange(block, coordinates)
                     }
                     .background(
                         color = block.color,
@@ -475,7 +502,8 @@ fun BlockItem(
 
                     )
 
-                    Text(text = "=",
+                    Text(
+                        text = "=",
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Medium,
@@ -501,6 +529,7 @@ fun BlockItem(
                 }
             }
         }
+
         is ForBlock -> {
             val density = LocalDensity.current
             Box(
@@ -509,7 +538,7 @@ fun BlockItem(
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                        onChange(block, coordinates)
                     }
                     .background(
                         color = block.color,
@@ -536,7 +565,8 @@ fun BlockItem(
                             fontFamily = font
                         )
 
-                        Text(text = "(",
+                        Text(
+                            text = "(",
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -558,7 +588,8 @@ fun BlockItem(
                             )
                         )
 
-                        Text(text = ";",
+                        Text(
+                            text = ";",
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -567,7 +598,7 @@ fun BlockItem(
 
                         OutlinedTextField(
                             value = block.conditionInput.getInputField(),
-                            onValueChange = { block.conditionInput.set(it)},
+                            onValueChange = { block.conditionInput.set(it) },
                             modifier = Modifier
                                 .width(72.dp)
                                 .height(56.dp),
@@ -580,7 +611,8 @@ fun BlockItem(
                             )
                         )
 
-                        Text(text = ";",
+                        Text(
+                            text = ";",
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -602,7 +634,8 @@ fun BlockItem(
                             )
                         )
 
-                        Text(text = ")",
+                        Text(
+                            text = ")",
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -629,6 +662,7 @@ fun BlockItem(
                 }
             }
         }
+
         is WhileBlock -> {
             val density = LocalDensity.current
             Box(
@@ -637,7 +671,7 @@ fun BlockItem(
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                        onChange(block, coordinates)
                     }
                     .background(
                         color = block.color,
@@ -664,7 +698,8 @@ fun BlockItem(
                             fontFamily = font
                         )
 
-                        Text(text = "(",
+                        Text(
+                            text = "(",
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -686,7 +721,8 @@ fun BlockItem(
                             )
                         )
 
-                        Text(text = ")",
+                        Text(
+                            text = ")",
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -713,7 +749,8 @@ fun BlockItem(
                 }
             }
         }
-        is ReturnBlock, is ContinueBlock, is BreakBlock ->{
+
+        is ReturnBlock, is ContinueBlock, is BreakBlock -> {
             block.heightDP = 80.dp
             Box(
                 modifier = Modifier
@@ -721,7 +758,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                        onChange(block, coordinates)
                     }
                     .background(
                         color = block.color,
@@ -744,6 +781,7 @@ fun BlockItem(
                 }
             }
         }
+
         is PrintBlock -> {
             block.heightDP = 80.dp
             Box(
@@ -752,7 +790,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                        onChange(block, coordinates)
                     }
                     .background(
                         color = block.color,
@@ -779,7 +817,8 @@ fun BlockItem(
                             fontFamily = font
                         )
 
-                        Text(text = "(",
+                        Text(
+                            text = "(",
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -801,7 +840,8 @@ fun BlockItem(
                             )
                         )
 
-                        Text(text = ")",
+                        Text(
+                            text = ")",
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,

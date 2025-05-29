@@ -1,3 +1,4 @@
+import android.util.Log
 import com.example.hit.BlockItem
 import com.example.hit.BlockPosition
 import com.example.hit.font
@@ -19,24 +20,18 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import com.example.hit.blocks.BasicBlock
 import java.util.UUID
-import kotlin.math.abs
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Drag(
     block: BasicBlock,
-    position: BlockPosition,
-    active: Boolean,
+    active : Boolean,
     initID : () -> Unit,
-    positionChange: (BlockPosition) -> Unit,
-    allBlockPositions: Map<UUID, BlockPosition>,
     blocksOnScreen: List<BasicBlock>,
-    onSizeChanged: (UUID, Float, Float) -> Unit,
     del: ()-> Unit,
     blockWithDeleteShownId: UUID?,
     onShowDeleteChange: (UUID?) -> Unit
@@ -61,73 +56,73 @@ fun Drag(
             draggedBlock.connectBottomBlock(possibleConnectedBlock)
         }
     }
-    
+
     val density = LocalDensity.current
-    val minBlockY = 20f
-
-    var X by remember { mutableStateOf(position.posX) }
-    var Y by remember { mutableStateOf(position.posY) }
-
-    var blockHeight by remember { mutableStateOf(0f) }
-    var blockWidth by remember { mutableStateOf(0f) }
 
     var isNearSnap by remember { mutableStateOf(false) }
     var snapTarget by remember { mutableStateOf<Pair<Float, Float>?>(null) }
 
-    val animatedY by animateFloatAsState(
-        targetValue = if (snapTarget != null) snapTarget!!.second else Y,
+    var currentX by remember { mutableStateOf(block.x) }
+    var currentY by remember { mutableStateOf(block.y) }
+
+    val animatedX by animateFloatAsState(
+        targetValue = currentX,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
-        ),
+        )
     )
 
+    val animatedY by animateFloatAsState(
+        targetValue = currentY,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
 
     fun distance(point1: Pair<Float, Float>, point2: Pair<Float, Float>): Float {
+        //Log.println(Log.DEBUG, null, listOf(point1, point2).toString())
         val dx = point1.first - point2.first
         val dy = point1.second - point2.second
         return kotlin.math.sqrt(dx * dx + dy * dy)
     }
 
     fun findSnapTarget(
-        currentBlockId: UUID,
-        currentX: Float,
-        currentY: Float,
-        blockHeight: Float,
-        blockWidth: Float,
-        blockPositions: Map<UUID, BlockPosition>
+        currentBlock: BasicBlock
     ): Pair<Float, Float>? {
-        for ((id, pos) in blockPositions) {
-            if (id == currentBlockId) continue
+        for (otherBlock in blocksOnScreen) {
+            if (otherBlock.id == currentBlock.id) continue
 
-            val otherHeightPx = pos.heightPx
-            val otherWidthPx = pos.widthPx
-            val otherTop = pos.posY
-            val otherBottom = pos.posY + otherHeightPx
+            val otherHeightPx = otherBlock.getDynamicHeightPx(density)
+            val otherWidthPx = otherBlock.getDynamicWidthPx(density)
+            val otherTop = otherBlock.y
+            val otherBottom = otherTop + otherHeightPx
 
-            val otherTopCenter = Pair(pos.posX + otherWidthPx / 2, otherTop)
-            val otherBottomCenter = Pair(pos.posX + otherWidthPx / 2, otherBottom)
+            val otherTopCenter = Pair(otherBlock.x + otherBlock.getDynamicWidthPx(density) / 2, otherBlock.y)
 
-            val currentBottomCenter = Pair(currentX + blockWidth / 2, currentY + blockHeight)
-            val currentTopCenter = Pair(currentX + blockWidth / 2, currentY)
 
-            val distanceBottomToTop = distance(currentBottomCenter, otherTopCenter)
-            if (distanceBottomToTop < 50f) {
-                return Pair(otherTopCenter.first - blockWidth / 2, otherTopCenter.second - blockHeight)
+            val otherBottomCenter = Pair(otherBlock.x + otherWidthPx / 2, otherBottom)
+            val currentTopCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y)
+
+            val currentBottomCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y+currentBlock.getDynamicHeightPx(density))
+
+            Log.println(Log.DEBUG, null, listOf(currentBlock.y, otherTop).toString())
+            val distanceCurrentTopToOtherBottom = distance(currentTopCenter, otherBottomCenter)
+            if (distanceCurrentTopToOtherBottom < 50f) {
+                return Pair(otherBlock.x, otherBottom)
             }
-
-            val distanceTopToBottom = distance(currentTopCenter, otherBottomCenter)
-            if (distanceTopToBottom < 50f) {
-                return Pair(otherBottomCenter.first - blockWidth / 2, otherBottomCenter.second)
+            val distanceCurrentBottomToOtherTop = distance(currentBottomCenter, otherTopCenter)
+            if (distanceCurrentBottomToOtherTop < 50f) {
+                return Pair(otherBlock.x, otherTop-currentBlock.getDynamicHeightPx(density))
             }
         }
-
         return null
     }
 
     Box(
         modifier = Modifier
-            .offset { IntOffset(X.roundToInt(), animatedY.roundToInt()) }
+            .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
             .zIndex(if (active) 1f else 0f)
             .combinedClickable(
                 onClick = { onShowDeleteChange(null) },
@@ -150,23 +145,23 @@ fun Drag(
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        val newX = (X + dragAmount.x).coerceAtLeast(0f)
-                        val newY = (Y + dragAmount.y)
+                        currentX = (currentX + dragAmount.x).coerceAtLeast(0f)
+                        currentY = currentY + dragAmount.y
 
-                        X = newX
-                        Y = newY
-                        val potentialSnap = findSnapTarget(block.id, newX, newY, blockHeight, blockWidth, allBlockPositions)
+                        block.x = currentX
+                        block.y = currentY
+
+                        val potentialSnap = findSnapTarget(block)
                         snapTarget = potentialSnap
                         isNearSnap = potentialSnap != null
                     },
                     onDragEnd = {
-                        val finalY = if (snapTarget != null) snapTarget!!.second else Y
-
-                        X = if (snapTarget != null) snapTarget!!.first else X
-                        Y = finalY
-
-                        positionChange(position.copy(posX = X, posY = Y, heightPx = blockHeight, widthPx = blockWidth))
-
+                        if (snapTarget != null) {
+                            currentX = snapTarget!!.first
+                            currentY = snapTarget!!.second
+                        }
+                        block.x = currentX
+                        block.y = currentY
                         snapTarget = null
                         isNearSnap = false
                     }
@@ -176,11 +171,6 @@ fun Drag(
         BlockItem(
             block = block,
             onClick = { onShowDeleteChange(null) },
-            onSizeChanged = { newWidthPx, newHeightPx ->
-                blockWidth = newWidthPx
-                blockHeight = newHeightPx
-                onSizeChanged(block.id, newWidthPx, newHeightPx)
-            }
         )
         if(block.id == blockWithDeleteShownId){
             Button(
