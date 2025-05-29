@@ -207,6 +207,7 @@ fun BlockItem(
             val density = LocalDensity.current
             var curHeight by remember { mutableStateOf(0) }
             var hasElse by remember { mutableStateOf(false) }
+            var ifCondition by remember { mutableStateOf("") }
             var elseIfCounts by remember { mutableStateOf(listOf<String>()) }
 
             Box(
@@ -244,8 +245,10 @@ fun BlockItem(
                             fontFamily = font,
                         )
                         OutlinedTextField(
-                            value = "",
-                            onValueChange = { },
+                            value = ifCondition,
+                            onValueChange = {
+                                ifCondition = it
+                                block.setNewCondition(ifCondition, 0) },
                             modifier = Modifier
                                 .fillMaxWidth(0.7f)
                                 .height(56.dp),
@@ -303,6 +306,7 @@ fun BlockItem(
                                         elseIfCounts = elseIfCounts.toMutableList().also {
                                             it[index] = newCondition
                                         }
+                                        block.setNewCondition(condition, index+1)
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth(0.5f)
@@ -375,7 +379,9 @@ fun BlockItem(
                                 modifier = Modifier
                                     .width(104.dp)
                                     .height(48.dp),
-                                onClick = { elseIfCounts = elseIfCounts + "" },
+                                onClick = { elseIfCounts = elseIfCounts + "";
+                                            block.addElseIfBlock("")
+                                          },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7943DE))
                             ){
                                 Text("ELSE IF", color = Color.White, fontFamily = font, fontSize = 18.sp)
@@ -385,7 +391,8 @@ fun BlockItem(
                                 modifier = Modifier
                                     .width(104.dp)
                                     .height(48.dp),
-                                onClick = { hasElse = true },
+                                onClick = { hasElse = true;
+                                          block.addElseBlock()},
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF7943DE)
                                 )

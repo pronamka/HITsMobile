@@ -229,7 +229,12 @@ class BodyBlock(
 class IfElseBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.IF, color = Color(0xFFBD3FCB)) {
-    val blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
+    var blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
+
+    init {
+        addElseIfBlock("")
+    }
+
     private var defaultBlockInput: BodyBlock? = null
 
 
@@ -243,10 +248,18 @@ class IfElseBlock(
         }
     }
 
-    fun addElseIfBlock() {
+    fun addElseIfBlock(condition : String) {
         val conditionInput = OperationInputField()
+        conditionInput.setOperation(condition)
         val block = BodyBlock(blockId = UUID.randomUUID())
         blocksInput.add(Pair(conditionInput, block))
+    }
+
+
+    fun setNewCondition(condition : String, index : Int) {
+        val conditionInput = OperationInputField()
+        conditionInput.setOperation(condition)
+        blocksInput[index] = Pair(conditionInput, blocksInput[index].second)
     }
 
     fun addElseBlock() {
