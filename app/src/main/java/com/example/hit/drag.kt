@@ -35,16 +35,19 @@ fun Drag(
     positionChange: (BlockPosition) -> Unit,
     allBlockPositions: Map<UUID, BlockPosition>,
     blocksOnScreen: List<BasicBlock>,
-    topPanelHeight: Float,
-    onHeightChanged: (Dp) -> Unit,
-    del: ()-> Unit
+    onSizeChanged: (UUID, Float, Float) -> Unit,
+    del: ()-> Unit,
+    blockWithDeleteShownId: UUID?,
+    onShowDeleteChange: (UUID?) -> Unit
 ){
     val density = LocalDensity.current
+    val minBlockY = 20f
+
     var X by remember { mutableStateOf(position.posX) }
     var Y by remember { mutableStateOf(position.posY) }
 
-    var blockHeight by remember { mutableStateOf(with(density) { block.heightDP.toPx() }) }
-    var showDelete by remember { mutableStateOf(false) }
+    var blockHeight by remember { mutableStateOf(0f) }
+    var blockWidth by remember { mutableStateOf(0f) }
 
     var isNearSnap by remember { mutableStateOf(false) }
     var snapTarget by remember { mutableStateOf<Pair<Float, Float>?>(null) }
@@ -72,6 +75,12 @@ fun Drag(
         secondBlock!!.connectionCnt++
     }
 
+    fun distance(point1: Pair<Float, Float>, point2: Pair<Float, Float>): Float {
+        val dx = point1.first - point2.first
+        val dy = point1.second - point2.second
+        return kotlin.math.sqrt(dx * dx + dy * dy)
+    }
+
     data class Snap(var position: Pair<Float, Float>?, var blockID : UUID?)
 
     fun findSnapTarget(
@@ -79,42 +88,44 @@ fun Drag(
         currentX: Float,
         currentY: Float,
         blockHeight: Float,
+        blockWidth: Float,
         blockPositions: Map<UUID, BlockPosition>
     ): Pair<Float, Float>? {
-        val snapThreshold = 50f
-        var minDistance = Float.MAX_VALUE
-        var snapPosition: Pair<Float, Float>? = null
-
         for ((id, pos) in blockPositions) {
             if (id == currentBlockId) continue
 
+            val otherHeightPx = pos.heightPx
+            val otherWidthPx = pos.widthPx
             val otherTop = pos.posY
-            val otherBottom = pos.posY + blockHeight
+            val otherBottom = pos.posY + otherHeightPx
 
-            val distanceToTop = Math.abs((currentY + blockHeight) - otherTop)
-            if (distanceToTop < snapThreshold && distanceToTop < minDistance && Math.abs(currentX - pos.posX) < snapThreshold) {
-                minDistance = distanceToTop
-                snapPosition = Pair(pos.posX, otherTop - blockHeight)
+            val otherTopCenter = Pair(pos.posX + otherWidthPx / 2, otherTop)
+            val otherBottomCenter = Pair(pos.posX + otherWidthPx / 2, otherBottom)
+
+            val currentBottomCenter = Pair(currentX + blockWidth / 2, currentY + blockHeight)
+            val currentTopCenter = Pair(currentX + blockWidth / 2, currentY)
+
+            val distanceBottomToTop = distance(currentBottomCenter, otherTopCenter)
+            if (distanceBottomToTop < 50f) {
+                return Pair(otherTopCenter.first - blockWidth / 2, otherTopCenter.second - blockHeight)
             }
 
-
-            val distanceToBottom = Math.abs(currentY - (pos.posY + blockHeight))
-            if (distanceToBottom < snapThreshold && distanceToBottom < minDistance && Math.abs(currentX - pos.posX) < snapThreshold) {
-                minDistance = distanceToBottom
-                snapPosition = Pair(pos.posX, pos.posY + blockHeight)
+            val distanceTopToBottom = distance(currentTopCenter, otherBottomCenter)
+            if (distanceTopToBottom < 50f) {
+                return Pair(otherBottomCenter.first - blockWidth / 2, otherBottomCenter.second)
             }
         }
 
-        return snapPosition
+        return null
     }
 
     Box(
         modifier = Modifier
-            .offset { IntOffset(X.roundToInt(), if (snapTarget != null) animatedY.roundToInt() else Y.roundToInt()) }
+            .offset { IntOffset(X.roundToInt(), animatedY.roundToInt()) }
             .zIndex(if (active) 1f else 0f)
             .combinedClickable(
-                onClick = {},
-                onLongClick = { showDelete = true }
+                onClick = { onShowDeleteChange(null) },
+                onLongClick = { onShowDeleteChange(block.id) }
             )
             .drawBehind {
                 if (isNearSnap) {
@@ -138,22 +149,18 @@ fun Drag(
 
                         X = newX
                         Y = newY
-                        position.posX = newX
-                        position.posY = newY
-                        positionChange(position.copy(posX = X, posY = Y))
-                        val potentialSnap = findSnapTarget(block.id, newX, newY, blockHeight, allBlockPositions)
+                        val potentialSnap = findSnapTarget(block.id, newX, newY, blockHeight, blockWidth, allBlockPositions)
                         snapTarget = potentialSnap
                         isNearSnap = potentialSnap != null
                     },
                     onDragEnd = {
-                        val finalSnap = findSnapTarget(block.id, X, Y, blockHeight, allBlockPositions)
-                        if (finalSnap != null) {
-                            X = finalSnap.first
-                            Y = finalSnap.second
-                            position.posX = X
-                            position.posY = Y
-                            positionChange(position.copy(posX = X, posY = Y))
-                        }
+                        val finalY = if (snapTarget != null) snapTarget!!.second else Y
+
+                        X = if (snapTarget != null) snapTarget!!.first else X
+                        Y = finalY
+
+                        positionChange(position.copy(posX = X, posY = Y, heightPx = blockHeight, widthPx = blockWidth))
+
                         snapTarget = null
                         isNearSnap = false
                     }
@@ -162,10 +169,14 @@ fun Drag(
     ) {
         BlockItem(
             block = block,
-            onClick = { },
-            onHeightChanged = { newHeightDp -> blockHeight = with(density) { newHeightDp.toPx() } }
+            onClick = { onShowDeleteChange(null) },
+            onSizeChanged = { newWidthPx, newHeightPx ->
+                blockWidth = newWidthPx
+                blockHeight = newHeightPx
+                onSizeChanged(block.id, newWidthPx, newHeightPx)
+            }
         )
-        if(showDelete){
+        if(block.id == blockWithDeleteShownId){
             Button(
                 onClick = { del() },
                 modifier = Modifier.align(Alignment.TopEnd)

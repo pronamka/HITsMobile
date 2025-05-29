@@ -60,7 +60,9 @@ import java.util.UUID
 data class BlockPosition(
     var id : UUID,
     var posX : Float = 0f,
-    var posY : Float = 0f
+    var posY : Float = 0f,
+    var heightPx: Float = 0f,
+    var widthPx: Float = 0f
 )
 
 
@@ -71,7 +73,7 @@ fun BlockItem(
     showMenu : Boolean = false,
     block: BasicBlock,
     onClick: () -> Unit,
-    onHeightChanged: (Dp) -> Unit,
+    onSizeChanged: (Float, Float) -> Unit,
 ) {
     var isDataTypeDropdownExpanded by remember { mutableStateOf(false) }
 
@@ -104,6 +106,9 @@ fun BlockItem(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
                     .height(80.dp)
+                    .onGloballyPositioned { coordinates ->
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                    }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -212,9 +217,7 @@ fun BlockItem(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .onGloballyPositioned { coordinates ->
-                        val newHeight = with(density) { coordinates.size.height.toDp() }
-                        block.heightDP = newHeight
-                        onHeightChanged(newHeight)
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
                     }
                     .wrapContentWidth()
                     .wrapContentHeight()
@@ -405,6 +408,9 @@ fun BlockItem(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
                     .height(80.dp)
+                    .onGloballyPositioned { coordinates ->
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                    }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -489,6 +495,9 @@ fun BlockItem(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
                     .height(80.dp)
+                    .onGloballyPositioned { coordinates ->
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                    }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -552,9 +561,7 @@ fun BlockItem(
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        val newHeight = with(density) { coordinates.size.height.toDp() }
-                        block.heightDP = newHeight
-                        onHeightChanged(newHeight)
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
                     }
                     .background(
                         color = block.color,
@@ -682,9 +689,7 @@ fun BlockItem(
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        val newHeight = with(density) { coordinates.size.height.toDp() }
-                        block.heightDP = newHeight
-                        onHeightChanged(newHeight)
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
                     }
                     .background(
                         color = block.color,
@@ -767,6 +772,9 @@ fun BlockItem(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
                     .height(80.dp)
+                    .onGloballyPositioned { coordinates ->
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                    }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -795,6 +803,9 @@ fun BlockItem(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
                     .height(80.dp)
+                    .onGloballyPositioned { coordinates ->
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                    }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -859,6 +870,9 @@ fun BlockItem(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
                     .height(80.dp)
+                    .onGloballyPositioned { coordinates ->
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                    }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
@@ -972,6 +986,9 @@ fun BlockItem(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .width(252.dp)
                     .height(80.dp)
+                    .onGloballyPositioned { coordinates ->
+                        onSizeChanged(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+                    }
                     .background(
                         color = block.color,
                         shape = RoundedCornerShape(24.dp)
