@@ -61,15 +61,24 @@ fun Drag(
     var isNearSnap by remember { mutableStateOf(false) }
     var snapTarget by remember { mutableStateOf<Pair<Float, Float>?>(null) }
 
+    var currentX by remember { mutableStateOf(block.x) }
+    var currentY by remember { mutableStateOf(block.y) }
 
-    val animatedY by animateFloatAsState(
-        targetValue = if (snapTarget != null) snapTarget!!.second else block.Y.value,
+    val animatedX by animateFloatAsState(
+        targetValue = currentX,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
-        ),
+        )
     )
 
+    val animatedY by animateFloatAsState(
+        targetValue = currentY,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
 
     fun distance(point1: Pair<Float, Float>, point2: Pair<Float, Float>): Float {
         //Log.println(Log.DEBUG, null, listOf(point1, point2).toString())
@@ -86,38 +95,23 @@ fun Drag(
 
             val otherHeightPx = otherBlock.getDynamicHeightPx(density)
             val otherWidthPx = otherBlock.getDynamicWidthPx(density)
-            val otherTop = otherBlock.Y.value
+            val otherTop = otherBlock.y
             val otherBottom = otherTop + otherHeightPx
 
-            //val otherTopCenter = Pair(pos.posX + otherWidthPx / 2, otherTop)
-            val otherBottomCenter = Pair(otherBlock.X.value + otherWidthPx / 2, otherBottom)
-
-            //val currentBottomCenter = Pair(currentX + blockWidth / 2, currentY + blockHeight)
-            val currentTopCenter = Pair(currentBlock.X.value + currentBlock.getDynamicWidthPx(density) / 2, block.Y.value)
+            val otherBottomCenter = Pair(otherBlock.x + otherWidthPx / 2, otherBottom)
+            val currentTopCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y)
 
             val distanceCurrentTopToOtherBottom = distance(currentTopCenter, otherBottomCenter)
-            //Log.println(Log.DEBUG, null, distanceCurrentTopToOtherBottom.toString())
             if (distanceCurrentTopToOtherBottom < 50f) {
-                //Log.println(Log.DEBUG, null, listOf(currentX, currentY, pos.posX, otherBottom).toString())
-                return Pair(otherBlock.X.value, otherBottom)
+                return Pair(otherBlock.x, otherBottom)
             }
-            /*val distanceTopToBottom = distance(currentTopCenter, otherBottomCenter)
-            if (distanceTopToBottom < 50f) {
-                return Pair(pos.posX, otherBottom)
-            }
-
-            val distanceBottomToTop = distance(currentBottomCenter, otherTopCenter)
-            if (distanceBottomToTop < 50f) {
-                return Pair(pos.posX, otherBottom)
-            }*/
         }
-
         return null
     }
 
     Box(
         modifier = Modifier
-            .offset { IntOffset(block.X.value.roundToInt(), animatedY.roundToInt()) }
+            .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
             .zIndex(if (active) 1f else 0f)
             .combinedClickable(
                 onClick = { onShowDeleteChange(null) },
@@ -140,19 +134,18 @@ fun Drag(
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        val newX = (block.X.value + dragAmount.x).coerceAtLeast(0f)
-                        val newY = (block.Y.value + dragAmount.y)
+                        currentX = (currentX + dragAmount.x).coerceAtLeast(0f)
+                        currentY = currentY + dragAmount.y
 
-                        block.X.value = newX
-                        block.Y.value = newY
                         val potentialSnap = findSnapTarget(block)
                         snapTarget = potentialSnap
                         isNearSnap = potentialSnap != null
                     },
                     onDragEnd = {
-                        block.X.value = if (snapTarget != null) snapTarget!!.first else block.X.value
-                        block.Y.value = if (snapTarget != null) snapTarget!!.second else block.Y.value
-
+                        if (snapTarget != null) {
+                            currentX = snapTarget!!.first
+                            currentY = snapTarget!!.second
+                        }
                         snapTarget = null
                         isNearSnap = false
                     }

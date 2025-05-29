@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -65,6 +66,7 @@ var font = FontFamily(Font(R.font.fredoka))
 fun CodeScreen(
     navController: NavHostController,
 ) {
+    var nextBlockPosition by remember { mutableFloatStateOf(0f) }
     var showDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showConsole by remember { mutableStateOf(false) }

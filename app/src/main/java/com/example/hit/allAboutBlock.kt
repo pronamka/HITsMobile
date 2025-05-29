@@ -66,7 +66,10 @@ data class BlockPosition(
 )
 
 fun onChange(block : BasicBlock, coordinates : LayoutCoordinates) {
-
+    block.x = coordinates.positionOnScreen().x
+    block.y = coordinates.positionOnScreen().y
+    block.heightDP = coordinates.size.height.dp
+    block.widthDP = coordinates.size.width.dp
 }
 
 
@@ -97,21 +100,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        run {
-                            Log.println(
-                                Log.DEBUG,
-                                null,
-                                listOf(
-                                    coordinates.positionOnScreen().x,
-                                    coordinates.positionOnScreen().y
-                                ).toString()
-                            )
-                            block.X = mutableStateOf(coordinates.positionOnScreen().x)
-                            block.Y = mutableStateOf(coordinates.positionOnScreen().x)
-                            block.heightDP = coordinates.size.height.dp
-                            block.widthDP = coordinates.size.width.dp
-                        }
-
+                        onChange(block, coordinates)
                     }
                     .background(
                         color = block.color,
