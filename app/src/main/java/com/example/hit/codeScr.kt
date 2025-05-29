@@ -240,6 +240,7 @@ fun CodeScreen(
                                     blockPositions[block.id] = newPosition },
                                 allBlockPositions = blockPositions,
                                 listOfBlocks = listOfBlocks,
+                                topPanelHeight = topPanelHeightPx,
                             )
                         }
                     }
