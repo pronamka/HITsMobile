@@ -1,5 +1,7 @@
 package com.example.hit.blocks
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -31,9 +33,12 @@ abstract class BasicBlock(
     var id: UUID,
     val type: BlockType,
     var color: Color,
+    var X : MutableState<Float> = mutableStateOf(0f),
+    var Y : MutableState<Float> = mutableStateOf(0f),
     var topConnection: BasicBlock? = null,
     var bottomConnection: BasicBlock? = null,
     var heightDP: Dp = 80.dp,
+    var widthDP: Dp = 256.dp,
     var connectionCnt: Int = 0
 ) {
     fun move() {
@@ -68,6 +73,10 @@ abstract class BasicBlock(
 
     open fun getDynamicHeightPx(density: Density): Float {
         return with(density) { heightDP.toPx() }
+    }
+
+    open fun getDynamicWidthPx(density: Density): Float {
+        return with(density) { widthDP.toPx() }
     }
 }
 
