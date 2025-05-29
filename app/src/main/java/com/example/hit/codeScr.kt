@@ -222,16 +222,13 @@ fun CodeScreen(
                     }
                 }
 
-                LazyColumn(
-                    state = lazyListState,
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp)
                         .clickable { blockWithDeleteShownId = null },
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(listOfBlocks.size, key = { listOfBlocks[it].id }) { index ->
-                        val block = listOfBlocks[index]
+                    listOfBlocks.forEach{block ->
                         Box(
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -246,9 +243,7 @@ fun CodeScreen(
                             )
                         }
                     }
-                    item {
-                        Spacer(modifier = Modifier.height(150.dp))
-                    }
+                    Spacer(modifier = Modifier.height(150.dp))
                 }
             }
         }

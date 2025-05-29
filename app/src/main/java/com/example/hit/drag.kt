@@ -1,3 +1,4 @@
+import android.util.Log
 import com.example.hit.BlockItem
 import com.example.hit.BlockPosition
 import com.example.hit.font
@@ -98,12 +99,22 @@ fun Drag(
             val otherTop = otherBlock.y
             val otherBottom = otherTop + otherHeightPx
 
+            val otherTopCenter = Pair(otherBlock.x + otherBlock.getDynamicWidthPx(density) / 2, otherBlock.y)
+
+
             val otherBottomCenter = Pair(otherBlock.x + otherWidthPx / 2, otherBottom)
             val currentTopCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y)
 
+            val currentBottomCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y+currentBlock.getDynamicHeightPx(density))
+
+            Log.println(Log.DEBUG, null, listOf(currentBlock.y, otherTop).toString())
             val distanceCurrentTopToOtherBottom = distance(currentTopCenter, otherBottomCenter)
             if (distanceCurrentTopToOtherBottom < 50f) {
                 return Pair(otherBlock.x, otherBottom)
+            }
+            val distanceCurrentBottomToOtherTop = distance(currentBottomCenter, otherTopCenter)
+            if (distanceCurrentBottomToOtherTop < 50f) {
+                return Pair(otherBlock.x, otherTop-currentBlock.getDynamicHeightPx(density))
             }
         }
         return null
@@ -137,6 +148,9 @@ fun Drag(
                         currentX = (currentX + dragAmount.x).coerceAtLeast(0f)
                         currentY = currentY + dragAmount.y
 
+                        block.x = currentX
+                        block.y = currentY
+
                         val potentialSnap = findSnapTarget(block)
                         snapTarget = potentialSnap
                         isNearSnap = potentialSnap != null
@@ -146,6 +160,8 @@ fun Drag(
                             currentX = snapTarget!!.first
                             currentY = snapTarget!!.second
                         }
+                        block.x = currentX
+                        block.y = currentY
                         snapTarget = null
                         isNearSnap = false
                     }

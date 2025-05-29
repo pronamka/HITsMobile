@@ -66,10 +66,10 @@ data class BlockPosition(
 )
 
 fun onChange(block : BasicBlock, coordinates : LayoutCoordinates) {
-    block.x = coordinates.positionOnScreen().x
-    block.y = coordinates.positionOnScreen().y
-    block.heightDP = coordinates.size.height.dp
-    block.widthDP = coordinates.size.width.dp
+//    block.x = coordinates.positionOnScreen().x
+//    block.y = coordinates.positionOnScreen().y
+//    block.heightDP = coordinates.size.height.dp
+//    block.widthDP = coordinates.size.width.dp
 }
 
 
