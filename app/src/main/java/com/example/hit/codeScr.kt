@@ -3,63 +3,75 @@ package com.example.hit
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.IntOffset
-import com.example.hit.language.parser.BlockStatement
-import com.example.hit.language.parser.IStatement
-import com.example.hit.language.parser.IfElseStatement
-import com.example.hit.language.parser.operations.ComparisonOperation
-import com.example.hit.language.parser.operations.IOperation
-import org.jetbrains.annotations.NonBlockingExecutor
-import kotlin.math.roundToInt
-
+import com.example.hit.blocks.ArrayDeclarationBlock
+import com.example.hit.blocks.BasicBlock
+import com.example.hit.blocks.BlockData
+import com.example.hit.blocks.ForBlock
+import com.example.hit.blocks.IfElseBlock
+import com.example.hit.blocks.VariableAssignmentBlock
+import com.example.hit.blocks.VariableDeclarationBlock
+import com.example.hit.blocks.WhileBlock
+import com.example.hit.blocks.container.Container
+import com.example.hit.codeRunner.CodeRunner
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.UUID
 
 var font = FontFamily(Font(R.font.fredoka))
 
@@ -68,31 +80,35 @@ fun CodeScreen(
     navController: NavHostController,
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    var listBlocks = remember { mutableStateListOf<CodeBlock>() }
-    var blockPositions = remember { mutableStateMapOf<Int, BlockPosition>() }
-    var blockId by remember { mutableStateOf<Int?>(null) }
+    var showConsole by remember { mutableStateOf(false) }
+    val listOfBlocks = remember { mutableStateListOf<BasicBlock>() }
+    val blockPositions = remember { mutableStateMapOf<UUID, BlockPosition>() }
+    var blockId by remember { mutableStateOf<UUID?>(null) }
+    val consoleOutput = remember { mutableStateListOf<String>() }
+    val density = LocalDensity.current
+    val topPanelHeightPx = with(density) { (52.dp).toPx() }
 
-    fun runProgram(){
-        val ourBlocks = listOf<BasicBlock>()
-        val statements = mutableListOf<IStatement>()
-        for (ourBlock in ourBlocks) {
-            statements.add(ourBlock.execute())
-        }
-    }
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
-    val menuOffset by animateDpAsState(
+
+    val menuOff by animateDpAsState(
         targetValue = if (showMenu) 0.dp else (-300).dp,
     )
-    val Alpha by animateFloatAsState(
-        targetValue = if (showMenu) 0.5f else 0f,
+
+    val consoleOff by animateDpAsState(
+        targetValue = if (showConsole) 0.dp else (360).dp,
+    )
+
+    val alpha by animateFloatAsState(
+        targetValue = if (showMenu || showConsole) 0.5f else 0f,
     )
 
     val defaultBlocks = remember { BlockData.defaultBlocks }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             bottomBar = {
                 Row(
                     modifier = Modifier
@@ -102,7 +118,11 @@ fun CodeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        onClick = {},
+                        onClick = {
+                            val container = Container(listOfBlocks)
+                            val codeRunner = CodeRunner(container, consoleOutput)
+                            codeRunner.run()
+                            showConsole = !showConsole },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
                         shape = RoundedCornerShape(28.dp),
                         modifier = Modifier.padding(bottom = 24.dp).width(158.dp).height(58.dp)
@@ -118,7 +138,7 @@ fun CodeScreen(
 
                     Button(
                         onClick = {
-                            listBlocks.clear()
+                            listOfBlocks.clear()
                             blockPositions.clear() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA6294E)),
                         shape = RoundedCornerShape(28.dp),
@@ -134,8 +154,7 @@ fun CodeScreen(
                     }
                 }
             }
-        )
-        { padding ->
+        ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -194,42 +213,136 @@ fun CodeScreen(
                     }
                 }
 
-                Box(
+                LazyColumn(
+                    state = lazyListState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listBlocks.forEach { block ->
-                        val position = blockPositions[block.hashCode()] ?: BlockPosition(
-                            id = block.hashCode(),
+                    items(listOfBlocks.size, key = { listOfBlocks[it].id }) { index ->
+                        val block = listOfBlocks[index]
+                        val position = blockPositions[block.id] ?: BlockPosition(
+                            id = block.id,
                             posX = 0f,
-                            posY = 0f
+                            posY = topPanelHeightPx + 20f
                         )
-                        Drag(
-                            block,
-                            position,
-                            active = blockId == position.id,
-                            { blockId = position.id },
-                            { newPosition -> blockPositions[block.hashCode()] = newPosition }
-                            /*{ newBlock  }*/
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Drag(
+                                block = block,
+                                position = position,
+                                active = blockId == position.id,
+                                initID = { blockId = position.id },
+                                positionChange = { newPosition ->
+                                    blockPositions[block.id] = newPosition },
+                                allBlockPositions = blockPositions,
+                                listOfBlocks = listOfBlocks,
+                                topPanelHeight = topPanelHeightPx,
+                            )
+                        }
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(150.dp))
                     }
                 }
             }
         }
 
-        if(showMenu){
+        if(showConsole) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = Alpha))
-                    .clickable{showMenu = false}
+                    .background(Color.Black.copy(alpha = alpha))
+                    .clickable { showConsole = false }
+            )
+        }
+        Box(
+            modifier = Modifier
+                .offset(y = consoleOff)
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(360.dp)
+                .navigationBarsPadding()
+                .background(
+                    color = Color(0xFFFFFFFF),
+                    shape = RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp, )
+                )
+        ){
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Console Output",
+                        color = Color(0xFF7943DE),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = font
+                    )
+
+                    Button(
+                        onClick = { showConsole = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFA6294E),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Close", fontFamily = font)
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .background(
+                            color = Color.LightGray.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(8.dp)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(consoleOutput.size) { index ->
+                            Text(
+                                text = consoleOutput[index],
+                                color = Color.DarkGray,
+                                fontFamily = font,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if(showMenu && !showConsole) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = alpha))
+                    .clickable { showMenu = false }
             )
         }
 
         Box(
             modifier = Modifier
-                .offset(x = menuOffset)
+                .offset(x = menuOff)
                 .width(296.dp)
                 .statusBarsPadding()
                 .navigationBarsPadding()
@@ -245,48 +358,25 @@ fun CodeScreen(
             ) {
                 items(defaultBlocks) { block ->
                     BlockItem(
+                        showMenu = true,
                         block = block,
                         onClick = {
-                            listBlocks.add(block.copy())
-                            val newBlock = block.copy()
-                            blockPositions[newBlock.hashCode()] = BlockPosition(
-                                id = newBlock.hashCode(),
+                            val newBlock = block.deepCopy()
+                            listOfBlocks.add(newBlock)
+
+                            blockPositions[newBlock.id] = BlockPosition(
+                                id = newBlock.id,
                                 posX = 0f,
-                                posY = listBlocks.size * 150f
+                                posY = topPanelHeightPx + 20f
                             )
+                            coroutineScope.launch {
+                                delay(100)
+                                lazyListState.animateScrollToItem(listOfBlocks.size - 1)
+                            }
                         }
                     )
                 }
             }
         }
-
-    }
-}
-
-@Composable
-fun BlockItem(
-    block: CodeBlock,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical =  16.dp)
-            .fillMaxWidth()
-            .height(64.dp)
-            .background(
-                color = block.color,
-                shape = PuzzleShape()
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Text(
-            text = block.type.toString(),
-            modifier = Modifier.padding(start = 16.dp),
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            fontFamily = font
-        )
     }
 }

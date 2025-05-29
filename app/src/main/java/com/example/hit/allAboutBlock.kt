@@ -1,512 +1,1075 @@
 package com.example.hit
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.example.hit.language.parser.ArrayElementAssignmentStatement
-import com.example.hit.language.parser.AssignmentStatement
-import com.example.hit.language.parser.BlockStatement
-import com.example.hit.language.parser.BoolValue
-import com.example.hit.language.parser.BreakStatement
-import com.example.hit.language.parser.ContinueStatement
-import com.example.hit.language.parser.DeclarationStatement
-import com.example.hit.language.parser.ForLoop
-import com.example.hit.language.parser.FunctionDeclarationStatement
-import com.example.hit.language.parser.IStatement
-import com.example.hit.language.parser.IfElseStatement
-import com.example.hit.language.parser.Lexer
-import com.example.hit.language.parser.OperationsParser
-import com.example.hit.language.parser.PrintStatement
-import com.example.hit.language.parser.ReturnStatement
-import com.example.hit.language.parser.VariableAssignmentStatement
-import com.example.hit.language.parser.VariableType
-import com.example.hit.language.parser.WhileLoop
-import com.example.hit.language.parser.exceptions.UnexpectedTypeException
-import com.example.hit.language.parser.operations.IOperation
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.hit.blocks.ArrayDeclarationBlock
+import com.example.hit.blocks.ArrayElementAssignmentBlock
+import com.example.hit.blocks.BasicBlock
+import com.example.hit.blocks.BreakBlock
+import com.example.hit.blocks.ContinueBlock
+import com.example.hit.blocks.ForBlock
+import com.example.hit.blocks.IfElseBlock
+import com.example.hit.blocks.PrintBlock
+import com.example.hit.blocks.ReturnBlock
+import com.example.hit.blocks.VariableAssignmentBlock
+import com.example.hit.blocks.VariableDeclarationBlock
+import com.example.hit.blocks.VariableInitializationBlock
+import com.example.hit.blocks.WhileBlock
 import java.util.UUID
 
-enum class BlockType(string: String) {
-    VARIABLE_INITIALIZATION("variable_initialization"),
-
-    VARIABLE_DECLARATION("variable_declaration"),
-    ARRAY_DECLARATION("array_declaration"),
-
-    VARIABLE_ASSIGNMENT("variable_assignment"),
-    ARRAY_ELEMENT_ASSIGNMENT("array_element_assignment"),
-
-    IF("if"),
-    ELSE("else"),
-    ELSE_IF("else if"),
-
-
-    FOR("for"),
-    WHILE("while"),
-
-    PLUS("+"),
-    MINUS("-"),
-    DIVISION("/"),
-    MULTY("*"),
-    MOD("%"),
-
-    AND("and"),
-    OR("or"),
-    NOT("not"),
-
-
-    EQUALS("=="),
-    NOT_EQUALS("!="),
-    GREATER_THAN(">"),
-    LESS_THAN("<"),
-    GREATER_THAN_AND_EQUALS(">="),
-    LESS_THAN_AND_EQUALS("<="),
-
-    RETURN("return"),
-
-    PRINT("print"),
-
-    BREAK("break"),
-    CONTINUE("continue"),
-
-    BLOCK("block"),
-
-    FUNCTION("function")
-
-}
-
-enum class DataType {
-    INT,
-    STRING,
-    FLOAT,
-    BOOLEAN
-}
 
 data class BlockPosition(
-    var id: Int,
-    var posX: Float = 0f,
-    var posY: Float = 0f
+    var id : UUID,
+    var posX : Float = 0f,
+    var posY : Float = 0f
 )
 
-data class CodeBlock(
-    val type: BlockType,
-    val color: Color,
-    val relatedBlock: BasicBlock? = null
-)
-
-object BlockData {
-    val defaultBlocks = listOf(
 
 
-        CodeBlock(
-            type = BlockType.IF,
-            color = Color(0xFFA5D6A7)
-        ),
-        CodeBlock(
-            type = BlockType.ELSE,
-            color = Color(0xFF81C784)
-        ),
-        CodeBlock(
-            type = BlockType.ELSE_IF,
-            color = Color(0xFF66BB6A)
-        ),
-
-
-        CodeBlock(
-            type = BlockType.FOR,
-            color = Color(0xFFFFCC80)
-        ),
-        CodeBlock(
-            type = BlockType.WHILE,
-            color = Color(0xFFFFB74D)
-        ),
-
-        CodeBlock(
-            type = BlockType.PLUS,
-            color = Color(0xFFE1BEE7)
-        ),
-        CodeBlock(
-            type = BlockType.MINUS,
-            color = Color(0xFFCE93D8)
-        ),
-        CodeBlock(
-            type = BlockType.DIVISION,
-            color = Color(0xFFBA68C8)
-        ),
-        CodeBlock(
-            type = BlockType.MULTY,
-            color = Color(0xFFAB47BC)
-        ),
-        CodeBlock(
-            type = BlockType.MOD,
-            color = Color(0xFF9C27B0)
-        ),
-
-
-        CodeBlock(
-            type = BlockType.AND,
-            color = Color(0xFFFFAB91)
-        ),
-        CodeBlock(
-            type = BlockType.OR,
-            color = Color(0xFFFF8A65)
-        ),
-        CodeBlock(
-            type = BlockType.NOT,
-            color = Color(0xFFFF7043)
-        ),
-
-
-        CodeBlock(
-            type = BlockType.EQUALS,
-            color = Color(0xFFFFAEBE)
-        ),
-        CodeBlock(
-            type = BlockType.NOT_EQUALS,
-            color = Color(0xFFFF80AA)
-        ),
-        CodeBlock(
-            type = BlockType.GREATER_THAN,
-            color = Color(0xFFF84983)
-        ),
-        CodeBlock(
-            type = BlockType.LESS_THAN,
-            color = Color(0xFFFF3C7E)
-        ),
-        CodeBlock(
-            type = BlockType.GREATER_THAN_AND_EQUALS,
-            color = Color(0xFFFA1464)
-        ),
-        CodeBlock(
-            type = BlockType.LESS_THAN_AND_EQUALS,
-            color = Color(0xFF930032)
-        ),
-
-        CodeBlock(
-            type = BlockType.RETURN,
-            color = Color(0xFFDE30FF)
-        ),
-    )
-}
-
-abstract class BasicBlock(
-    val id: UUID,
-    val type: BlockType,
-    val color: Color,
-    val position: BlockPosition? = null
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BlockItem(
+    showMenu : Boolean = false,
+    block: BasicBlock,
+    onClick: () -> Unit
 ) {
-    open var compatibleBlocks: List<BlockType> = BlockType.entries
-    abstract fun execute(): IStatement
-}
+    var isDataTypeDropdownExpanded by remember { mutableStateOf(false) }
 
-class StringInputField {
-    var value: String? = null
-    fun get(): String {
-        if (value == null) {
-            throw Exception()
-        }
-        return value as String
+
+    val dataTypes = remember {
+        listOf(
+            "Int",
+            "String",
+            "Boolean",
+            "Float",
+            "Double",
+            "Array"
+        )
     }
-}
 
-class OperationInputField {
-    val inputFiled: StringInputField = StringInputField()
-
-    fun getOperation(): IOperation {
-        val s = inputFiled.get()
-        return OperationsParser(Lexer(s).tokenize()).parse()[0]
-    }
-}
-
-abstract class DeclarationBlock(
-    type: BlockType,
-    blockId: UUID,
-) : BasicBlock(blockId, type = type, color = Color(0xFF45A3FF)) {
-    val nameInput = StringInputField()
-    val typeInput = StringInputField()
-
-    val stringToTypeMap = mapOf(
-        "Int" to VariableType.INT,
-        "String" to VariableType.STRING,
-        "Bool" to VariableType.BOOL,
-        "Double" to VariableType.DOUBLE
+    val textFieldColors = TextFieldDefaults.colors(
+        focusedTextColor = Color.DarkGray,
+        unfocusedTextColor = Color.DarkGray,
+        focusedPlaceholderColor = Color.Gray,
+        unfocusedPlaceholderColor = Color.Gray,
+        focusedIndicatorColor = Color.DarkGray,
+        unfocusedIndicatorColor = Color.DarkGray.copy(alpha = 0.5f),
+        focusedContainerColor = Color.White.copy(alpha = 0.9f),
+        unfocusedContainerColor = Color.White.copy(alpha = 0.9f)
     )
 
-    fun getParameters(): Pair<String, VariableType> {
-        val name = nameInput.get()
-        val type = typeInput.get()
-        if (!stringToTypeMap.containsKey(type)) {
-            throw Exception("wrong type")
-        }
-        return Pair(name, stringToTypeMap[type]!!)
-    }
-}
+    when (block) {
+        is VariableDeclarationBlock -> {
+            block.heightDP = 80.dp
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .width(252.dp)
+                    .height(80.dp)
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = block.nameInput.getInputField(),
+                        onValueChange = { block.nameInput.setName(it)},
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
 
-class VariableInitializationBlock(
-    blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.VARIABLE_INITIALIZATION) {
+                    )
+                    Text(text = ":",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
 
-    override fun execute(): DeclarationStatement {
-        val parameters = getParameters()
-        return DeclarationStatement(parameters.second, parameters.first)
-    }
-}
+                    Box(modifier = Modifier.weight(1f)) {
+                        ExposedDropdownMenuBox(
+                            expanded = isDataTypeDropdownExpanded,
+                            onExpandedChange = {
+                                if (!showMenu) isDataTypeDropdownExpanded = it
+                            }
+                        ) {
+                            OutlinedTextField(
+                                value = block.typeInput.getInputField(),
+                                onValueChange = { block.typeInput.setType(it) },
+                                readOnly = true,
+                                enabled = !showMenu,
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(
+                                        expanded = isDataTypeDropdownExpanded
+                                    )
+                                },
+                                modifier = Modifier.menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = isDataTypeDropdownExpanded,
+                                onDismissRequest = { isDataTypeDropdownExpanded = false }
+                            ) {
+                                dataTypes.forEach { type ->
+                                    DropdownMenuItem(
+                                        text = { Text(type) },
+                                        onClick = {
+                                            block.typeInput.setType(type)
+                                            isDataTypeDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
 
-class VariableDeclarationBlock(
-    blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.VARIABLE_DECLARATION) {
+                    Text(text = "=",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
 
-    val valueInput = OperationInputField()
+                    OutlinedTextField(
+                        value = block.valueInput.getInputField(),
+                        onValueChange = {
+                            block.valueInput.setOperation(it)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+                    )
 
-    override fun execute(): DeclarationStatement {
-        val value = valueInput.getOperation()
-        val parameters = getParameters()
-        return DeclarationStatement(parameters.second, parameters.first, value)
-    }
-}
-
-class ArrayDeclarationBlock(
-    blockId: UUID,
-) : DeclarationBlock(blockId = blockId, type = BlockType.ARRAY_DECLARATION) {
-
-    val valueInput = OperationInputField()
-    val sizeInput = OperationInputField()
-
-    override fun execute(): DeclarationStatement {
-        val size = sizeInput.getOperation()
-        val value = valueInput.getOperation()
-        val parameters = getParameters()
-        return DeclarationStatement(
-            VariableType.ARRAY(parameters.second, size),
-            parameters.first,
-            value
-        )
-    }
-}
-
-abstract class AssignmentBlock(
-    blockId: UUID,
-    type: BlockType,
-) : BasicBlock(id = blockId, type = type, color = Color(0xFF45A3FF)) {
-    val nameInput = StringInputField()
-    val valueInput = OperationInputField()
-
-
-    fun getParameters(): Pair<String, IOperation> {
-        val name = nameInput.get()
-        val operation = valueInput.getOperation()
-        return Pair(name, operation)
-    }
-}
-
-class VariableAssignmentBlock(
-    blockId: UUID
-) : AssignmentBlock(blockId = blockId, type = BlockType.VARIABLE_ASSIGNMENT) {
-    override fun execute(): AssignmentStatement {
-        val parameters = getParameters()
-        return VariableAssignmentStatement(parameters.first, parameters.second)
-    }
-}
-
-class ArrayElementAssignmentBlock(
-    blockId: UUID
-) : AssignmentBlock(blockId = blockId, type = BlockType.ARRAY_ELEMENT_ASSIGNMENT) {
-
-    val indexInput = OperationInputField()
-
-    override fun execute(): ArrayElementAssignmentStatement {
-        val parameters = getParameters()
-        val index = indexInput.getOperation()
-        return ArrayElementAssignmentStatement(parameters.first, parameters.second, index)
-    }
-}
-
-class PrintBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.PRINT, color = Color(0xFF45A3FF)) {
-    val valueInput = OperationInputField()
-
-    override fun execute(): PrintStatement {
-        val operation = valueInput.getOperation()
-        return PrintStatement(operation)
-    }
-}
-
-class BodyBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.BLOCK, color = Color(0xFF45A3FF)) {
-    val blocks = mutableListOf<BasicBlock>()
-
-    override fun execute(): BlockStatement {
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks) {
-            statements.add(block.execute())
-        }
-        return BlockStatement(statements)
-    }
-}
-
-class IfElseStatement(
-    val blocks: List<Pair<IOperation, BlockStatement>>,
-    val defaultBlock: BlockStatement? = null,
-) : IStatement {
-    override fun evaluate() {
-        for ((condition, block) in blocks) {
-            val conditionValue = condition.evaluate()
-            if (conditionValue !is BoolValue) {
-                throw UnexpectedTypeException("Expected a BoolValue, but got ${conditionValue::class.java.simpleName}")
-            }
-            if (conditionValue.value) {
-                block.evaluate()
-                return
+                }
             }
         }
-        defaultBlock?.evaluate()
-    }
-}
 
-class IfElseBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.IF, color = Color(0xFF45A3FF)) {
+        is IfElseBlock -> {
+            val density = LocalDensity.current
+            var curHeight by remember { mutableStateOf(0) }
+            var hasElse by remember { mutableStateOf(false) }
+            var ifCondition by remember { mutableStateOf("") }
+            var elseIfCounts by remember { mutableStateOf(listOf<String>()) }
 
-    val blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
-    var defaultBlockInput: BodyBlock? = null
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .onGloballyPositioned { coordinates ->
+                        curHeight = coordinates.size.height
+                        block.heightDP = with(density) { curHeight.toDp() }
+                    }
+                    .wrapContentWidth()
+                    .wrapContentHeight()
+                    .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp)
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = block.type.value,
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font,
+                        )
+                        OutlinedTextField(
+                            value = ifCondition,
+                            onValueChange = {
+                                ifCondition = it
+                                block.setNewCondition(ifCondition, 0) },
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+                                .height(56.dp),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors
+                        )
+                    }
 
-    fun addElseIfBlock() {
-        val conditionInput = OperationInputField()
-        val block = BodyBlock(blockId = UUID.randomUUID())
-        blocksInput.add(Pair(conditionInput, block))
-    }
+                    Box(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .wrapContentWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .wrapContentHeight(unbounded = true)
+                            .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp)
+                            .background(
+                                color = Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .border(
+                                width = 2.dp,
+                                color = Color.White.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                    )
 
-    fun addElseBlock() {
-        defaultBlockInput = BodyBlock(blockId = UUID.randomUUID())
-    }
 
-    override fun execute(): IfElseStatement {
-        val blocks = mutableListOf<Pair<IOperation, BlockStatement>>()
-        var defaultBlock: BlockStatement? = null
+                    elseIfCounts.forEachIndexed { index, condition ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    width = 1.dp,
+                                    color = Color.White.copy(alpha = 0.3f),
+                                    shape = RoundedCornerShape(20.dp)
+                                ),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "ELSE IF",
+                                    color = Color.White,
+                                    fontSize = 26.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = font,
+                                )
+                                OutlinedTextField(
+                                    value = condition,
+                                    onValueChange = { newCondition ->
+                                        elseIfCounts = elseIfCounts.toMutableList().also {
+                                            it[index] = newCondition
+                                        }
+                                        block.setNewCondition(condition, index+1)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.5f)
+                                        .height(56.dp),
+                                    enabled = !showMenu,
+                                    singleLine = true,
+                                    colors = textFieldColors
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .wrapContentWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    .wrapContentHeight(unbounded = true)
+                                    .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
+                                    .background(
+                                        color = Color.White.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color.White.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                            )
+                        }
+                    }
 
-        for (blockInput in blocksInput) {
-            val operation = blockInput.first.getOperation()
-            val statements = mutableListOf<IStatement>()
-            for (block in blockInput.second.blocks) {
-                statements.add(block.execute())
+                    if (hasElse) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                                .wrapContentHeight(unbounded = true)
+                                .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "ELSE",
+                                color = Color.White,
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = font,
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .wrapContentWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    .wrapContentHeight(unbounded = true)
+                                    .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
+                                    .background(
+                                        color = Color.White.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color.White.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                            )
+                        }
+                    }
+
+                    else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Button(
+                                modifier = Modifier
+                                    .width(104.dp)
+                                    .height(48.dp),
+                                onClick = { elseIfCounts = elseIfCounts + "";
+                                            block.addElseIfBlock("")
+                                          },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7943DE))
+                            ){
+                                Text("ELSE IF", color = Color.White, fontFamily = font, fontSize = 18.sp)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Button(
+                                modifier = Modifier
+                                    .width(104.dp)
+                                    .height(48.dp),
+                                onClick = { hasElse = true;
+                                          block.addElseBlock()},
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF7943DE)
+                                )
+                            ) {
+                                Text("ELSE", color = Color.White, fontFamily = font, fontSize = 18.sp)
+                            }
+                        }
+                    }
+                }
             }
-            blocks.add(Pair(operation, BlockStatement(statements)))
         }
 
-        if (defaultBlockInput != null) {
-            val statements = mutableListOf<IStatement>()
-            for (block in defaultBlockInput!!.blocks) {
-                statements.add(block.execute())
+        is VariableInitializationBlock ->{
+            block.heightDP = 80.dp
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .width(252.dp)
+                    .height(80.dp)
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = block.nameInput.getInputField(),
+                        onValueChange = {
+                            block.nameInput.setName(it);
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+
+                    )
+                    Text(
+                        text = ":",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
+
+                    Box(modifier = Modifier.weight(1f)) {
+                        ExposedDropdownMenuBox(
+                            expanded = isDataTypeDropdownExpanded,
+                            onExpandedChange = {
+                                if (!showMenu) isDataTypeDropdownExpanded = it
+                            }
+                        ) {
+                            OutlinedTextField(
+                                value = block.typeInput.getInputField(),
+                                onValueChange = { block.typeInput.setType(it) },
+                                readOnly = true,
+                                enabled = !showMenu,
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(
+                                        expanded = isDataTypeDropdownExpanded
+                                    )
+                                },
+                                modifier = Modifier.menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = isDataTypeDropdownExpanded,
+                                onDismissRequest = { isDataTypeDropdownExpanded = false }
+                            ) {
+                                dataTypes.forEach { type ->
+                                    DropdownMenuItem(
+                                        text = { Text(type) },
+                                        onClick = {
+                                            block.typeInput.setType(type)
+                                            isDataTypeDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            defaultBlock = BlockStatement(statements)
         }
 
-        return IfElseStatement(blocks, defaultBlock)
-    }
-}
+        is VariableAssignmentBlock -> {
+            block.heightDP = 80.dp
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .width(252.dp)
+                    .height(80.dp)
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = block.nameInput.getInputField(),
+                        onValueChange = {
+                            block.nameInput.setName(it);
+                        },
+                        modifier = Modifier
+                            .width(84.dp)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
 
-class ForBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.FOR, color = Color(0xFF45A3FF)) {
-    val initializer = VariableAssignmentBlock(blockId = UUID.randomUUID())
-    val conditionInput = OperationInputField()
-    val stateChange = VariableAssignmentBlock(blockId = UUID.randomUUID())
-    val blocks = BodyBlock(blockId = UUID.randomUUID())
+                    )
 
-    override fun execute(): ForLoop {
-        val operation = conditionInput.getOperation()
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks) {
-            statements.add(block.execute())
+                    Text(text = "=",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
+
+                    OutlinedTextField(
+                        value = block.valueInput.getInputField(),
+                        onValueChange = { block.valueInput.setOperation(it) },
+                        modifier = Modifier
+                            .width(84.dp)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+
+                    )
+
+                }
+            }
         }
-        return ForLoop(
-            initializer.execute(),
-            operation,
-            stateChange.execute(),
-            BlockStatement(statements)
-        )
-    }
-}
+        is ForBlock -> {
+            val density = LocalDensity.current
+            var curHeight by remember { mutableStateOf(0) }
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .wrapContentWidth()
+                    .wrapContentHeight()
+                    .onGloballyPositioned { coordinates ->
+                        curHeight = coordinates.size.height
+                        block.heightDP = with(density) { curHeight.toDp() }
+                    }
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.wrapContentWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = block.type.value,
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
 
+                        Text(text = "(",
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
 
-class WhileBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.WHILE, color = Color(0xFF45A3FF)) {
-    val conditionInput = OperationInputField()
-    val blocks = BodyBlock(blockId = UUID.randomUUID())
+                        OutlinedTextField(
+                            value = "",
+                            onValueChange = { },
+                            modifier = Modifier
+                                .width(72.dp)
+                                .height(56.dp),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 18.sp,
+                                fontFamily = font
+                            )
+                        )
 
-    override fun execute(): WhileLoop {
-        val operation = conditionInput.getOperation()
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks) {
-            statements.add(block.execute())
+                        Text(text = ";",
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
+
+                        OutlinedTextField(
+                            value = block.conditionInput.getInputField(),
+                            onValueChange = { block.conditionInput.setOperation(it)},
+                            modifier = Modifier
+                                .width(72.dp)
+                                .height(56.dp),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 18.sp,
+                                fontFamily = font
+                            )
+                        )
+
+                        Text(text = ";",
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
+
+                        OutlinedTextField(
+                            value = "",
+                            onValueChange = { },
+                            modifier = Modifier
+                                .width(72.dp)
+                                .height(56.dp),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 18.sp,
+                                fontFamily = font
+                            )
+                        )
+
+                        Text(text = ")",
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .wrapContentHeight(unbounded = true)
+                            .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
+                            .background(
+                                color = Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .border(
+                                width = 2.dp,
+                                color = Color.White.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                    )
+                }
+            }
         }
-        return WhileLoop(operation, BlockStatement(statements))
-    }
-}
+        is WhileBlock -> {
+            val density = LocalDensity.current
+            var curHeight by remember { mutableStateOf(0) }
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .wrapContentWidth()
+                    .wrapContentHeight()
+                    .onGloballyPositioned { coordinates ->
+                        curHeight = coordinates.size.height
+                        block.heightDP = with(density) { curHeight.toDp() }
+                    }
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.wrapContentWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = block.type.value,
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
 
-class BreakBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.BREAK, color = Color(0xFF45A3FF)) {
-    override fun execute(): BreakStatement {
-        return BreakStatement()
-    }
-}
+                        Text(text = "(",
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
 
-class ContinueBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.CONTINUE, color = Color(0xFF45A3FF)) {
-    override fun execute(): ContinueStatement {
-        return ContinueStatement()
-    }
-}
+                        OutlinedTextField(
+                            value = block.conditionInput.getInputField(),
+                            onValueChange = { block.conditionInput.setOperation(it) },
+                            modifier = Modifier
+                                .width(146.dp)
+                                .height(56.dp),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
+                                fontFamily = font
+                            )
+                        )
 
-class ReturnBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.RETURN, color = Color(0xFF45A3FF)) {
-    val valueInputField = OperationInputField()
+                        Text(text = ")",
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
+                    }
 
-    override fun execute(): ReturnStatement {
-        return ReturnStatement(valueInputField.getOperation())
-    }
-}
-
-class FunctionBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.FUNCTION, color = Color(0xFF45A3FF)) {
-    val nameInput = StringInputField()
-    val inputParameters = mutableListOf<VariableInitializationBlock>()
-    val blocks = BodyBlock(blockId = UUID.randomUUID())
-
-    override fun execute(): FunctionDeclarationStatement {
-        val name = nameInput.get()
-        val statements = mutableListOf<IStatement>()
-        val parameters = mutableListOf<DeclarationStatement>()
-        for (block in blocks.blocks) {
-            statements.add(block.execute())
+                    Box(
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .wrapContentHeight(unbounded = true)
+                            .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
+                            .background(
+                                color = Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .border(
+                                width = 2.dp,
+                                color = Color.White.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                    )
+                }
+            }
         }
-        for (inputParameter in inputParameters) {
-            parameters.add(inputParameter.execute())
+        is ReturnBlock, is ContinueBlock, is BreakBlock ->{
+            block.heightDP = 80.dp
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .width(252.dp)
+                    .height(80.dp)
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = block.type.value,
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
+                }
+            }
         }
-        return FunctionDeclarationStatement(name, parameters, BlockStatement(statements), TODO())
-    }
+        is PrintBlock -> {
+            block.heightDP = 80.dp
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .width(252.dp)
+                    .height(80.dp)
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.wrapContentWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = block.type.value,
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
 
-    fun addParameter(initBlock: VariableInitializationBlock) {
-        inputParameters.add(initBlock)
+                        Text(text = "(",
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
+
+                        OutlinedTextField(
+                            value = block.valueInput.getInputField(),
+                            onValueChange = { block.valueInput.setOperation(it) },
+                            modifier = Modifier
+                                .width(126.dp)
+                                .height(56.dp),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
+                                fontFamily = font
+                            )
+                        )
+
+                        Text(text = ")",
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
+                    }
+                }
+            }
+        }
+        is ArrayDeclarationBlock ->{
+            block.heightDP = 80.dp
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .width(252.dp)
+                    .height(80.dp)
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = block.nameInput.getInputField(),
+                        onValueChange = {
+                            block.nameInput.setName(it);
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+
+                    )
+                    Text(text = ":",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
+
+                    Box(modifier = Modifier.weight(1f)) {
+                        ExposedDropdownMenuBox(
+                            expanded = isDataTypeDropdownExpanded,
+                            onExpandedChange = {
+                                if (!showMenu) isDataTypeDropdownExpanded = it
+                            }
+                        ) {
+                            OutlinedTextField(
+                                value = block.typeInput.getInputField(),
+                                onValueChange = { block.typeInput.setType(it) },
+                                readOnly = true,
+                                enabled = !showMenu,
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(
+                                        expanded = isDataTypeDropdownExpanded
+                                    )
+                                },
+                                modifier = Modifier.menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = isDataTypeDropdownExpanded,
+                                onDismissRequest = { isDataTypeDropdownExpanded = false }
+                            ) {
+                                dataTypes.forEach { type ->
+                                    DropdownMenuItem(
+                                        text = { Text(type) },
+                                        onClick = {
+                                            block.typeInput.setType(type)
+                                            isDataTypeDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Text(text = "[",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
+
+                    OutlinedTextField(
+                        value = block.sizeInput.getInputField(),
+                        onValueChange = {
+                            block.sizeInput.setOperation(it)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+                    )
+
+                    Text(text = "]",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
+                }
+            }
+        }
+        is ArrayElementAssignmentBlock -> {
+            block.heightDP = 80.dp
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .width(252.dp)
+                    .height(80.dp)
+                    .background(
+                        color = block.color,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable(onClick = onClick)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = block.nameInput.getInputField(),
+                        onValueChange = {
+                            block.nameInput.setName(it);
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+
+                    )
+
+                    Text(text = "[",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
+
+                    OutlinedTextField(
+                        value = block.indexInput.getInputField(),
+                        onValueChange = {
+                            block.indexInput.setOperation(it)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+                    )
+
+                    Text(
+                        text = "]",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
+
+                    Text(
+                        text = "=",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
+
+                    OutlinedTextField(
+                        value = block.valueInput.getInputField(),
+                        onValueChange = {
+                            block.valueInput.setOperation(it)
+                        },
+                        modifier = Modifier
+                            .width(92.dp)
+                            .height(56.dp),
+                        singleLine = true,
+                        enabled = !showMenu,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = font
+                        )
+                    )
+                }
+            }
+        }
     }
 }
-
-class AssignmentArrayElementBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.VARIABLE_ASSIGNMENT, color = Color(0xFF45A3FF)) {
-    val indexInput = OperationInputField()
-    val nameInput = StringInputField()
-    val valueInput = OperationInputField()
-
-    override fun execute(): ArrayElementAssignmentStatement {
-        val name = nameInput.get()
-        val operation = valueInput.getOperation()
-        val index = indexInput.getOperation()
-        return ArrayElementAssignmentStatement(name, operation, index)
-    }
-}
-
-
