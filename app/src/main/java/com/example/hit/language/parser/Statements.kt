@@ -1,11 +1,11 @@
 package com.example.hit.language.parser
 
 import com.example.hit.language.parser.exceptions.ContinueIterationException
+import com.example.hit.language.parser.exceptions.ReturnException
 import com.example.hit.language.parser.exceptions.StopIterationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
-import com.example.hit.language.parser.operations.ComparisonOperation
+import com.example.hit.language.parser.operations.FunctionCallOperation
 import com.example.hit.language.parser.operations.IOperation
-import com.example.hit.language.parser.operations.ReturnOperation
 
 interface IStatement {
     fun evaluate()
@@ -17,7 +17,7 @@ class DeclarationStatement(
     var variableValue: IOperation? = null
 ) : IStatement {
     override fun evaluate() {
-        if (Scopes.getLast().exists(variableName)) {
+        if (Scopes.variableExists(variableName)) {
             throw IllegalStateException("Variable $variableName has already been declared.")
         }
         val variable = Variable(variableType, variableValue)
@@ -27,7 +27,7 @@ class DeclarationStatement(
         } else {
             value = variable
         }
-        Scopes.getLast().add(variableName, value)
+        Scopes.addVariable(variableName, value)
     }
 
     override fun toString(): String {
@@ -44,14 +44,15 @@ class DeclarationStatement(
 class FunctionDeclarationStatement(
     val name: String,
     val parameters: List<DeclarationStatement> = listOf(),
-    val body: BlockStatement
-): IStatement{
+    val body: BlockStatement,
+    val returnType: VariableType
+) : IStatement {
     override fun evaluate() {
-        if (Scopes.getLast().exists(name)) {
+        if (Scopes.variableExists(name)) {
             throw IllegalStateException("Function $name has already been declared.")
         }
-        val function = FunctionValue(parameters, body)
-        Scopes.getLast().add(name, function)
+        val function = FunctionValue(parameters, body, returnType)
+        Scopes.addVariable(name, function)
     }
 }
 
@@ -72,8 +73,7 @@ class VariableAssignmentStatement(
 ) : AssignmentStatement(variableName, variableValue) {
     override fun evaluate() {
         checkIfVariableDeclared()
-        val repository = Scopes.getRepositoryWithVariable(variableName)
-        val variable = repository.get(variableName)
+        val variable = Scopes.getVariable(variableName)
 
         val value: Value<*>
         if (variable is Variable) {
@@ -90,7 +90,7 @@ class VariableAssignmentStatement(
             }
             value = newValue
         }
-        repository.add(variableName, value)
+        Scopes.addVariable(variableName, value)
     }
 
     override fun toString(): String {
@@ -105,13 +105,12 @@ class ArrayElementAssignmentStatement(
 ) : AssignmentStatement(variableName, variableValue) {
     override fun evaluate() {
         checkIfVariableDeclared()
-        val repository = Scopes.getRepositoryWithVariable(variableName)
-        val variable = repository.get(variableName)
+        val variable = Scopes.getInitializedValue(variableName)
         if (variable !is ArrayValue<*>) {
             throw RuntimeException("$variable is not an array.")
         }
         val index = indexValue.evaluate()
-        if (index !is IntValue){
+        if (index !is IntValue) {
             throw UnexpectedTypeException("Array indices can only be an integer, but $index was given.")
         }
 
@@ -134,33 +133,26 @@ class PrintStatement(
 }
 
 class ReturnStatement(
-    val returnOperation: ReturnOperation
-): IStatement{
-    var returnValue: IOperation? = null
+    val returnOperation: IOperation
+) : IStatement {
     override fun evaluate() {
-        returnValue = returnOperation
+        throw ReturnException(returnOperation.evaluate())
     }
 }
 
 class BlockStatement(
-    val statements: MutableList<IStatement>
+    val statements: MutableList<IStatement>,
+    val isFunctionBody: Boolean = false
 ) : IStatement {
-    var outputValue: IOperation? = null
     override fun evaluate() {
-        Scopes.add(VariablesRepository())
+        Scopes.createNewScope(isFunctionBody)
         for (statement in statements) {
-            if (statement is ReturnStatement){
-                statement.evaluate()
-                outputValue = statement.returnValue
-                return
-            }
             statement.evaluate()
         }
-
         Scopes.removeLast()
     }
 
-    fun addStatement(index: Int = 0, statement: IStatement){
+    fun addStatement(index: Int = 0, statement: IStatement) {
         statements.add(index, statement)
     }
 }
@@ -172,7 +164,7 @@ class IfElseStatement(
     override fun evaluate() {
         for ((condition, block) in blocks) {
             val conditionValue = condition.evaluate()
-            if (conditionValue !is BoolValue){
+            if (conditionValue !is BoolValue) {
                 throw UnexpectedTypeException("Expected a BoolValue, but got ${conditionValue::class.java.simpleName}")
             }
             if (conditionValue.value) {
@@ -187,10 +179,10 @@ class IfElseStatement(
 abstract class Loop(
     val condition: IOperation,
     val block: BlockStatement,
-): IStatement{
-    fun checkCondition(): Boolean{
+) : IStatement {
+    fun checkCondition(): Boolean {
         val value = condition.evaluate()
-        if (value !is BoolValue){
+        if (value !is BoolValue) {
             throw UnexpectedTypeException("")
         }
         return value.value
@@ -245,5 +237,14 @@ class BreakStatement : IStatement {
 class ContinueStatement : IStatement {
     override fun evaluate() {
         throw ContinueIterationException()
+    }
+}
+
+class FunctionCallStatement(
+    val functionName: IOperation,
+    val parametersValues: List<IOperation>
+) : IStatement {
+    override fun evaluate() {
+        FunctionCallOperation(functionName, parametersValues).evaluate()
     }
 }

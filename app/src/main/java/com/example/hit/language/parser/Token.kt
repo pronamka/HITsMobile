@@ -16,7 +16,7 @@ open class Token(
 }
 
 class ArrayToken(
-    val size: IOperation,
+    val size: IOperation? = null,
     val elementType: VariableType,
     val value: IOperation? = null
 ): Token(TokenType.ARRAY, "")

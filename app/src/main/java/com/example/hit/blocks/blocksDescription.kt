@@ -22,7 +22,6 @@ import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
 import com.example.hit.language.parser.operations.IOperation
-import com.example.hit.language.parser.operations.ReturnOperation
 import java.util.UUID
 
 abstract class BasicBlock(
@@ -368,7 +367,7 @@ class ReturnBlock(
     val valueInputField = OperationInputField()
 
     override fun execute(): ReturnStatement {
-        return ReturnStatement(ReturnOperation(valueInputField.getOperation()))
+        return ReturnStatement((valueInputField.getOperation()))
     }
 
     override fun deepCopy(): BasicBlock {
@@ -380,11 +379,13 @@ class FunctionBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.FUNCTION, color = Color(0xFF45A3FF)) {
     val nameInput = NameInputField()
+    val returnValueTypeInput = TypeInputField()
     val inputParameters = mutableListOf<VariableInitializationBlock>()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     override fun execute(): FunctionDeclarationStatement {
         val name = nameInput.getName()
+        val returnValueType = returnValueTypeInput.getType()
         val statements = mutableListOf<IStatement>()
         val parameters = mutableListOf<DeclarationStatement>()
         for (block in blocks.blocks){
@@ -393,7 +394,7 @@ class FunctionBlock(
         for (inputParameter in inputParameters){
             parameters.add(inputParameter.execute())
         }
-        return FunctionDeclarationStatement(name, parameters, BlockStatement(statements))
+        return FunctionDeclarationStatement(name, parameters, BlockStatement(statements), returnValueType)
     }
 
     override fun deepCopy(): BasicBlock {

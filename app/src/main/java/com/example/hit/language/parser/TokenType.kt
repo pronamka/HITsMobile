@@ -40,5 +40,13 @@ enum class TokenType {
     AMPERSAND,
     VERTICAL_BAR,
 
+    DOT,
+
+    INT_KEYWORD,
+    DOUBLE_KEYWORD,
+    STRING_KEYWORD,
+    BOOL_KEYWORD,
+    ARRAY_KEYWORD,
+
     EOF;
 }

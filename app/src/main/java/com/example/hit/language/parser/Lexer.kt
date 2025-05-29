@@ -27,12 +27,21 @@ class Lexer(
         "!" to TokenType.NOT,
         "&" to TokenType.AMPERSAND,
         "|" to TokenType.VERTICAL_BAR,
-        )
+        "." to TokenType.DOT
+    )
 
     private val keywords: Map<String, TokenType> = mapOf(
         "true" to TokenType.TRUE,
         "false" to TokenType.FALSE,
         "return" to TokenType.RETURN,
+    )
+
+    private val typeKeywords: Map<String, TokenType> = mapOf(
+        "Int" to TokenType.INT_KEYWORD,
+        "Double" to TokenType.DOUBLE_KEYWORD,
+        "String" to TokenType.STRING_KEYWORD,
+        "Bool" to TokenType.BOOL_KEYWORD,
+        "Array" to TokenType.ARRAY_KEYWORD
     )
 
     private val tokens: MutableList<Token> = mutableListOf()
@@ -58,13 +67,13 @@ class Lexer(
         return tokens
     }
 
-    fun tokenizeOperator(){
+    fun tokenizeOperator() {
         var currentCharacter = peekAtIndex(0)
         var operatorString = currentCharacter.toString()
         while (operators.containsKey(operatorString)) {
             operatorString += getNextChar()
         }
-        operatorString = operatorString.substring(0, operatorString.length-1)
+        operatorString = operatorString.substring(0, operatorString.length - 1)
         addToken(operators[operatorString]!!, "")
     }
 
@@ -102,6 +111,10 @@ class Lexer(
         val word = inputString.substring(startIndex..currentIndex - 1)
         if (keywords.containsKey(word)) {
             addToken(keywords[word]!!, word)
+            return
+        }
+        if (typeKeywords.containsKey(word)) {
+            addToken(typeKeywords[word]!!, word)
             return
         }
         addToken(TokenType.WORD, word)

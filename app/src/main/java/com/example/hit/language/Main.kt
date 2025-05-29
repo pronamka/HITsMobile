@@ -1,106 +1,75 @@
-/*package com.example.hit.language
+package com.example.hit.language
 
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
+import com.example.hit.language.parser.AssignmentStatement
 import com.example.hit.language.parser.BlockStatement
-import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.DeclarationStatement
 import com.example.hit.language.parser.ForLoop
+import com.example.hit.language.parser.FunctionDeclarationStatement
 import com.example.hit.language.parser.IStatement
-import com.example.hit.language.parser.IfElseStatement
 import com.example.hit.language.parser.Lexer
-import com.example.hit.language.parser.Parser
+import com.example.hit.language.parser.OperationsParser
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.PrintStatement
+import com.example.hit.language.parser.ReturnStatement
+import com.example.hit.language.parser.StatementsParser
 import com.example.hit.language.parser.TokenType
-import com.example.hit.language.parser.operations.BinaryOperation
-import com.example.hit.language.parser.operations.ConditionOperation
-import com.example.hit.language.parser.operations.ConditionOperationType
+import com.example.hit.language.parser.operations.ComparisonOperation
+import com.example.hit.language.parser.operations.IOperation
+
+fun getOperation(input: String): IOperation {
+    return OperationsParser(Lexer(input).tokenize()).parse()[0]
+}
+
+fun getDeclarationStatement(input: String): DeclarationStatement{
+    return StatementsParser(Lexer(input).tokenize()).parseDeclaration()
+}
+
+fun getAssignmentStatement(input: String): AssignmentStatement{
+    return StatementsParser(Lexer(input).tokenize()).parseAssignment()
+}
+
+fun getStatementsParser(input: String): StatementsParser{
+    return StatementsParser(Lexer(input).tokenize())
+}
 
 class Main {
     fun main() {
-        val atomicValues = """
-            5
-            [2, 4, 1, 9, 2]
-            1
-            0
-            i
-            size
-            j
-            a[i]
-            a[j]
-            t
-            a
-        """.trimIndent()
-        println(VariableType.classMap)
-        val values = Parser(Lexer(atomicValues).tokenize()).parse()
-        println(VariableType.classMap)
         val program: List<IStatement> = listOf(
-            DeclarationStatement(
-                VariableType.INT, "size", values[0] //5
-            ),
-            DeclarationStatement(
-                VariableType.ARRAY(VariableType.INT, 5), "a", values[1] // array
-            ),
-            ForLoop(
-                DeclarationStatement(
-                    VariableType.INT, "i", values[3] // 0
-                ),
-                ConditionOperation(
-                    values[4], values[5], ConditionOperationType.LESS //i, size
-                ),
-                VariableAssignmentStatement(
-                    "i", BinaryOperation(
-                        values[4], values[2], TokenType.PLUS //i, 1
-                    )
-                ),
+            FunctionDeclarationStatement(
+                "printArray",
+                getStatementsParser("arr Int[]").parseFunctionParameters(),
                 BlockStatement(
-                    listOf(
+                    mutableListOf(
                         ForLoop(
-                            DeclarationStatement(
-                                VariableType.INT, "j", values[4] // i
+                            getDeclarationStatement("i Int = 0"),
+                            ComparisonOperation(
+                                getOperation("i"), getOperation("5"), TokenType.LESS
                             ),
-                            ConditionOperation(
-                                values[6], values[5], ConditionOperationType.LESS // j, size
-                            ),
-                            VariableAssignmentStatement(
-                                "j", BinaryOperation(
-                                    values[6], values[2], TokenType.PLUS // j, 1
-                                )
-                            ),
+                            getAssignmentStatement("i = i+1"),
                             BlockStatement(
-                                listOf(
-                                    IfElseStatement(
-                                        listOf(
-                                            Pair(
-                                                ConditionOperation(
-                                                    values[7], // a[i]
-                                                    values[8], // a[j]
-                                                    ConditionOperationType.GREATER
-                                                ), BlockStatement(
-                                                    listOf(
-                                                        DeclarationStatement(
-                                                            VariableType.INT, "t", values[7] // a[i]
-                                                        ),
-                                                        ArrayElementAssignmentStatement(
-                                                            "a", values[8], values[4] // a[j], i
-                                                        ),
-                                                        ArrayElementAssignmentStatement(
-                                                            "a", values[9], values[6] // t, j
-                                                        ),
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
+                                mutableListOf(
+                                    PrintStatement(getOperation("arr[i]"))
                                 )
                             )
-                        )
+                        ),
+                        ArrayElementAssignmentStatement(
+                            "arr", getOperation("arr[1]"), getOperation("0")
+                        ),
+                        ReturnStatement(getOperation("arr"))
                     )
-                )
+                ),
+                getStatementsParser("Int[]").parseType(),
             ),
-            PrintStatement(values[10])
+            getDeclarationStatement("a Int[5] = [5, 4, 3, 2, 1]"),
+            DeclarationStatement(
+                VariableType.ARRAY(VariableType.INT, getOperation("5")),
+                "b",
+                getOperation("printArray(a)")
+            ),
+            PrintStatement(getOperation("a")),
+            PrintStatement(getOperation("b.size()")),
         )
-        println(VariableType.classMap)
         for (statement in program) {
             println(statement)
         }
@@ -112,4 +81,5 @@ class Main {
 
 fun main(args: Array<String>) {
     Main().main()
-}*/
+
+}

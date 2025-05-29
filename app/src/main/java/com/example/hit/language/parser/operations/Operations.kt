@@ -98,7 +98,7 @@ class VariableOperation(
     val variableName: String
 ) : IOperation {
     override fun evaluate(): Value<*> {
-        return Scopes.getVariable(variableName)
+        return Scopes.getInitializedValue(variableName)
     }
 
     override fun toString(): String {
@@ -107,14 +107,14 @@ class VariableOperation(
 }
 
 class ArrayElementOperation(
-    val variableName: String,
+    val variable: IOperation,
     val indexValue: IOperation
 ) : IOperation {
     override fun evaluate(): Value<*> {
-        val array = VariableOperation(variableName).evaluate()
+        val array = variable.evaluate()
         val index = indexValue.evaluate()
         if (array !is ArrayValue<*>) {
-            throw InvalidOperationException("Cannot use get operator: $variableName is not an array.")
+            throw InvalidOperationException("Cannot use get operator: $variable is not an array.")
         }
         if (index !is IntValue) {
             throw UnexpectedTypeException("Array indices can only be an integer, but $index was given.")
@@ -191,25 +191,28 @@ class LogicalOperation(
     }
 }
 
-class ReturnOperation(
-    val value: IOperation
-) : IOperation {
-    override fun evaluate(): Value<*> {
-        return value.evaluate()
-    }
-}
-
 class FunctionCallOperation(
-    val functionName: String,
+    val toCall: IOperation,
     val parameters: List<IOperation> = listOf()
 ) : IOperation {
     override fun evaluate(): Value<*> {
-        val function = Scopes.getVariable(functionName)
+        val function = toCall.evaluate()
         if (function !is CallableValue<*>) {
             throw InvalidOperationException(
                 "Variable of type ${function::class.java.simpleName} is not callable."
             )
         }
         return function.call(parameters)
+    }
+}
+
+class MethodCallOperation(
+    val variable: IOperation,
+    val methodName: String,
+    val parameters: List<IOperation> = listOf()
+) : IOperation {
+    override fun evaluate(): Value<*> {
+        val value = variable.evaluate()
+        return value.callMethod(methodName, parameters)
     }
 }

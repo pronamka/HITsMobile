@@ -4,6 +4,55 @@ import com.example.hit.language.parser.exceptions.ArrayInitializationException
 import com.example.hit.language.parser.exceptions.UnexpectedTypeException
 import com.example.hit.language.parser.operations.ValueOperation
 
+class ArrayFactory(
+    val token: ArrayToken
+) {
+
+    fun getArraySize(): Int {
+        val arraySize = token.size!!.evaluate()
+        if (arraySize !is IntValue) {
+            throw UnexpectedTypeException(
+                "The size of an array must be an Int value, " +
+                        "but got ${arraySize::class.java.simpleName}"
+            )
+        }
+        return arraySize.value
+    }
+
+    fun create(): Value<*> {
+        val desiredClass = TypesManager.getCorrespondingValue(token.elementType)
+        if (token.value == null) {
+            if (token.size == null) {
+                throw ArrayInitializationException(
+                    "You must specify the size of the array."
+                )
+            }
+            return ArrayValue(getArraySize(), desiredClass)
+        }
+
+        var arrayValue = token.value.evaluate()
+        if (arrayValue is ArrayValue<*>) {
+            arrayValue = arrayValue.toCollectionValue()
+        }
+
+        if (arrayValue !is CollectionValue) {
+            throw IllegalArgumentException(
+                "Array can only be initialized with an array expression."
+            )
+        }
+
+        val elements: MutableList<Value<*>> = arrayValue.toList().toMutableList()
+        TypesManager.checkElementTypes(token.elementType, elements, true)
+
+        val arraySize = if (token.size == null) {
+            elements.size
+        } else {
+            getArraySize()
+        }
+        return ArrayValue(arraySize, desiredClass, elements)
+    }
+}
+
 class ValueFactory(
     val token: Token
 ) {
@@ -21,32 +70,7 @@ class ValueFactory(
                                 "be initialized with an array expression."
                     )
                 }
-                val arraySize = token.size.evaluate()
-                if (arraySize !is IntValue) {
-                    throw UnexpectedTypeException(
-                        "The size of an array must be an Int value, " +
-                                "but got ${arraySize::class.java.simpleName}"
-                    )
-                }
-
-                val desiredClass = VariableType.classMap[token.elementType]!!
-                if (token.value == null) {
-                    return ArrayValue(arraySize.value, desiredClass)
-                }
-                val arrayValue = token.value.evaluate()
-                if (arrayValue !is CollectionValue) {
-                    throw IllegalArgumentException("Array can only be initialized with an array expression.")
-                }
-                val elements: MutableList<Value<*>> = arrayValue.toList().toMutableList()
-                for (element in elements) {
-                    if (!desiredClass.isInstance(element)) {
-                        throw ArrayInitializationException(
-                            "Failed to initialize array: Array element type was ${desiredClass.java.simpleName}," +
-                                    "but the element $element has different type."
-                        )
-                    }
-                }
-                return ArrayValue(arraySize.value, desiredClass, elements)
+                ArrayFactory(token).create()
             }
 
             else -> throw NotImplementedError("Token of type ${token.tokenType} cannot be parsed into a value.")
