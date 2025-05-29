@@ -59,13 +59,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.hit.blocks.ArrayDeclarationBlock
 import com.example.hit.blocks.BasicBlock
 import com.example.hit.blocks.BlockData
 import com.example.hit.blocks.ForBlock
 import com.example.hit.blocks.IfElseBlock
-import com.example.hit.blocks.VariableAssignmentBlock
-import com.example.hit.blocks.VariableDeclarationBlock
 import com.example.hit.blocks.WhileBlock
 import com.example.hit.blocks.container.Container
 import com.example.hit.codeRunner.CodeRunner

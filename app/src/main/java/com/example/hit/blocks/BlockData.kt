@@ -5,11 +5,9 @@ import java.util.UUID
 
 object BlockData {
     val defaultBlocks = listOf(
-        VariableInitializationBlock(UUID.randomUUID()),
-        VariableDeclarationBlock(UUID.randomUUID()),
-        ArrayDeclarationBlock(UUID.randomUUID()),
-        VariableAssignmentBlock(UUID.randomUUID()),
-        ArrayElementAssignmentBlock(UUID.randomUUID()),
+        InitializationBlock(UUID.randomUUID()),
+        DeclarationBlock(UUID.randomUUID()),
+        AssignmentBlock(UUID.randomUUID()),
         PrintBlock(UUID.randomUUID()),
         BodyBlock(UUID.randomUUID()),
         IfElseBlock(UUID.randomUUID()),

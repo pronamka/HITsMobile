@@ -2,13 +2,11 @@ package com.example.hit.blocks
 
 enum class BlockType(val value: String) {
 
-    VARIABLE_INITIALIZATION(""),
+    INITIALIZATION("initialization"),
 
-    VARIABLE_DECLARATION("variable_declaration"),
-    ARRAY_DECLARATION("array_dec"),
+    DECLARATION("declaration"),
 
-    VARIABLE_ASSIGNMENT("variable_as"),
-    ARRAY_ELEMENT_ASSIGNMENT("array_elem_as"),
+    ASSIGNMENT("assignment"),
 
     IF("if"),
 
