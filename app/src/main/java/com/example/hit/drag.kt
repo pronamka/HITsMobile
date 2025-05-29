@@ -113,7 +113,7 @@ fun Drag(
 
             val distanceBottomToTop = distance(currentBottomCenter, otherTopCenter)
             if (distanceBottomToTop < 50f) {
-                return Pair(otherBottomCenter.first - blockWidth / 2, otherBottomCenter.second - blockHeight)
+                return Pair(otherTopCenter.first - blockWidth / 2, otherTopCenter.second - blockHeight)
             }
 
             val distanceTopToBottom = distance(currentTopCenter, otherBottomCenter)
