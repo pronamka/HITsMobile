@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,7 +56,6 @@ import com.example.hit.blocks.InitializationBlock
 import com.example.hit.blocks.PrintBlock
 import com.example.hit.blocks.ReturnBlock
 import com.example.hit.blocks.WhileBlock
-import com.example.hit.language.parser.exceptions.ReturnException
 import java.util.UUID
 
 
@@ -73,11 +71,16 @@ object NumberConstants {
     val bodyBlockHorizontalPadding = 8.dp
     val bodyBlockVerticalPadding = 12.dp
 
-    val standardColumnPadding = 8.dp
-    val standardColumnHorizontalArrangement = 8.dp
-    val standardColumnVerticalArrangement = 8.dp
+    val columnPadding = 8.dp
+    val boxPadding = 16.dp
+    val boxRoundedShape = 24.dp
 
-    val standardRowHorizontalArrangement = 8.dp
+    val columnHorizontalArrangement = 8.dp
+    val columnVerticalArrangement = 8.dp
+
+    val rowHorizontalArrangement = 8.dp
+    val rowHorizontalPadding = 16.dp
+    val rowVerticalPadding = 8.dp
 
     val standardBlockWidth = 256.dp
     val standardBlockHeight = 80.dp
@@ -85,34 +88,38 @@ object NumberConstants {
     val wideBlockWidth = 350.dp
     val wideBlockHeight = 250.dp
 
-    val standardBoxPadding = 16.dp
-
-    val standardInputFieldHeight = 56.dp
-    val standardInputFieldWidth = 190.dp
-
-    val standardSpacerHeight = 10.dp
-
-    val standardAddElseBlockButtonHeight = 48.dp
-    val standardAddElseBlockButtonWidth = 104.dp
-
-    val standardIfLabelWidth = 60.dp
+    val spacerHeight = 10.dp
+    val spacerWidth = 12.dp
 
     val addBlockButtonWidth = 60.dp
 
-
     val borderWidth = 2.dp
 
-
     val roundCornerShape = 16.dp
-
 
     val bodyBlockTransparencyIndex = 0.2f
     val borderTransparencyIndex = 0.5f
     val singleSymbolWidth = 4.dp
 
+    val inputTextFieldHeight = 56.dp
+    val inputTextFieldWidth = 84.dp
+    val inputFieldStandardWeight = 1f
+
+    val inputFieldFontSize = 18.sp
+    val textFontSize = 26.sp
+
     object IfElseBlock {
+
+        val standardIfLabelWidth = 60.dp
+
+        val standardInputFieldHeight = inputTextFieldHeight
+        val standardInputFieldWidth = 190.dp
+
         val rowWidth = standardIfLabelWidth + standardInputFieldWidth + addBlockButtonWidth
-        val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
+        val overallPadding = columnPadding * 2 + boxPadding * 2
+
+        val standardAddElseBlockButtonHeight = 48.dp
+        val standardAddElseBlockButtonWidth = 104.dp
     }
 
 
@@ -120,20 +127,20 @@ object NumberConstants {
         val horizontalArrangement = 8.dp
 
         val inputTextFieldWidth = 72.dp
-        val inputTextFieldHeight = 56.dp
+        val inputTextFieldHeight = inputTextFieldWidth
 
         val labelWidth = 50.dp
 
         val rowWidth =
             labelWidth + inputTextFieldWidth * 3 + singleSymbolWidth * 4 + horizontalArrangement * 9 + addBlockButtonWidth
-        val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
+        val overallPadding = columnPadding * 2 + boxPadding * 2
     }
 
     object WhileBlock {
         val horizontalArrangement = 8.dp
 
         val inputTextFieldWidth = 146.dp
-        val inputTextFieldHeight = 56.dp
+        val inputTextFieldHeight = inputTextFieldWidth
 
         val labelWidth = 70.dp
 
@@ -141,7 +148,7 @@ object NumberConstants {
 
         val rowWidth =
             labelWidth + inputTextFieldWidth + singleSymbolWidth * 2 + horizontalArrangement * 6 + addBlockButtonWidth
-        val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
+        val overallPadding = columnPadding * 2 + boxPadding * 2
     }
 
     object Function {
@@ -157,7 +164,17 @@ object NumberConstants {
 
         val rowWidth =
             labelWidth + inputTextFieldWidth * 2 + parametersInputTextFieldWidth + horizontalArrangement * 4 + addBlockButtonWidth
-        val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
+        val overallPadding = columnPadding * 2 + boxPadding * 2
+    }
+
+    object ReturnBlock{
+        val inputFieldWidth = 126.dp
+    }
+
+    object OtherConstants {
+        val halfTransparent = 0.5f
+        val almostTransparent = 0.9f
+
     }
 }
 
@@ -179,30 +196,33 @@ fun BlockItem(
         focusedPlaceholderColor = Color.Gray,
         unfocusedPlaceholderColor = Color.Gray,
         focusedIndicatorColor = Color.DarkGray,
-        unfocusedIndicatorColor = Color.DarkGray.copy(alpha = 0.5f),
-        focusedContainerColor = Color.White.copy(alpha = 0.9f),
-        unfocusedContainerColor = Color.White.copy(alpha = 0.9f)
+        unfocusedIndicatorColor = Color.DarkGray.copy(alpha = NumberConstants.OtherConstants.halfTransparent),
+        focusedContainerColor = Color.White.copy(alpha = NumberConstants.OtherConstants.almostTransparent),
+        unfocusedContainerColor = Color.White.copy(alpha = NumberConstants.OtherConstants.almostTransparent)
     )
 
     when (block) {
         is InitializationBlock -> {
-            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .width(252.dp)
-                    .height(80.dp)
+                    .padding(
+                        horizontal = NumberConstants.boxPadding,
+                        vertical = NumberConstants.boxPadding
+                    )
+                    .width(NumberConstants.standardBlockWidth)
+                    .height(NumberConstants.standardBlockHeight)
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
                     }
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = NumberConstants.rowHorizontalArrangement),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -210,19 +230,19 @@ fun BlockItem(
                         value = block.nameInput.getInputField(),
                         onValueChange = { block.nameInput.set(it) },
                         modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
+                            .weight(NumberConstants.inputFieldStandardWeight)
+                            .height(NumberConstants.inputTextFieldHeight),
                         singleLine = true,
                         enabled = !showMenu,
                         colors = textFieldColors,
                         textStyle = TextStyle(
-                            fontSize = 18.sp, fontFamily = font
+                            fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                         )
                     )
                     Text(
                         text = stringResource(R.string.simbol1),
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = NumberConstants.textFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
@@ -231,20 +251,20 @@ fun BlockItem(
                         value = block.typeInput.getInputField(),
                         onValueChange = { block.typeInput.set(it) },
                         modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
+                            .weight(NumberConstants.inputFieldStandardWeight)
+                            .height(NumberConstants.inputTextFieldHeight),
                         singleLine = true,
                         enabled = !showMenu,
                         colors = textFieldColors,
                         textStyle = TextStyle(
-                            fontSize = 18.sp, fontFamily = font
+                            fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                         )
                     )
 
                     Text(
                         text = stringResource(R.string.simbol2),
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = NumberConstants.textFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
@@ -255,13 +275,13 @@ fun BlockItem(
                             block.valueInput.set(it)
                         },
                         modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
+                            .weight(NumberConstants.inputFieldStandardWeight)
+                            .height(NumberConstants.inputTextFieldHeight),
                         singleLine = true,
                         enabled = !showMenu,
                         colors = textFieldColors,
                         textStyle = TextStyle(
-                            fontSize = 18.sp, fontFamily = font
+                            fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                         )
                     )
                 }
@@ -276,14 +296,12 @@ fun BlockItem(
             Box(
                 modifier = Modifier
                     .padding(
-                        horizontal = NumberConstants.standardBoxPadding,
-                        vertical = NumberConstants.standardBoxPadding
+                        horizontal = NumberConstants.boxPadding,
+                        vertical = NumberConstants.boxPadding
                     )
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
                     }
-                    //.wrapContentWidth()
-                    //.wrapContentHeight()
                     .defaultMinSize(
                         minHeight = NumberConstants.wideBlockHeight,
                         minWidth = NumberConstants.wideBlockWidth
@@ -291,28 +309,29 @@ fun BlockItem(
                     .height(block.getDynamicHeightDp(density))
                     .width(block.getDynamicWidthDp(density))
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
                 Column(
                     modifier = Modifier
                         .wrapContentWidth()
                         .wrapContentHeight()
-                        .padding(NumberConstants.standardColumnPadding),
-                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
+                        .padding(NumberConstants.columnPadding),
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.columnVerticalArrangement)
                 ) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnHorizontalArrangement),
+                        horizontalArrangement = Arrangement.spacedBy(NumberConstants.columnHorizontalArrangement),
                         verticalAlignment = Alignment.CenterVertically,
 
                         ) {
                         Text(
                             text = block.type.value,
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
-                            modifier = Modifier.width(NumberConstants.standardIfLabelWidth)
+                            modifier = Modifier.width(NumberConstants.IfElseBlock.standardIfLabelWidth)
                         )
                         OutlinedTextField(
                             value = ifCondition,
@@ -321,8 +340,8 @@ fun BlockItem(
                                 block.setNewCondition(ifCondition, 0)
                             },
                             modifier = Modifier
-                                .width(NumberConstants.standardInputFieldWidth)
-                                .height(NumberConstants.standardInputFieldHeight),
+                                .width(NumberConstants.IfElseBlock.standardInputFieldWidth)
+                                .height(NumberConstants.IfElseBlock.standardInputFieldHeight),
                             enabled = !showMenu,
                             singleLine = true,
                             colors = textFieldColors
@@ -378,26 +397,26 @@ fun BlockItem(
                                     onChangeSize = { onChange(blockInner, density) })
                             }
                         }
-                        Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
+                        Spacer(modifier = Modifier.height(NumberConstants.spacerHeight))
                     }
 
                     elseIfCounts.forEachIndexed { index, condition ->
                         Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
+                            verticalArrangement = Arrangement.spacedBy(NumberConstants.columnVerticalArrangement)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(NumberConstants.standardRowHorizontalArrangement),
+                                horizontalArrangement = Arrangement.spacedBy(NumberConstants.rowHorizontalArrangement),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = stringResource(R.string.else_if),
                                     color = Color.White,
-                                    fontSize = 20.sp,
+                                    fontSize = NumberConstants.textFontSize,
                                     fontWeight = FontWeight.Medium,
                                     fontFamily = font,
-                                    modifier = Modifier.width(NumberConstants.standardIfLabelWidth)
+                                    modifier = Modifier.width(NumberConstants.IfElseBlock.standardIfLabelWidth)
                                 )
                                 OutlinedTextField(
                                     value = condition,
@@ -408,8 +427,8 @@ fun BlockItem(
                                         block.setNewCondition(elseIfCounts[index], index + 1)
                                     },
                                     modifier = Modifier
-                                        .width(NumberConstants.standardInputFieldWidth)
-                                        .height(NumberConstants.standardInputFieldHeight),
+                                        .width(NumberConstants.IfElseBlock.standardInputFieldWidth)
+                                        .height(NumberConstants.IfElseBlock.standardInputFieldHeight),
                                     enabled = !showMenu,
                                     singleLine = true,
                                     colors = textFieldColors
@@ -477,7 +496,7 @@ fun BlockItem(
                                     }
 
                                 }
-                                Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
+                                Spacer(modifier = Modifier.height(NumberConstants.spacerHeight))
                             }
                         }
                     }
@@ -491,7 +510,7 @@ fun BlockItem(
                                     minHeight = NumberConstants.standardBlockHeight,
                                     minWidth = NumberConstants.standardBlockWidth
                                 ),
-                            verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
+                            verticalArrangement = Arrangement.spacedBy(NumberConstants.columnVerticalArrangement)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -501,10 +520,10 @@ fun BlockItem(
                                 Text(
                                     text = stringResource(R.string.els),
                                     color = Color.White,
-                                    fontSize = 26.sp,
+                                    fontSize = NumberConstants.textFontSize,
                                     fontWeight = FontWeight.Medium,
                                     fontFamily = font,
-                                    modifier = Modifier.width(NumberConstants.standardIfLabelWidth)
+                                    modifier = Modifier.width(NumberConstants.IfElseBlock.standardIfLabelWidth)
                                 )
 
                                 Button(
@@ -562,7 +581,7 @@ fun BlockItem(
                                             onChangeSize = { onChange(blockFor, density) })
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
+                                Spacer(modifier = Modifier.height(NumberConstants.spacerHeight))
                             }
                         }
                     } else {
@@ -571,8 +590,8 @@ fun BlockItem(
                         ) {
                             Button(
                                 modifier = Modifier
-                                    .width(NumberConstants.standardAddElseBlockButtonWidth)
-                                    .height(NumberConstants.standardAddElseBlockButtonHeight),
+                                    .width(NumberConstants.IfElseBlock.standardAddElseBlockButtonWidth)
+                                    .height(NumberConstants.IfElseBlock.standardAddElseBlockButtonHeight),
                                 onClick = {
                                     elseIfCounts = elseIfCounts + "";
                                     block.addElseIfBlock("")
@@ -587,14 +606,14 @@ fun BlockItem(
                                     stringResource(R.string.else_if),
                                     color = Color.White,
                                     fontFamily = font,
-                                    fontSize = 18.sp
+                                    fontSize = NumberConstants.inputFieldFontSize
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(NumberConstants.spacerWidth))
                             Button(
                                 modifier = Modifier
-                                    .width(NumberConstants.standardAddElseBlockButtonWidth)
-                                    .height(NumberConstants.standardAddElseBlockButtonHeight),
+                                    .width(NumberConstants.IfElseBlock.standardAddElseBlockButtonWidth)
+                                    .height(NumberConstants.IfElseBlock.standardAddElseBlockButtonHeight),
                                 onClick = {
                                     hasElse = true;
                                     block.addElseBlock()
@@ -607,7 +626,7 @@ fun BlockItem(
                                     stringResource(R.string.els),
                                     color = Color.White,
                                     fontFamily = font,
-                                    fontSize = 18.sp
+                                    fontSize = NumberConstants.inputFieldFontSize
                                 )
                             }
                         }
@@ -617,24 +636,27 @@ fun BlockItem(
         }
 
         is DeclarationBlock -> {
-            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .width(252.dp)
-                    .height(80.dp)
+                    .padding(
+                        horizontal = NumberConstants.boxPadding,
+                        vertical = NumberConstants.boxPadding
+                    )
+                    .width(NumberConstants.standardBlockWidth)
+                    .height(NumberConstants.standardBlockHeight)
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
                     }
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        .padding(horizontal = NumberConstants.rowHorizontalPadding),
+                    horizontalArrangement = Arrangement.spacedBy(NumberConstants.rowHorizontalArrangement),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
@@ -643,19 +665,19 @@ fun BlockItem(
                             block.nameInput.set(it);
                         },
                         modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
+                            .weight(NumberConstants.inputFieldStandardWeight)
+                            .height(NumberConstants.inputTextFieldHeight),
                         singleLine = true,
                         enabled = !showMenu,
                         colors = textFieldColors,
                         textStyle = TextStyle(
-                            fontSize = 18.sp, fontFamily = font
+                            fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                         )
                     )
                     Text(
                         text = stringResource(R.string.simbol1),
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = NumberConstants.textFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
@@ -665,13 +687,13 @@ fun BlockItem(
                             block.typeInput.set(it);
                         },
                         modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
+                            .weight(NumberConstants.inputFieldStandardWeight)
+                            .height(NumberConstants.inputTextFieldHeight),
                         singleLine = true,
                         enabled = !showMenu,
                         colors = textFieldColors,
                         textStyle = TextStyle(
-                            fontSize = 18.sp, fontFamily = font
+                            fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                         )
                     )
                 }
@@ -679,22 +701,28 @@ fun BlockItem(
         }
 
         is AssignmentBlock -> {
-            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .width(252.dp)
-                    .height(80.dp)
+                    .padding(
+                        horizontal = NumberConstants.boxPadding,
+                        vertical = NumberConstants.boxPadding
+                    )
+                    .width(NumberConstants.standardBlockWidth)
+                    .height(NumberConstants.standardBlockHeight)
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
                     }
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(
+                        horizontal = NumberConstants.rowHorizontalPadding,
+                        vertical = NumberConstants.rowVerticalPadding
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(NumberConstants.rowHorizontalArrangement),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
@@ -703,13 +731,13 @@ fun BlockItem(
                             block.nameInput.set(it);
                         },
                         modifier = Modifier
-                            .width(84.dp)
-                            .height(56.dp),
+                            .width(NumberConstants.inputTextFieldWidth)
+                            .height(NumberConstants.inputTextFieldHeight),
                         singleLine = true,
                         enabled = !showMenu,
                         colors = textFieldColors,
                         textStyle = TextStyle(
-                            fontSize = 18.sp, fontFamily = font
+                            fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                         )
 
                     )
@@ -717,7 +745,7 @@ fun BlockItem(
                     Text(
                         text = stringResource(R.string.simbol2),
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = NumberConstants.textFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
@@ -726,13 +754,13 @@ fun BlockItem(
                         value = block.valueInput.getInputField(),
                         onValueChange = { block.valueInput.set(it) },
                         modifier = Modifier
-                            .width(84.dp)
-                            .height(56.dp),
+                            .width(NumberConstants.inputTextFieldWidth)
+                            .height(NumberConstants.inputTextFieldHeight),
                         singleLine = true,
                         enabled = !showMenu,
                         colors = textFieldColors,
                         textStyle = TextStyle(
-                            fontSize = 18.sp, fontFamily = font
+                            fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                         )
 
                     )
@@ -746,8 +774,8 @@ fun BlockItem(
             Box(
                 modifier = Modifier
                     .padding(
-                        horizontal = NumberConstants.standardBoxPadding,
-                        vertical = NumberConstants.standardBoxPadding
+                        horizontal = NumberConstants.boxPadding,
+                        vertical = NumberConstants.boxPadding
                     )
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
@@ -759,14 +787,15 @@ fun BlockItem(
                     .height(block.getDynamicHeightDp(density))
                     .width(block.getDynamicWidthDp(density))
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
                 Column(
                     modifier = Modifier
                         .wrapContentWidth()
-                        .padding(NumberConstants.standardColumnPadding),
-                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
+                        .padding(NumberConstants.columnPadding),
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.columnVerticalArrangement)
                 ) {
                     Row(
                         modifier = Modifier.wrapContentWidth(),
@@ -776,7 +805,7 @@ fun BlockItem(
                         Text(
                             text = block.type.value,
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
                             modifier = Modifier.width(NumberConstants.ForBlock.labelWidth)
@@ -785,7 +814,7 @@ fun BlockItem(
                         Text(
                             text = stringResource(R.string.simbol3),
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
                             modifier = Modifier.width(NumberConstants.singleSymbolWidth)
@@ -801,14 +830,14 @@ fun BlockItem(
                             singleLine = true,
                             colors = textFieldColors,
                             textStyle = TextStyle(
-                                fontSize = 18.sp, fontFamily = font
+                                fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                             )
                         )
 
                         Text(
                             text = stringResource(R.string.simbol5),
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
                             modifier = Modifier.width(NumberConstants.singleSymbolWidth)
@@ -824,14 +853,14 @@ fun BlockItem(
                             singleLine = true,
                             colors = textFieldColors,
                             textStyle = TextStyle(
-                                fontSize = 18.sp, fontFamily = font
+                                fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                             )
                         )
 
                         Text(
                             text = stringResource(R.string.simbol5),
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
                             modifier = Modifier.width(NumberConstants.singleSymbolWidth)
@@ -847,14 +876,14 @@ fun BlockItem(
                             singleLine = true,
                             colors = textFieldColors,
                             textStyle = TextStyle(
-                                fontSize = 18.sp, fontFamily = font
+                                fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                             )
                         )
 
                         Text(
                             text = stringResource(R.string.simbol4),
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
                             modifier = Modifier.width(NumberConstants.singleSymbolWidth)
@@ -912,7 +941,7 @@ fun BlockItem(
                             }
 
                         }
-                        Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
+                        Spacer(modifier = Modifier.height(NumberConstants.spacerHeight))
                     }
                 }
             }
@@ -936,15 +965,16 @@ fun BlockItem(
                     .height(block.getDynamicHeightDp(density))
                     .width(block.getDynamicWidthDp(density))
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
             ) {
                 Column(
                     modifier = Modifier
                         .wrapContentWidth()
-                        .padding(NumberConstants.standardColumnPadding),
-                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
+                        .padding(NumberConstants.columnPadding),
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.columnVerticalArrangement)
                 ) {
                     Row(
                         modifier = Modifier.wrapContentWidth(),
@@ -954,7 +984,7 @@ fun BlockItem(
                         Text(
                             text = block.type.value,
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
                             modifier = Modifier.width(NumberConstants.WhileBlock.labelWidth)
@@ -963,7 +993,7 @@ fun BlockItem(
                         Text(
                             text = stringResource(R.string.simbol3),
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
                             modifier = Modifier.width(NumberConstants.singleSymbolWidth)
@@ -986,7 +1016,7 @@ fun BlockItem(
                         Text(
                             text = stringResource(R.string.simbol4),
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
                             modifier = Modifier.width(NumberConstants.singleSymbolWidth)
@@ -1044,35 +1074,41 @@ fun BlockItem(
                             }
 
                         }
-                        Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
+                        Spacer(modifier = Modifier.height(NumberConstants.spacerHeight))
                     }
                 }
             }
         }
 
         is ReturnBlock -> {
-            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .width(252.dp)
-                    .height(80.dp)
+                    .padding(
+                        horizontal = NumberConstants.boxPadding,
+                        vertical = NumberConstants.boxPadding
+                    )
+                    .width(NumberConstants.standardBlockWidth)
+                    .height(NumberConstants.standardBlockHeight)
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
                     }
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(
+                        horizontal = NumberConstants.rowHorizontalPadding,
+                        vertical = NumberConstants.rowVerticalPadding
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(NumberConstants.rowHorizontalArrangement/2),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = block.type.value,
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = NumberConstants.textFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
@@ -1081,13 +1117,13 @@ fun BlockItem(
                         value = block.valueInputField.getInputField(),
                         onValueChange = { block.valueInputField.set(it) },
                         modifier = Modifier
-                            .width(126.dp)
-                            .height(56.dp),
+                            .width(NumberConstants.ReturnBlock.inputFieldWidth)
+                            .height(NumberConstants.inputTextFieldHeight),
                         enabled = !showMenu,
                         singleLine = true,
                         colors = textFieldColors,
                         textStyle = TextStyle(
-                            fontSize = 16.sp, fontFamily = font
+                            fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                         )
                     )
                 }
@@ -1095,28 +1131,34 @@ fun BlockItem(
         }
 
         is ContinueBlock, is BreakBlock -> {
-            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .width(252.dp)
-                    .height(80.dp)
+                    .padding(
+                        horizontal = NumberConstants.boxPadding,
+                        vertical = NumberConstants.boxPadding
+                    )
+                    .width(NumberConstants.standardBlockWidth)
+                    .height(NumberConstants.standardBlockHeight)
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
                     }
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                    modifier = Modifier.padding(
+                        horizontal = NumberConstants.rowHorizontalPadding,
+                        vertical = NumberConstants.rowVerticalPadding
+                    ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = block.type.value,
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = NumberConstants.textFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
@@ -1125,28 +1167,34 @@ fun BlockItem(
         }
 
         is PrintBlock -> {
-            block.heightDP = 80.dp
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .width(256.dp)
-                    .height(80.dp)
+                    .padding(
+                        horizontal = NumberConstants.boxPadding,
+                        vertical = NumberConstants.boxPadding
+                    )
+                    .width(NumberConstants.standardBlockWidth)
+                    .height(NumberConstants.standardBlockHeight)
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
                     }
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(
+                        horizontal = NumberConstants.rowHorizontalPadding,
+                        vertical = NumberConstants.rowVerticalPadding
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(NumberConstants.rowHorizontalArrangement/2),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = block.type.value,
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = NumberConstants.textFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
@@ -1154,7 +1202,7 @@ fun BlockItem(
                     Text(
                         text = stringResource(R.string.simbol3),
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = NumberConstants.textFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
@@ -1163,20 +1211,20 @@ fun BlockItem(
                         value = block.valueInput.getInputField(),
                         onValueChange = { block.valueInput.set(it) },
                         modifier = Modifier
-                            .width(126.dp)
-                            .height(56.dp),
+                            .width(NumberConstants.ReturnBlock.inputFieldWidth)
+                            .height(NumberConstants.inputTextFieldHeight),
                         enabled = !showMenu,
                         singleLine = true,
                         colors = textFieldColors,
                         textStyle = TextStyle(
-                            fontSize = 16.sp, fontFamily = font
+                            fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                         )
                     )
 
                     Text(
                         text = ")",
                         color = Color.White,
-                        fontSize = 26.sp,
+                        fontSize = NumberConstants.textFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = font
                     )
@@ -1189,8 +1237,8 @@ fun BlockItem(
             Box(
                 modifier = Modifier
                     .padding(
-                        horizontal = NumberConstants.standardBoxPadding,
-                        vertical = NumberConstants.standardBoxPadding
+                        horizontal = NumberConstants.boxPadding,
+                        vertical = NumberConstants.boxPadding
                     )
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
@@ -1203,14 +1251,15 @@ fun BlockItem(
                     .width(block.getDynamicWidthDp(density))
 
                     .background(
-                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                        color = block.color.value,
+                        shape = RoundedCornerShape(NumberConstants.boxRoundedShape)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
                 Column(
                     modifier = Modifier
                         .wrapContentWidth()
-                        .padding(NumberConstants.standardColumnPadding),
-                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
+                        .padding(NumberConstants.columnPadding),
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.columnVerticalArrangement)
                 ) {
                     Row(
                         modifier = Modifier.wrapContentWidth(),
@@ -1220,7 +1269,7 @@ fun BlockItem(
                         Text(
                             text = block.type.value,
                             color = Color.White,
-                            fontSize = 26.sp,
+                            fontSize = NumberConstants.textFontSize,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
                             modifier = Modifier.width(NumberConstants.Function.labelWidth)
@@ -1236,7 +1285,7 @@ fun BlockItem(
                             singleLine = true,
                             colors = textFieldColors,
                             textStyle = TextStyle(
-                                fontSize = 18.sp, fontFamily = font
+                                fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                             )
                         )
 
@@ -1250,7 +1299,7 @@ fun BlockItem(
                             singleLine = true,
                             colors = textFieldColors,
                             textStyle = TextStyle(
-                                fontSize = 18.sp, fontFamily = font
+                                fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                             )
                         )
 
@@ -1264,7 +1313,7 @@ fun BlockItem(
                             singleLine = true,
                             colors = textFieldColors,
                             textStyle = TextStyle(
-                                fontSize = 18.sp, fontFamily = font
+                                fontSize = NumberConstants.inputFieldFontSize, fontFamily = font
                             )
                         )
 
@@ -1323,7 +1372,7 @@ fun BlockItem(
                             }
 
                         }
-                        Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
+                        Spacer(modifier = Modifier.height(NumberConstants.spacerHeight))
                     }
                 }
             }

@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.example.hit.NumberConstants
 import com.example.hit.blocks.container.Container
 import com.example.hit.language.parser.AssignmentStatement
@@ -250,12 +249,12 @@ class IfElseBlock(
 
     var blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
     var standardHeight =
-        (NumberConstants.standardInputFieldHeight + NumberConstants.standardSpacerHeight + NumberConstants.standardColumnHorizontalArrangement * 2 + NumberConstants.standardColumnPadding * 2)
+        (NumberConstants.inputTextFieldHeight + NumberConstants.spacerHeight + NumberConstants.columnHorizontalArrangement * 2 + NumberConstants.columnPadding * 2)
 
     var standardWidth = NumberConstants.IfElseBlock.rowWidth
 
     var standardBottomRowHeight =
-        (NumberConstants.standardColumnVerticalArrangement * 2 + NumberConstants.standardAddElseBlockButtonHeight)
+        (NumberConstants.columnVerticalArrangement * 2 + NumberConstants.IfElseBlock.standardAddElseBlockButtonHeight)
 
     init {
         heightDP = NumberConstants.wideBlockHeight
@@ -346,7 +345,7 @@ class ForBlock(
     val stateChangeInput = AssignmentStatementInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
     var standardHeight =
-        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardColumnPadding * 2 + NumberConstants.standardColumnVerticalArrangement * 2 + NumberConstants.ForBlock.inputTextFieldHeight)
+        (NumberConstants.boxPadding * 2 + NumberConstants.columnPadding * 2 + NumberConstants.columnVerticalArrangement * 2 + NumberConstants.ForBlock.inputTextFieldHeight)
     var standardWidth = NumberConstants.ForBlock.rowWidth
 
 
@@ -391,7 +390,7 @@ class WhileBlock(
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     var standardHeight =
-        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardColumnPadding * 2 + NumberConstants.standardColumnVerticalArrangement + NumberConstants.WhileBlock.inputTextFieldHeight)
+        (NumberConstants.boxPadding * 2 + NumberConstants.columnPadding * 2 + NumberConstants.columnVerticalArrangement + NumberConstants.WhileBlock.inputTextFieldHeight)
     var standardWidth = NumberConstants.WhileBlock.rowWidth
 
     init {
@@ -479,7 +478,7 @@ class FunctionBlock(
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     var standardHeight =
-        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardColumnPadding * 2 + NumberConstants.standardColumnVerticalArrangement * 2 + NumberConstants.Function.inputTextFieldHeight)
+        (NumberConstants.boxPadding * 2 + NumberConstants.columnPadding * 2 + NumberConstants.columnVerticalArrangement * 2 + NumberConstants.Function.inputTextFieldHeight)
     var standardWidth = NumberConstants.Function.rowWidth
 
     init {
