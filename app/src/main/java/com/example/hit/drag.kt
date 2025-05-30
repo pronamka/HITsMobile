@@ -24,6 +24,7 @@ import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import kotlin.math.max
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -33,6 +34,7 @@ fun Drag(
     del: () -> Unit,
     blockWithDeleteShownId: UUID?,
     onShowDeleteChange: (UUID?) -> Unit,
+    startZIndex: Float = 1f
 ) {
     fun compatible(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop: Boolean): Boolean {
         val draggedBlock = blocksOnScreen.first { it.id == draggedBlockId }
@@ -63,7 +65,7 @@ fun Drag(
     var currentX by remember { mutableStateOf(block.x) }
     var currentY by remember { mutableStateOf(block.y) }
 
-    var active by remember { mutableStateOf(false) }
+    var currentZIndex by remember { mutableFloatStateOf(startZIndex) }
 
     val animatedX by animateFloatAsState(
         targetValue = currentX,
@@ -125,9 +127,13 @@ fun Drag(
         return null
     }
 
-    fun calculateZIndex(): Float {
-        Log.println(Log.DEBUG, null, active.toString())
-        return if (active) 1000f else 0f
+    fun increaseZIndex() {
+        var maxZIndex = 0f
+        for (block in blocksOnScreen) {
+            maxZIndex = max(maxZIndex, block.zIndex)
+        }
+        block.zIndex = maxZIndex + 1
+        currentZIndex = block.zIndex
     }
 
     Box(
@@ -148,7 +154,7 @@ fun Drag(
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
-                        active = true
+                        increaseZIndex()
                         //Log.println(Log.DEBUG, null, active.toString())
                         block.connectionCnt = 0
                         snapTarget = null
@@ -167,7 +173,6 @@ fun Drag(
                         isNearSnap = potentialSnap != null
                     },
                     onDragEnd = {
-                        active = false
                         //Log.println(Log.DEBUG, null, active.toString())
                         if (snapTarget != null) {
                             currentX = snapTarget!!.first
@@ -180,7 +185,7 @@ fun Drag(
                     }
                 )
             }
-            .zIndex(calculateZIndex())
+            .zIndex(currentZIndex)
 
     ) {
         BlockItem(
