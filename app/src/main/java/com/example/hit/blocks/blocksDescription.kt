@@ -3,6 +3,7 @@ package com.example.hit.blocks
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Density
@@ -204,7 +205,7 @@ class BodyBlock(
     type = BlockType.BLOCK,
     color = mutableStateOf(Color(0xFF45A3FF))
 ) {
-    val blocks = mutableListOf<BasicBlock>()
+    val blocks = mutableStateListOf<BasicBlock>()
 
     fun addBlock(block: BasicBlock) {
         block.parentBlock = this
