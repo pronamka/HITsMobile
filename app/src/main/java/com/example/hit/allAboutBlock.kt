@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -100,7 +101,6 @@ object NumberConstants {
     val addBlockButtonWidth = 60.dp
 
 
-
     val borderWidth = 2.dp
 
 
@@ -111,7 +111,7 @@ object NumberConstants {
     val borderTransparencyIndex = 0.5f
     val singleSymbolWidth = 4.dp
 
-    object IfElseBlock{
+    object IfElseBlock {
         val rowWidth = standardIfLabelWidth + standardInputFieldWidth + addBlockButtonWidth
         val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
     }
@@ -124,8 +124,6 @@ object NumberConstants {
         val inputTextFieldHeight = 56.dp
 
         val labelWidth = 50.dp
-
-        val rowPadding = 16.dp
 
         val rowWidth =
             labelWidth + inputTextFieldWidth * 3 + singleSymbolWidth * 4 + horizontalArrangement * 9 + addBlockButtonWidth
@@ -336,7 +334,7 @@ fun BlockItem(
                                     onSwapMenu(block.blocksInput[0].second)
                                 }
                             }, colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE), contentColor = Color.White
+                                containerColor = colorResource(R.color.purple_002), contentColor = Color.White
                             ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
@@ -424,7 +422,7 @@ fun BlockItem(
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF7943DE),
+                                        containerColor = colorResource(R.color.purple_002),
                                         contentColor = Color.White
                                     ),
                                 ) {
@@ -517,7 +515,7 @@ fun BlockItem(
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF7943DE),
+                                        containerColor = colorResource(R.color.purple_002),
                                         contentColor = Color.White
                                     ),
                                     modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
@@ -581,9 +579,7 @@ fun BlockItem(
                                     block.addElseIfBlock("")
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(
-                                        0xFF7943DE
-                                    )
+                                    containerColor = colorResource(R.color.purple_002),
                                 )
                             ) {
                                 Text(
@@ -605,7 +601,7 @@ fun BlockItem(
 
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF7943DE)
+                                    containerColor = colorResource(R.color.purple_002),
                                 )
                             ) {
                                 Text(
@@ -871,7 +867,7 @@ fun BlockItem(
                                     onSwapMenu(block.blocks)
                                 }
                             }, colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE), contentColor = Color.White
+                                containerColor = colorResource(R.color.purple_002), contentColor = Color.White
                             ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
@@ -922,8 +918,8 @@ fun BlockItem(
                 }
             }
         }
+
         is WhileBlock -> {
-            val density = LocalDensity.current
             Box(
                 modifier = Modifier
                     .padding(
@@ -1002,7 +998,7 @@ fun BlockItem(
                                     onSwapMenu(block.blocks)
                                 }
                             }, colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE), contentColor = Color.White
+                                containerColor = colorResource(R.color.purple_002), contentColor = Color.White
                             ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
@@ -1068,39 +1064,32 @@ fun BlockItem(
                         color = block.color.value, shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
-                Column(
-                    modifier = Modifier
-                        .wrapContentWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.wrapContentWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = block.type.value,
-                            color = Color.White,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = font
-                        )
+                    Text(
+                        text = block.type.value,
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
 
-                        OutlinedTextField(
-                            value = block.valueInputField.getInputField(),
-                            onValueChange = { block.valueInputField.set(it) },
-                            modifier = Modifier
-                                .width(126.dp)
-                                .height(56.dp),
-                            enabled = !showMenu,
-                            singleLine = true,
-                            colors = textFieldColors,
-                            textStyle = TextStyle(
-                                fontSize = 16.sp, fontFamily = font
-                            )
+                    OutlinedTextField(
+                        value = block.valueInputField.getInputField(),
+                        onValueChange = { block.valueInputField.set(it) },
+                        modifier = Modifier
+                            .width(126.dp)
+                            .height(56.dp),
+                        enabled = !showMenu,
+                        singleLine = true,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 16.sp, fontFamily = font
                         )
-                    }
+                    )
                 }
             }
         }
@@ -1140,7 +1129,7 @@ fun BlockItem(
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .width(252.dp)
+                    .width(256.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
@@ -1149,58 +1138,52 @@ fun BlockItem(
                         color = block.color.value, shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
-                Column(
-                    modifier = Modifier
-                        .wrapContentWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.wrapContentWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = block.type.value,
-                            color = Color.White,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = font
-                        )
+                    Text(
+                        text = block.type.value,
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
 
-                        Text(
-                            text = stringResource(R.string.simbol3),
-                            color = Color.White,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = font
-                        )
+                    Text(
+                        text = stringResource(R.string.simbol3),
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
 
-                        OutlinedTextField(
-                            value = block.valueInput.getInputField(),
-                            onValueChange = { block.valueInput.set(it) },
-                            modifier = Modifier
-                                .width(126.dp)
-                                .height(56.dp),
-                            enabled = !showMenu,
-                            singleLine = true,
-                            colors = textFieldColors,
-                            textStyle = TextStyle(
-                                fontSize = 16.sp, fontFamily = font
-                            )
+                    OutlinedTextField(
+                        value = block.valueInput.getInputField(),
+                        onValueChange = { block.valueInput.set(it) },
+                        modifier = Modifier
+                            .width(126.dp)
+                            .height(56.dp),
+                        enabled = !showMenu,
+                        singleLine = true,
+                        colors = textFieldColors,
+                        textStyle = TextStyle(
+                            fontSize = 16.sp, fontFamily = font
                         )
+                    )
 
-                        Text(
-                            text = ")",
-                            color = Color.White,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = font
-                        )
-                    }
+                    Text(
+                        text = ")",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = font
+                    )
                 }
             }
         }
+
         is FunctionBlock -> {
             val density = LocalDensity.current
             Box(
@@ -1213,7 +1196,8 @@ fun BlockItem(
                         onChange(block, density)
                     }
                     .defaultMinSize(
-                        minHeight = NumberConstants.wideBlockHeight,    minWidth = NumberConstants.wideBlockWidth
+                        minHeight = NumberConstants.wideBlockHeight,
+                        minWidth = NumberConstants.wideBlockWidth
                     )
                     .height(block.getDynamicHeightDp(density))
                     .width(block.getDynamicWidthDp(density))
@@ -1318,7 +1302,7 @@ fun BlockItem(
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE),
+                                containerColor = colorResource(R.color.purple_002),
                                 contentColor = Color.White
                             ),
                             modifier = Modifier.width(NumberConstants.addBlockButtonWidth)

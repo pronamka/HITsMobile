@@ -5,7 +5,7 @@
     <string name="clear_button">Clear</string>
     <string name="nameApp">Building grils 💡</string>
     <string name="delete">Delete</string>
-    <string name="inAbout">Это приложение для новичков, которые хотят погрузиться в мир программирования.</string>
+    <string name="inAbout">This app is for beginners who want to dive into the world of programming.</string>
     <string name="Ok">Ok</string>
     <string name="Error">Error</string>
     <string name="Invalid">Invalid block position</string>
