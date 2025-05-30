@@ -1,5 +1,6 @@
 package com.example.hit.language.parser
 
+import com.example.hit.console.console
 import com.example.hit.language.parser.exceptions.ContinueIterationException
 import com.example.hit.language.parser.exceptions.ReturnException
 import com.example.hit.language.parser.exceptions.StopIterationException
@@ -124,7 +125,7 @@ class PrintStatement(
     var outputValue: String? = null
     override fun evaluate() {
         outputValue = toPrint.evaluate().toString()
-        println(outputValue)
+        console.add(outputValue!!)
     }
 
     override fun toString(): String {

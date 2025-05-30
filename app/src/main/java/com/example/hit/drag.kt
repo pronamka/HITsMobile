@@ -24,17 +24,21 @@ import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.hit.blocks.BodyBlock
 import kotlin.math.max
+import kotlin.math.min
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Drag(
     block: BasicBlock,
     blocksOnScreen: MutableList<BasicBlock>,
-    del: () -> Unit,
     blockWithDeleteShownId: UUID?,
     onShowDeleteChange: (UUID?) -> Unit,
+    onSwapMenu: (BodyBlock) -> Unit,
 ) {
+
+    var temp = remember { mutableStateListOf(blocksOnScreen) }
 
     data class Snap(var x: Float, var y: Float, var connectedBlock: BasicBlock, var isTop: Boolean)
 
@@ -70,6 +74,17 @@ fun Drag(
         val dx = point1.first - point2.first
         val dy = point1.second - point2.second
         return kotlin.math.sqrt(dx * dx + dy * dy)
+    }
+
+    fun deleteBlock() {
+        for (blockIndex in 0..blocksOnScreen.size - 1) {
+            if (blocksOnScreen[blockIndex].id == block.id) {
+                blocksOnScreen.removeAt(blockIndex)
+                block.move()
+                return
+            }
+        }
+        Log.println(Log.ERROR, null, "Element with given id not found.")
     }
 
 
@@ -148,11 +163,24 @@ fun Drag(
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        currentX = (currentX + dragAmount.x).coerceAtLeast(0f)
-                        currentY = currentY + dragAmount.y
+                        if (block.parentBlock != null){
+                            currentX = min(currentX+dragAmount.x, block.parentBlock!!.getDynamicWidthPx(density)-block.getDynamicWidthPx(density) )
+                            currentY = min(currentY+dragAmount.y, block.parentBlock!!.getDynamicHeightPx(density)-block.getDynamicHeightPx(density) )
+                        }
+                        else{
+                            currentX = currentX+dragAmount.x
+                            currentY = currentY+dragAmount.y
+                        }
+                        currentX = currentX.coerceAtLeast(0f)
+                        currentY = currentY.coerceAtLeast(0f)
+
+                        //Log.println(Log.DEBUG, null, listOf(block.getDynamicWidthPx(density), block.getDynamicHeightPx(density)).toString())
+                        //Log.println(Log.DEBUG, null, listOf(block.parentBlock!!.getDynamicWidthPx(density), block.parentBlock!!.getDynamicHeightPx(density)).toString())
 
                         block.x = currentX
                         block.y = currentY
+
+                        //Log.println(Log.DEBUG, null, "${block.x}, ${block.y}")
 
                         val potentialSnap = findSnapTarget(block)
                         snapTarget = potentialSnap
@@ -180,10 +208,11 @@ fun Drag(
         BlockItem(
             block = block,
             onClick = { onShowDeleteChange(null) },
+            onSwapMenu = onSwapMenu
         )
         if (block.id == blockWithDeleteShownId) {
             Button(
-                onClick = { del() },
+                onClick = { deleteBlock() },
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 Text(

@@ -1,6 +1,7 @@
 package com.example.hit.blocks
 
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
@@ -8,6 +9,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.hit.BlockPosition
+import com.example.hit.Constants
 import com.example.hit.blocks.container.Container
 import com.example.hit.language.parser.ArrayElementAssignmentStatement
 import com.example.hit.language.parser.AssignmentStatement
@@ -27,6 +29,7 @@ import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
 import com.example.hit.language.parser.operations.IOperation
+import java.io.Console
 import java.util.UUID
 
 val blockTypeToColor = mapOf(
@@ -54,7 +57,8 @@ abstract class BasicBlock(
     var bottomConnection: BasicBlock? = null,
     var heightDP: Dp = 80.dp,
     var widthDP: Dp = 256.dp,
-    var zIndex: Float = 0f
+    var zIndex: Float = 0f,
+    var parentBlock: BasicBlock? = null
 ) {
     fun move() {
         if (topConnection != null) {
@@ -94,6 +98,14 @@ abstract class BasicBlock(
 
     open fun getDynamicWidthPx(density: Density): Float {
         return with(density) { widthDP.toPx() }
+    }
+
+    fun getDynamicHeightDp(density: Density): Dp {
+        return with(density) { getDynamicHeightPx(density).toDp() }
+    }
+
+    fun getDynamicWidthDp(density: Density): Dp {
+        return with(density) { getDynamicWidthPx(density).toDp() }
     }
 }
 
@@ -167,7 +179,7 @@ class InitializationBlock(
 }
 
 class PrintBlock(
-    blockId: UUID
+    blockId: UUID,
 ) : BasicBlock(
     blockId,
     type = BlockType.PRINT,
@@ -186,7 +198,7 @@ class PrintBlock(
 }
 
 class BodyBlock(
-    blockId: UUID
+    blockId: UUID,
 ) : BasicBlock(
     blockId,
     type = BlockType.BLOCK,
@@ -195,6 +207,7 @@ class BodyBlock(
     val blocks = mutableListOf<BasicBlock>()
 
     fun addBlock(block: BasicBlock) {
+        block.parentBlock = this
         blocks.add(block)
     }
 
@@ -206,6 +219,34 @@ class BodyBlock(
             statements.add(block.execute())
         }
         return BlockStatement(statements)
+    }
+
+    fun getLowestPoint(density: Density): Float{
+        var height = 0f
+        for (block in blocks) {
+            height += block.getDynamicHeightPx(density)
+        }
+        return height
+    }
+
+    fun getPointToSpawn(density: Density): Float{
+        if (blocks.isEmpty()){
+            return 0f
+        }
+        return getLowestPoint(density)-blocks.last().getDynamicHeightPx(density)
+    }
+
+    override fun getDynamicHeightPx(density: Density): Float {
+        return getLowestPoint(density) + with(density) {(Constants.bodyBlockVerticalPadding * 2).toPx()}
+    }
+
+    override fun getDynamicWidthPx(density: Density): Float{
+        var width = 0f
+        for (block in blocks) {
+            if (width < block.getDynamicWidthPx(density))
+                width = block.getDynamicWidthPx(density)
+        }
+        return width + with(density) {(Constants.bodyBlockHorizontalPadding * 2).toPx()}
     }
 
     override fun deepCopy(): BasicBlock {
@@ -226,21 +267,40 @@ class IfElseBlock(
         addElseIfBlock("")
     }
 
-    private var defaultBlockInput: BodyBlock? = null
+    var defaultBlockInput: BodyBlock? = null
+
 
     override fun getDynamicHeightPx(density: Density): Float {
-        val base = 115.dp
-        val elseIfBlockHeight = 160.dp * blocksInput.size
-        val elseBlockHeight = if (defaultBlockInput != null) 100.dp else 0.dp
-        return with(density) {
-            (base + elseIfBlockHeight + elseBlockHeight).toPx()
+        var inBox = 0f
+        inBox += with(density) {(Constants.standardColumnPadding * 2).toPx()}
+        for (blockInput in blocksInput) {
+            inBox += blockInput.second.getDynamicHeightPx(density)
+            inBox += with(density) {(Constants.standardColumnHorizontalArrangement).toPx()}
         }
+        /*if (defaultBlockInput != null) {
+            inBox += defaultBlockInput!!.getDynamicHeightPx(density)
+        }*/
+        return inBox
+    }
+
+    override fun getDynamicWidthPx(density: Density): Float {
+        var inBox = 0f
+        for (blockInput in blocksInput) {
+            if (blockInput.second.getDynamicWidthPx(density)>inBox){
+                inBox = blockInput.second.getDynamicWidthPx(density)
+            }
+        }
+        /*if (defaultBlockInput != null) {
+            inBox += defaultBlockInput!!.getDynamicHeightPx(density)
+        }*/
+        return inBox
     }
 
     fun addElseIfBlock(condition: String) {
         val conditionInput = OperationInputField()
         conditionInput.set(condition)
-        val block = BodyBlock(blockId = UUID.randomUUID())
+        val block = BodyBlock(blockId = UUID.randomUUID(), )
+        block.parentBlock = this
         blocksInput.add(Pair(conditionInput, block))
     }
 
@@ -260,19 +320,11 @@ class IfElseBlock(
 
         for (blockInput in blocksInput) {
             val operation = blockInput.first.getOperation()
-            val statements = mutableListOf<IStatement>()
-            for (block in blockInput.second.blocks) {
-                statements.add(block.execute())
-            }
-            blocks.add(Pair(operation, BlockStatement(statements)))
+            blocks.add(Pair(operation, blockInput.second.execute()))
         }
 
         if (defaultBlockInput != null) {
-            val statements = mutableListOf<IStatement>()
-            for (block in defaultBlockInput!!.blocks) {
-                statements.add(block.execute())
-            }
-            defaultBlock = BlockStatement(statements)
+            defaultBlock = defaultBlockInput!!.execute()
         }
 
         return IfElseStatement(blocks, defaultBlock)
@@ -299,11 +351,7 @@ class ForBlock(
         val initializer = initializerInput.getDeclarationStatement()
         val operation = conditionInput.getOperation()
         val stateChange = stateChangeInput.getAssignmentStatement()
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks) {
-            statements.add(block.execute())
-        }
-        return ForLoop(initializer, operation, stateChange, BlockStatement(statements))
+        return ForLoop(initializer, operation, stateChange, blocks.execute())
     }
 
     override fun deepCopy(): BasicBlock {
@@ -323,11 +371,7 @@ class WhileBlock(
 
     override fun execute(): WhileLoop {
         val operation = conditionInput.getOperation()
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks) {
-            statements.add(block.execute())
-        }
-        return WhileLoop(operation, BlockStatement(statements))
+        return WhileLoop(operation, blocks.execute())
     }
 
     override fun deepCopy(): BasicBlock {
@@ -400,12 +444,8 @@ class FunctionBlock(
     override fun execute(): FunctionDeclarationStatement {
         val name = nameInput.getName()
         val returnValueType = returnValueTypeInput.getType()
-        val statements = mutableListOf<IStatement>()
         val parameters = inputParameters.getFunctionParametersInputField()
-        for (block in blocks.blocks) {
-            statements.add(block.execute())
-        }
-        return FunctionDeclarationStatement(name, parameters, BlockStatement(statements), returnValueType)
+        return FunctionDeclarationStatement(name, parameters, blocks.execute(), returnValueType)
     }
 
     override fun deepCopy(): BasicBlock {
