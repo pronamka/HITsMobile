@@ -35,32 +35,15 @@ fun Drag(
     del: ()-> Unit,
     blockWithDeleteShownId: UUID?,
     onShowDeleteChange: (UUID?) -> Unit
-){
-    fun compatible(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop : Boolean): Boolean {
-        val draggedBlock = blocksOnScreen.first { it.id == draggedBlockId }
-        val possibleConnectedBlock = blocksOnScreen.first{ it.id == possibleConnectedBlockId }
-        return if (isTop) {
-            draggedBlock.isBottomCompatible(possibleConnectedBlock)
-        } else {
-            draggedBlock.isTopCompatible(possibleConnectedBlock)
-        }
-    }
+) {
 
-    fun createConnection(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop : Boolean) {
-        val draggedBlock = blocksOnScreen.first { it.id == draggedBlockId }
-        val possibleConnectedBlock = blocksOnScreen.first { it.id == possibleConnectedBlockId }
+    data class Snap(var x: Float, var y: Float, var connectedBlock: BasicBlock, var isTop: Boolean)
 
-        if (isTop) {
-            draggedBlock.connectTopBlock(possibleConnectedBlock)
-        } else {
-            draggedBlock.connectBottomBlock(possibleConnectedBlock)
-        }
-    }
-
+    var lastInteractedTimestamp by remember { mutableStateOf(System.currentTimeMillis()) }
     val density = LocalDensity.current
 
     var isNearSnap by remember { mutableStateOf(false) }
-    var snapTarget by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    var snapTarget by remember { mutableStateOf<Snap?>(null) }
 
     var currentX by remember { mutableStateOf(block.x) }
     var currentY by remember { mutableStateOf(block.y) }
@@ -88,9 +71,10 @@ fun Drag(
         return kotlin.math.sqrt(dx * dx + dy * dy)
     }
 
+
     fun findSnapTarget(
         currentBlock: BasicBlock
-    ): Pair<Float, Float>? {
+    ): Snap? {
         for (otherBlock in blocksOnScreen) {
             if (otherBlock.id == currentBlock.id) continue
 
@@ -99,22 +83,32 @@ fun Drag(
             val otherTop = otherBlock.y
             val otherBottom = otherTop + otherHeightPx
 
-            val otherTopCenter = Pair(otherBlock.x + otherBlock.getDynamicWidthPx(density) / 2, otherBlock.y)
-
+            val otherTopCenter =
+                Pair(otherBlock.x + otherBlock.getDynamicWidthPx(density) / 2, otherBlock.y)
 
             val otherBottomCenter = Pair(otherBlock.x + otherWidthPx / 2, otherBottom)
-            val currentTopCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y)
+            val currentTopCenter =
+                Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y)
 
-            val currentBottomCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y+currentBlock.getDynamicHeightPx(density))
+            val currentBottomCenter = Pair(
+                currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2,
+                currentBlock.y + currentBlock.getDynamicHeightPx(density)
+            )
 
-            Log.println(Log.DEBUG, null, listOf(currentBlock.y, otherTop).toString())
+            //Log.println(Log.DEBUG, null, listOf(currentBlock.y, otherTop).toString())
             val distanceCurrentTopToOtherBottom = distance(currentTopCenter, otherBottomCenter)
-            if (distanceCurrentTopToOtherBottom < 50f) {
-                return Pair(otherBlock.x, otherBottom)
+            //Log.println(Log.DEBUG, null, otherBlock.bottomConnection.toString())
+            if (distanceCurrentTopToOtherBottom < 50f && otherBlock.isBottomCompatible()) {
+                return Snap(otherBlock.x, otherBottom, otherBlock, true) // block to to other bottom
             }
             val distanceCurrentBottomToOtherTop = distance(currentBottomCenter, otherTopCenter)
-            if (distanceCurrentBottomToOtherTop < 50f) {
-                return Pair(otherBlock.x, otherTop-currentBlock.getDynamicHeightPx(density))
+            if (distanceCurrentBottomToOtherTop < 50f && otherBlock.isTopCompatible()) {
+                return Snap(
+                    otherBlock.x,
+                    otherTop - currentBlock.getDynamicHeightPx(density),
+                    otherBlock,
+                    false
+                ) // block to to other top
             }
         }
         return null
@@ -123,7 +117,6 @@ fun Drag(
     Box(
         modifier = Modifier
             .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
-            .zIndex(if (active) 1f else 0f)
             .combinedClickable(
                 onClick = { onShowDeleteChange(null) },
                 onLongClick = { onShowDeleteChange(block.id) }
@@ -139,7 +132,7 @@ fun Drag(
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
-                        block.connectionCnt = 0
+                        block.move()
                         initID()
                         snapTarget = null
                     },
@@ -157,8 +150,13 @@ fun Drag(
                     },
                     onDragEnd = {
                         if (snapTarget != null) {
-                            currentX = snapTarget!!.first
-                            currentY = snapTarget!!.second
+                            if (snapTarget!!.isTop) {
+                                block.connectTopBlock(snapTarget!!.connectedBlock)
+                            } else {
+                                block.connectBottomBlock(snapTarget!!.connectedBlock)
+                            }
+                            currentX = snapTarget!!.x
+                            currentY = snapTarget!!.y
                         }
                         block.x = currentX
                         block.y = currentY

@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.hit.blocks.BasicBlock
 import com.example.hit.blocks.BlockData
+import com.example.hit.blocks.blockTypeToColor
 import com.example.hit.blocks.container.Container
 import com.example.hit.codeRunner.CodeRunner
 import kotlinx.coroutines.delay
@@ -246,7 +247,8 @@ fun CodeScreen(
                             .fillMaxSize()
                             .height(2000.dp)
                     ) {
-                        listOfBlocks.forEach { block ->
+                        listOfBlocks
+                            .forEach { block ->
                             Box(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -255,7 +257,8 @@ fun CodeScreen(
                                     active = blockId == block.id,
                                     initID = { blockId = block.id },
                                     blocksOnScreen = listOfBlocks,
-                                    del = { listOfBlocks.remove(block) },
+                                    del = { listOfBlocks.remove(block);
+                                          block.move()},
                                     blockWithDeleteShownId = blockWithDeleteShownId,
                                     onShowDeleteChange = { id -> blockWithDeleteShownId = id }
                                 )
@@ -309,7 +312,11 @@ fun CodeScreen(
                     )
 
                     Button(
-                        onClick = { showConsole = false },
+                        onClick = { showConsole = false;
+                                  for (block in listOfBlocks) {
+                                      block.color.value = blockTypeToColor[block.type]!!
+                                  }
+                                  },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFA6294E),
                             contentColor = Color.White

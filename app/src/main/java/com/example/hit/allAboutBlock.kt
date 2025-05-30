@@ -103,7 +103,7 @@ fun BlockItem(
                         onChange(block, coordinates)
                     }
                     .background(
-                        color = block.color,
+                        color = block.color.value,
                         shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
@@ -196,7 +196,7 @@ fun BlockItem(
                     .wrapContentHeight()
                     .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp)
                     .background(
-                        color = block.color,
+                        color = block.color.value,
                         shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
@@ -408,7 +408,7 @@ fun BlockItem(
                         onChange(block, coordinates)
                     }
                     .background(
-                        color = block.color,
+                        color = block.color.value,
                         shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
@@ -474,7 +474,7 @@ fun BlockItem(
                         onChange(block, coordinates)
                     }
                     .background(
-                        color = block.color,
+                        color = block.color.value,
                         shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
@@ -541,7 +541,7 @@ fun BlockItem(
                         onChange(block, coordinates)
                     }
                     .background(
-                        color = block.color,
+                        color = block.color.value,
                         shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
@@ -674,7 +674,7 @@ fun BlockItem(
                         onChange(block, coordinates)
                     }
                     .background(
-                        color = block.color,
+                        color = block.color.value,
                         shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
@@ -761,7 +761,7 @@ fun BlockItem(
                         onChange(block, coordinates)
                     }
                     .background(
-                        color = block.color,
+                        color = block.color.value,
                         shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
@@ -793,7 +793,7 @@ fun BlockItem(
                         onChange(block, coordinates)
                     }
                     .background(
-                        color = block.color,
+                        color = block.color.value,
                         shape = RoundedCornerShape(24.dp)
                     )
                     .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)

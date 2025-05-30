@@ -39,10 +39,11 @@ class CodeRunner(private val container: Container, private val console: MutableL
             }
             console.add("Program execution completed successfully!")
         } catch (e: Exception) {
-            blocks[errorIndex!!].color =  Color(0xFFFF0000)
+            blocks[errorIndex!!].color.value =  Color(0xFFFF0000)
             console.add("Error: ${e.message}")
         }
         finally{
+
             Scopes.reset()
         }
     }
