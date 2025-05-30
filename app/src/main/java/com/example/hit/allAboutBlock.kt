@@ -148,19 +148,19 @@ object NumberConstants {
     }
 
     object Function {
-        val horizontalArrangement = 4.dp
+        val horizontalArrangement = 8.dp
 
         val inputTextFieldWidth = 52.dp
         val inputTextFieldHeight = 56.dp
 
         val labelWidth = 50.dp
 
-        val rowPadding = 16.dp
 
         val parametersInputTextFieldWidth = 112.dp
 
         val rowWidth =
-            labelWidth + inputTextFieldWidth * 2 + parametersInputTextFieldWidth + horizontalArrangement * 5 + addBlockButtonWidth + rowPadding * 2 + standardBoxPadding * 2
+            labelWidth + inputTextFieldWidth * 2 + parametersInputTextFieldWidth + horizontalArrangement * 4 + addBlockButtonWidth
+        val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
     }
 }
 
@@ -1223,12 +1223,12 @@ fun BlockItem(
                 Column(
                     modifier = Modifier
                         .wrapContentWidth()
-                        .padding(NumberConstants.ForBlock.rowPadding),
-                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardRowHorizontalArrangement)
+                        .padding(NumberConstants.standardColumnPadding),
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
                 ) {
                     Row(
                         modifier = Modifier.wrapContentWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(NumberConstants.ForBlock.horizontalArrangement),
+                        horizontalArrangement = Arrangement.spacedBy(NumberConstants.Function.horizontalArrangement),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -1237,7 +1237,7 @@ fun BlockItem(
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
                             fontFamily = font,
-                            modifier = Modifier.width(NumberConstants.ForBlock.labelWidth)
+                            modifier = Modifier.width(NumberConstants.Function.labelWidth)
                         )
 
                         OutlinedTextField(

@@ -497,6 +497,7 @@ class FunctionBlock(
 
     override fun getDynamicWidthPx(density: Density): Float {
         var inBox = max(with(density) { (standardWidth).toPx() }, blocks.getDynamicWidthPx(density))
+        inBox += with(density) { (NumberConstants.Function.overallPadding).toPx() }
         inBox = max(inBox, super.getDynamicWidthPx(density))
         return inBox
     }
