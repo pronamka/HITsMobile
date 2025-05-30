@@ -20,5 +20,5 @@ enum class BlockType(val value: String) {
     CONTINUE("continue"),
 
     BLOCK("block"),
-    FUNCTION("function");
+    FUNCTION("func");
 }
