@@ -71,8 +71,8 @@ data class BlockPosition(
 
 fun onChange(block: BasicBlock, density: Density) {
     if (block is IfElseBlock || block is WhileBlock || block is ForBlock) {
-        block.heightDP = block.getDynamicHeightPx(density).dp
-        block.widthDP = block.getDynamicWidthPx(density).dp
+        block.heightDP = with(density){block.getDynamicHeightPx(density).toDp()}
+        block.widthDP = with(density){block.getDynamicWidthPx(density).toDp()}
     }
 }
 
@@ -225,7 +225,6 @@ fun BlockItem(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Constants.standardColumnHorizontalArrangement),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -243,7 +242,7 @@ fun BlockItem(
                                 block.setNewCondition(ifCondition, 0)
                             },
                             modifier = Modifier
-                                .fillMaxWidth(0.7f)
+                                .width(220.dp)
                                 .height(56.dp),
                             enabled = !showMenu,
                             singleLine = true,
@@ -296,7 +295,8 @@ fun BlockItem(
                                 blocksOnScreen = block.blocksInput[0].second.blocks,
                                 blockWithDeleteShownId = innerBlockWithDeleteShownId,
                                 onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
-                                onSwapMenu = onSwapMenu
+                                onSwapMenu = onSwapMenu,
+                                onChangeSize = {onChange(blockInner, density)}
                             )
                         }
                         Spacer(modifier = Modifier.height(10.dp))
@@ -329,7 +329,7 @@ fun BlockItem(
                                         block.setNewCondition(elseIfCounts[index], index + 1)
                                     },
                                     modifier = Modifier
-                                        .fillMaxWidth(0.5f)
+                                        .width(252.dp)
                                         .height(56.dp),
                                     enabled = !showMenu,
                                     singleLine = true,
@@ -382,7 +382,8 @@ fun BlockItem(
                                             onShowDeleteChange = { id ->
                                                 innerBlockWithDeleteShownId = id
                                             },
-                                            onSwapMenu = onSwapMenu
+                                            onSwapMenu = onSwapMenu,
+                                            onChangeSize = {onChange(blockInner, density)}
                                         )
                                     }
                                 }
@@ -459,7 +460,8 @@ fun BlockItem(
                                             onShowDeleteChange = { id ->
                                                 innerBlockWithDeleteShownId = id
                                             },
-                                            onSwapMenu = onSwapMenu
+                                            onSwapMenu = onSwapMenu,
+                                            onChangeSize = {onChange(blockFor, density)}
                                         )
                                     }
                                 }
@@ -468,7 +470,7 @@ fun BlockItem(
                         }
                     } else {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier,
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Button(

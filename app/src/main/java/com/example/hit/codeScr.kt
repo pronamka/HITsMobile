@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,10 +45,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -80,10 +81,13 @@ fun CodeScreen(
     val consoleOutput = remember { console }
     var menuForInnerBlock by remember { mutableStateOf(false) }
 
+    val density = LocalDensity.current
+
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    val scrollState = rememberScrollState()
+    val verticalScrollState = rememberScrollState()
+    val horizontalScrollState = rememberScrollState()
 
     val Scope = rememberCoroutineScope()
     var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
@@ -250,15 +254,15 @@ fun CodeScreen(
 
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
                         .padding(16.dp)
-                        .verticalScroll(scrollState)
+                        .verticalScroll(verticalScrollState)
+                        .horizontalScroll(horizontalScrollState)
                         .clickable { blockWithDeleteShownId = null },
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
                             .height(2000.dp)
+                            .width(1000.dp)
                     ) {
                         listOfBlocks.forEach { block ->
                             key(block.id){
@@ -267,7 +271,8 @@ fun CodeScreen(
                                     blocksOnScreen = listOfBlocks,
                                     blockWithDeleteShownId = blockWithDeleteShownId,
                                     onShowDeleteChange = { id -> blockWithDeleteShownId = id },
-                                    onSwapMenu = { bodyBlock -> changeMenuSetting(bodyBlock)}
+                                    onSwapMenu = { bodyBlock -> changeMenuSetting(bodyBlock)},
+                                    onChangeSize = {onChange(block, density)}
                                 )
                             }
                         }

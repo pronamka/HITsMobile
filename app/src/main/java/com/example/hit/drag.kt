@@ -23,6 +23,7 @@ import java.util.UUID
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
 import com.example.hit.blocks.BodyBlock
 import kotlin.math.max
@@ -36,6 +37,7 @@ fun Drag(
     blockWithDeleteShownId: UUID?,
     onShowDeleteChange: (UUID?) -> Unit,
     onSwapMenu: (BodyBlock) -> Unit,
+    onChangeSize: () -> Unit,
 ) {
 
     var temp = remember { mutableStateListOf(blocksOnScreen) }
@@ -157,6 +159,7 @@ fun Drag(
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
+                        onChangeSize()
                         increaseZIndex()
                         block.move()
                         snapTarget = null
@@ -208,7 +211,7 @@ fun Drag(
         BlockItem(
             block = block,
             onClick = { onShowDeleteChange(null) },
-            onSwapMenu = onSwapMenu
+            onSwapMenu = onSwapMenu,
         )
         if (block.id == blockWithDeleteShownId) {
             Button(
