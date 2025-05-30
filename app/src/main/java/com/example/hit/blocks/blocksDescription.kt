@@ -477,9 +477,27 @@ class FunctionBlock(
     val inputParameters = FunctionParametersInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
+    var standardHeight =
+        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardColumnPadding * 2 + NumberConstants.standardColumnVerticalArrangement * 2 + NumberConstants.Function.inputTextFieldHeight)
+    var standardWidth = NumberConstants.Function.rowWidth
+
     init {
         heightDP = NumberConstants.wideBlockHeight
         widthDP = NumberConstants.wideBlockWidth
+    }
+
+    override fun getDynamicHeightPx(density: Density): Float {
+        var inBox = blocks.getDynamicHeightPx(density)
+        inBox += with(density) { (standardHeight).toPx() }
+
+        inBox = max(inBox, super.getDynamicHeightPx(density))
+        return inBox
+    }
+
+    override fun getDynamicWidthPx(density: Density): Float {
+        var inBox = max(with(density) { (standardWidth).toPx() }, blocks.getDynamicWidthPx(density))
+        inBox = max(inBox, super.getDynamicWidthPx(density))
+        return inBox
     }
 
     override fun execute(): FunctionDeclarationStatement {
