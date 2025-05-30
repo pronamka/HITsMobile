@@ -1,7 +1,5 @@
 package com.example.hit.blocks
 
-import android.util.Log
-import androidx.compose.foundation.clickable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,10 +7,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.hit.BlockPosition
-import com.example.hit.Constants
+import com.example.hit.NumberConstants
 import com.example.hit.blocks.container.Container
-import com.example.hit.language.parser.ArrayElementAssignmentStatement
 import com.example.hit.language.parser.AssignmentStatement
 import com.example.hit.language.parser.BlockStatement
 import com.example.hit.language.parser.BreakStatement
@@ -26,12 +22,10 @@ import com.example.hit.language.parser.Lexer
 import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.ReturnStatement
 import com.example.hit.language.parser.StatementsParser
-import com.example.hit.language.parser.VariableAssignmentStatement
-import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
 import com.example.hit.language.parser.operations.IOperation
-import java.io.Console
 import java.util.UUID
+import kotlin.math.max
 
 val blockTypeToColor = mapOf(
     BlockType.ASSIGNMENT to Color(0xFF45A3FF),
@@ -56,8 +50,8 @@ abstract class BasicBlock(
     var y: Float = 0f,
     var topConnection: BasicBlock? = null,
     var bottomConnection: BasicBlock? = null,
-    var heightDP: Dp = 80.dp,
-    var widthDP: Dp = 256.dp,
+    var heightDP: Dp = NumberConstants.standardBlockHeight,
+    var widthDP: Dp = NumberConstants.standardBlockWidth,
     var zIndex: Float = 0f,
     var parentBlock: BasicBlock? = null
 ) {
@@ -111,12 +105,9 @@ abstract class BasicBlock(
 }
 
 class AssignmentBlock(
-    blockId: UUID,
-    color: Color = Color(0xFF45A3FF)
+    blockId: UUID, color: Color = Color(0xFF45A3FF)
 ) : BasicBlock(
-    id = blockId,
-    type = BlockType.ASSIGNMENT,
-    color = mutableStateOf(color)
+    id = blockId, type = BlockType.ASSIGNMENT, color = mutableStateOf(color)
 ) {
     val nameInput = StringInputField()
     val valueInput = OperationInputField()
@@ -134,12 +125,9 @@ class AssignmentBlock(
 }
 
 class DeclarationBlock(
-    blockId: UUID,
-    color: Color = Color(0xFF45A3FF)
+    blockId: UUID, color: Color = Color(0xFF45A3FF)
 ) : BasicBlock(
-    blockId,
-    type = BlockType.DECLARATION,
-    color = mutableStateOf(color)
+    blockId, type = BlockType.DECLARATION, color = mutableStateOf(color)
 ) {
     val nameInput = NameInputField()
     val typeInput = TypeInputField()
@@ -156,12 +144,9 @@ class DeclarationBlock(
 }
 
 class InitializationBlock(
-    blockId: UUID,
-    color: Color = Color(0xFF45A3FF)
+    blockId: UUID, color: Color = Color(0xFF45A3FF)
 ) : BasicBlock(
-    blockId,
-    type = BlockType.INITIALIZATION,
-    color = mutableStateOf(color)
+    blockId, type = BlockType.INITIALIZATION, color = mutableStateOf(color)
 ) {
     val nameInput = NameInputField()
     val typeInput = TypeInputField()
@@ -182,9 +167,7 @@ class InitializationBlock(
 class PrintBlock(
     blockId: UUID,
 ) : BasicBlock(
-    blockId,
-    type = BlockType.PRINT,
-    color = mutableStateOf(Color(0xFF45A3FF))
+    blockId, type = BlockType.PRINT, color = mutableStateOf(Color(0xFF45A3FF))
 ) {
     val valueInput = OperationInputField()
 
@@ -201,9 +184,7 @@ class PrintBlock(
 class BodyBlock(
     blockId: UUID,
 ) : BasicBlock(
-    blockId,
-    type = BlockType.BLOCK,
-    color = mutableStateOf(Color(0xFF45A3FF))
+    blockId, type = BlockType.BLOCK, color = mutableStateOf(Color(0xFF45A3FF))
 ) {
     val blocks = mutableStateListOf<BasicBlock>()
 
@@ -227,7 +208,8 @@ class BodyBlock(
         return container.isValidBlockArrangement()
     }
 
-    fun getLowestPoint(density: Density): Float{
+
+    fun getLowestPoint(density: Density): Float {
         var height = 0f
         for (block in blocks) {
             height += block.getDynamicHeightPx(density)
@@ -235,24 +217,23 @@ class BodyBlock(
         return height
     }
 
-    fun getPointToSpawn(density: Density): Float{
-        if (blocks.isEmpty()){
+    fun getPointToSpawn(density: Density): Float {
+        if (blocks.isEmpty()) {
             return 0f
         }
-        return getLowestPoint(density)-blocks.last().getDynamicHeightPx(density)
+        return getLowestPoint(density) - blocks.last().getDynamicHeightPx(density)
     }
 
     override fun getDynamicHeightPx(density: Density): Float {
-        return getLowestPoint(density) + with(density) {(Constants.bodyBlockVerticalPadding * 2).toPx()}
+        return getLowestPoint(density) + with(density) { (NumberConstants.bodyBlockVerticalPadding * 2).toPx() }
     }
 
-    override fun getDynamicWidthPx(density: Density): Float{
+    override fun getDynamicWidthPx(density: Density): Float {
         var width = 0f
         for (block in blocks) {
-            if (width < block.getDynamicWidthPx(density))
-                width = block.getDynamicWidthPx(density)
+            width = max(width, block.getDynamicWidthPx(density))
         }
-        return width + with(density) {(Constants.bodyBlockHorizontalPadding * 2).toPx()}
+        return width + with(density) { (NumberConstants.bodyBlockHorizontalPadding * 2 + NumberConstants.borderWidth).toPx() }
     }
 
     override fun deepCopy(): BasicBlock {
@@ -263,13 +244,20 @@ class BodyBlock(
 class IfElseBlock(
     blockId: UUID
 ) : BasicBlock(
-    blockId,
-    type = BlockType.IF,
-    color = mutableStateOf(Color(0xFFBD3FCB))
+    blockId, type = BlockType.IF, color = mutableStateOf(Color(0xFFBD3FCB))
 ) {
+
     var blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
+    var standardHeight =
+        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardInputFieldHeight + NumberConstants.standardSpacerHeight + NumberConstants.standardColumnHorizontalArrangement * 3 + NumberConstants.standardAddElseBlockButtonHeight + NumberConstants.standardColumnPadding * 2)
+
+    var standardWidth = listOf(
+        NumberConstants.rowWidth
+    )
 
     init {
+        heightDP = NumberConstants.wideBlockHeight
+        widthDP = NumberConstants.wideBlockWidth
         addElseIfBlock("")
     }
 
@@ -278,34 +266,38 @@ class IfElseBlock(
 
     override fun getDynamicHeightPx(density: Density): Float {
         var inBox = 0f
-        inBox += with(density) {(Constants.standardColumnPadding * 2).toPx()}
+        inBox += with(density) { (standardHeight).toPx() }
+
         for (blockInput in blocksInput) {
             inBox += blockInput.second.getDynamicHeightPx(density)
-            inBox += with(density) {(Constants.standardColumnHorizontalArrangement).toPx()}
+            inBox += with(density) { (NumberConstants.standardColumnHorizontalArrangement).toPx() }
         }
-        /*if (defaultBlockInput != null) {
+        if (defaultBlockInput != null) {
             inBox += defaultBlockInput!!.getDynamicHeightPx(density)
-        }*/
+            inBox += with(density) { (NumberConstants.standardColumnHorizontalArrangement).toPx() }
+        }
+        inBox = max(inBox, super.getDynamicHeightPx(density))
         return inBox
     }
 
     override fun getDynamicWidthPx(density: Density): Float {
-        var inBox = 0f
-        for (blockInput in blocksInput) {
-            if (blockInput.second.getDynamicWidthPx(density)>inBox){
-                inBox = blockInput.second.getDynamicWidthPx(density)
-            }
+        var inBox = max(
+            0f, standardWidth.maxOf { with(density) { it.toPx() } })
+        if (defaultBlockInput != null) {
+            inBox = max(inBox, defaultBlockInput!!.getDynamicHeightPx(density))
         }
-        /*if (defaultBlockInput != null) {
-            inBox += defaultBlockInput!!.getDynamicHeightPx(density)
-        }*/
+        for (blockInput in blocksInput) {
+            inBox = max(inBox, blockInput.second.getDynamicWidthPx(density))
+        }
+        inBox += with(density) { NumberConstants.standardBoxPadding.toPx() * 2 + NumberConstants.borderWidth.toPx()*2 + 10.dp.toPx() }
+        inBox = max(inBox, super.getDynamicWidthPx(density))
         return inBox
     }
 
     fun addElseIfBlock(condition: String) {
         val conditionInput = OperationInputField()
         conditionInput.set(condition)
-        val block = BodyBlock(blockId = UUID.randomUUID(), )
+        val block = BodyBlock(blockId = UUID.randomUUID())
         block.parentBlock = this
         blocksInput.add(Pair(conditionInput, block))
     }
@@ -344,14 +336,17 @@ class IfElseBlock(
 class ForBlock(
     blockId: UUID
 ) : BasicBlock(
-    blockId,
-    type = BlockType.FOR,
-    color = mutableStateOf(Color(0xFF7745FF))
+    blockId, type = BlockType.FOR, color = mutableStateOf(Color(0xFF7745FF))
 ) {
     val initializerInput = DeclarationStatementInputField()
     val conditionInput = OperationInputField()
     val stateChangeInput = AssignmentStatementInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
+
+    init {
+        heightDP = NumberConstants.wideBlockHeight
+        widthDP = NumberConstants.wideBlockWidth
+    }
 
     override fun execute(): ForLoop {
         val initializer = initializerInput.getDeclarationStatement()
@@ -368,12 +363,15 @@ class ForBlock(
 class WhileBlock(
     blockId: UUID
 ) : BasicBlock(
-    blockId,
-    type = BlockType.WHILE,
-    color = mutableStateOf(Color(0xFF7745FF))
+    blockId, type = BlockType.WHILE, color = mutableStateOf(Color(0xFF7745FF))
 ) {
     val conditionInput = OperationInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
+
+    init {
+        heightDP = NumberConstants.wideBlockHeight
+        widthDP = NumberConstants.wideBlockWidth
+    }
 
     override fun execute(): WhileLoop {
         val operation = conditionInput.getOperation()
@@ -388,9 +386,7 @@ class WhileBlock(
 class BreakBlock(
     blockId: UUID
 ) : BasicBlock(
-    blockId,
-    type = BlockType.BREAK,
-    color = mutableStateOf(Color(0xFFFF9645))
+    blockId, type = BlockType.BREAK, color = mutableStateOf(Color(0xFFFF9645))
 ) {
     override fun execute(): BreakStatement {
         return BreakStatement()
@@ -404,9 +400,7 @@ class BreakBlock(
 class ContinueBlock(
     blockId: UUID
 ) : BasicBlock(
-    blockId,
-    type = BlockType.CONTINUE,
-    color = mutableStateOf(Color(0xFFFF9645))
+    blockId, type = BlockType.CONTINUE, color = mutableStateOf(Color(0xFFFF9645))
 ) {
     override fun execute(): ContinueStatement {
         return ContinueStatement()
@@ -420,9 +414,7 @@ class ContinueBlock(
 class ReturnBlock(
     blockId: UUID
 ) : BasicBlock(
-    blockId,
-    type = BlockType.RETURN,
-    color = mutableStateOf(Color(0xFFFF9645))
+    blockId, type = BlockType.RETURN, color = mutableStateOf(Color(0xFFFF9645))
 ) {
     val valueInputField = OperationInputField()
 
@@ -438,14 +430,17 @@ class ReturnBlock(
 class FunctionBlock(
     blockId: UUID
 ) : BasicBlock(
-    blockId,
-    type = BlockType.FUNCTION,
-    color = mutableStateOf(Color(0xFF45A3FF))
+    blockId, type = BlockType.FUNCTION, color = mutableStateOf(Color(0xFF45A3FF))
 ) {
     val nameInput = NameInputField()
     val returnValueTypeInput = TypeInputField()
     val inputParameters = FunctionParametersInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
+
+    init {
+        heightDP = NumberConstants.wideBlockHeight
+        widthDP = NumberConstants.wideBlockWidth
+    }
 
     override fun execute(): FunctionDeclarationStatement {
         val name = nameInput.getName()
