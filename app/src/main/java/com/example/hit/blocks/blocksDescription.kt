@@ -98,6 +98,14 @@ abstract class BasicBlock(
     open fun getDynamicWidthPx(density: Density): Float {
         return with(density) { widthDP.toPx() }
     }
+
+    fun getDynamicHeightDp(density: Density): Dp {
+        return with(density) { getDynamicHeightPx(density).toDp() }
+    }
+
+    fun getDynamicWidthDp(density: Density): Dp {
+        return with(density) { getDynamicWidthPx(density).toDp() }
+    }
 }
 
 class AssignmentBlock(
@@ -212,12 +220,23 @@ class BodyBlock(
         return BlockStatement(statements)
     }
 
-    override fun getDynamicHeightPx(density: Density): Float {
+    fun getLowestPoint(density: Density): Float{
         var height = 0f
         for (block in blocks) {
             height += block.getDynamicHeightPx(density)
         }
-        return height + with(density) {(Constants.bodyBlockVerticalPadding * 2).toPx()}
+        return height
+    }
+
+    fun getPointToSpawn(density: Density): Float{
+        if (blocks.isEmpty()){
+            return 0f
+        }
+        return getLowestPoint(density)-blocks.last().getDynamicHeightPx(density)
+    }
+
+    override fun getDynamicHeightPx(density: Density): Float {
+        return getLowestPoint(density) + with(density) {(Constants.bodyBlockVerticalPadding * 2).toPx()}
     }
 
     override fun getDynamicWidthPx(density: Density): Float{
