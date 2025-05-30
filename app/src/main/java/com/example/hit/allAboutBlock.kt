@@ -87,7 +87,7 @@ object NumberConstants {
     val standardBoxPadding = 16.dp
 
     val standardInputFieldHeight = 56.dp
-    val standardInputFieldWidth = 220.dp
+    val standardInputFieldWidth = 190.dp
 
     val standardSpacerHeight = 10.dp
 
@@ -249,7 +249,7 @@ fun BlockItem(
                         .wrapContentWidth()
                         .wrapContentHeight()
                         .padding(NumberConstants.standardColumnPadding),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnHorizontalArrangement),
@@ -329,7 +329,6 @@ fun BlockItem(
                                     onSwapMenu = onSwapMenu,
                                     onChangeSize = { onChange(blockInner, density) })
                             }
-
                         }
                         Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
                     }
@@ -500,19 +499,15 @@ fun BlockItem(
                                         shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                                     )) {
                                 block.defaultBlockInput!!.blocks.forEach { blockFor ->
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Drag(
-                                            block = blockFor,
-                                            blocksOnScreen = block.defaultBlockInput!!.blocks,
-                                            blockWithDeleteShownId = innerBlockWithDeleteShownId,
-                                            onShowDeleteChange = { id ->
-                                                innerBlockWithDeleteShownId = id
-                                            },
-                                            onSwapMenu = onSwapMenu,
-                                            onChangeSize = { onChange(blockFor, density) })
-                                    }
+                                    Drag(
+                                        block = blockFor,
+                                        blocksOnScreen = block.defaultBlockInput!!.blocks,
+                                        blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                        onShowDeleteChange = { id ->
+                                            innerBlockWithDeleteShownId = id
+                                        },
+                                        onSwapMenu = onSwapMenu,
+                                        onChangeSize = { onChange(blockFor, density) })
                                 }
                                 Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
                             }

@@ -214,6 +214,7 @@ class BodyBlock(
         for (block in blocks) {
             height += block.getDynamicHeightPx(density)
         }
+        height = max(height, super.getDynamicHeightPx(density))
         return height
     }
 
@@ -249,11 +250,14 @@ class IfElseBlock(
 
     var blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
     var standardHeight =
-        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardInputFieldHeight + NumberConstants.standardSpacerHeight + NumberConstants.standardColumnHorizontalArrangement * 3 + NumberConstants.standardAddElseBlockButtonHeight + NumberConstants.standardColumnPadding * 2)
+        (NumberConstants.standardInputFieldHeight + NumberConstants.standardSpacerHeight + NumberConstants.standardColumnHorizontalArrangement * 2 + NumberConstants.standardColumnPadding * 2)
 
     var standardWidth = listOf(
         NumberConstants.rowWidth
     )
+
+    var standardBottomRowHeight =
+        (NumberConstants.standardColumnVerticalArrangement * 2 + NumberConstants.standardAddElseBlockButtonHeight)
 
     init {
         heightDP = NumberConstants.wideBlockHeight
@@ -275,6 +279,8 @@ class IfElseBlock(
         if (defaultBlockInput != null) {
             inBox += defaultBlockInput!!.getDynamicHeightPx(density)
             inBox += with(density) { (standardHeight).toPx() }
+        } else {
+            inBox += with(density) { (standardBottomRowHeight).toPx() }
         }
         inBox = max(inBox, super.getDynamicHeightPx(density))
         return inBox
@@ -289,7 +295,7 @@ class IfElseBlock(
         for (blockInput in blocksInput) {
             inBox = max(inBox, blockInput.second.getDynamicWidthPx(density))
         }
-        inBox += with(density) { NumberConstants.standardBoxPadding.toPx() * 2 + NumberConstants.borderWidth.toPx() * 2 + 10.dp.toPx() }
+        inBox += with(density) { NumberConstants.standardBoxPadding.toPx() * 2 + NumberConstants.borderWidth.toPx() * 2 }
         inBox = max(inBox, super.getDynamicWidthPx(density))
         return inBox
     }
