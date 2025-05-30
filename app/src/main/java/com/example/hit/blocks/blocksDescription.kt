@@ -4,6 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,7 @@ import com.example.hit.language.parser.WhileLoop
 import com.example.hit.language.parser.operations.IOperation
 import java.util.UUID
 import kotlin.math.max
+
 
 val blockTypeToColor = mapOf(
     BlockType.ASSIGNMENT to Color(0xFF45A3FF),
@@ -82,6 +84,13 @@ abstract class BasicBlock(
     fun connectBottomBlock(bottomBlock: BasicBlock) {
         bottomConnection = bottomBlock
         bottomBlock.topConnection = this
+    }
+
+    fun breakBottomConnection() {
+        if (bottomConnection != null) {
+            bottomConnection!!.topConnection = null
+            bottomConnection = null
+        }
     }
 
     abstract fun execute(): IStatement
@@ -189,6 +198,7 @@ class BodyBlock(
     val blocks = mutableStateListOf<BasicBlock>()
 
     fun addBlock(block: BasicBlock) {
+        this.parentBlock!!.breakBottomConnection()
         block.parentBlock = this
         blocks.add(block)
     }
@@ -298,6 +308,7 @@ class IfElseBlock(
     }
 
     fun addElseIfBlock(condition: String) {
+        breakBottomConnection()
         val conditionInput = OperationInputField()
         conditionInput.set(condition)
         val block = BodyBlock(blockId = UUID.randomUUID())
@@ -312,6 +323,7 @@ class IfElseBlock(
     }
 
     fun addElseBlock() {
+        breakBottomConnection()
         defaultBlockInput = BodyBlock(blockId = UUID.randomUUID())
     }
 
@@ -351,6 +363,7 @@ class ForBlock(
 
 
     init {
+        blocks.parentBlock = this
         heightDP = NumberConstants.wideBlockHeight
         widthDP = NumberConstants.wideBlockWidth
     }
@@ -395,6 +408,7 @@ class WhileBlock(
     var standardWidth = NumberConstants.WhileBlock.rowWidth
 
     init {
+        blocks.parentBlock = this
         heightDP = NumberConstants.wideBlockHeight
         widthDP = NumberConstants.wideBlockWidth
     }
@@ -483,6 +497,7 @@ class FunctionBlock(
     var standardWidth = NumberConstants.Function.rowWidth
 
     init {
+        blocks.parentBlock = this
         heightDP = NumberConstants.wideBlockHeight
         widthDP = NumberConstants.wideBlockWidth
     }
