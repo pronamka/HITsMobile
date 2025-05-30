@@ -32,11 +32,12 @@ import kotlin.math.max
 fun Drag(
     block: BasicBlock,
     blocksOnScreen: MutableList<BasicBlock>,
-    del: () -> Unit,
     blockWithDeleteShownId: UUID?,
     onShowDeleteChange: (UUID?) -> Unit,
     onSwapMenu: (BodyBlock) -> Unit
 ) {
+
+    var temp = remember { mutableStateListOf(blocksOnScreen) }
 
     data class Snap(var x: Float, var y: Float, var connectedBlock: BasicBlock, var isTop: Boolean)
 
@@ -72,6 +73,17 @@ fun Drag(
         val dx = point1.first - point2.first
         val dy = point1.second - point2.second
         return kotlin.math.sqrt(dx * dx + dy * dy)
+    }
+
+    fun deleteBlock() {
+        for (blockIndex in 0..blocksOnScreen.size - 1) {
+            if (blocksOnScreen[blockIndex].id == block.id) {
+                blocksOnScreen.removeAt(blockIndex)
+                block.move()
+                return
+            }
+        }
+        Log.println(Log.ERROR, null, "Element with given id not found.")
     }
 
 
@@ -186,7 +198,7 @@ fun Drag(
         )
         if (block.id == blockWithDeleteShownId) {
             Button(
-                onClick = { del() },
+                onClick = { deleteBlock() },
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 Text(

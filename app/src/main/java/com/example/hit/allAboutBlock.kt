@@ -287,7 +287,7 @@ fun BlockItem(
                                 Drag(
                                     block = blockInner,
                                     blocksOnScreen = block.blocksInput[0].second.blocks,
-                                    del = { block.blocksInput[0].second.blocks.remove(blockInner) },
+                                    //del = { block.blocksInput[0].second.blocks.remove(blockInner) },
                                     blockWithDeleteShownId = innerBlockWithDeleteShownId,
                                     onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
                                     onSwapMenu = onSwapMenu
@@ -379,7 +379,7 @@ fun BlockItem(
                                             Drag(
                                                 block = blockInner,
                                                 blocksOnScreen = block.blocksInput[index + 1].second.blocks,
-                                                del = { block.blocksInput[index + 1].second.blocks.remove(blockInner) },
+                                                //del = { block.blocksInput[index + 1].second.blocks.remove(blockInner) },
                                                 blockWithDeleteShownId = innerBlockWithDeleteShownId,
                                                 onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
                                                 onSwapMenu = onSwapMenu
@@ -462,7 +462,7 @@ fun BlockItem(
                                             Drag(
                                                 block = blockFor,
                                                 blocksOnScreen = block.blocksInput[block.blocksInput.size - 1].second.blocks,
-                                                del = { block.blocksInput[block.blocksInput.size - 1].second.blocks.remove(blockFor) },
+                                                //del = { block.blocksInput[block.blocksInput.size - 1].second.blocks.remove(blockFor) },
                                                 blockWithDeleteShownId = innerBlockWithDeleteShownId,
                                                 onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
                                                 onSwapMenu = onSwapMenu

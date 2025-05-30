@@ -38,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -259,15 +260,15 @@ fun CodeScreen(
                             .height(2000.dp)
                     ) {
                         listOfBlocks.forEach { block ->
-                            Drag(
-                                block = block,
-                                blocksOnScreen = listOfBlocks,
-                                del = { listOfBlocks.remove(block);
-                                      block.move()},
-                                blockWithDeleteShownId = blockWithDeleteShownId,
-                                onShowDeleteChange = { id -> blockWithDeleteShownId = id },
-                                onSwapMenu = { bodyBlock -> changeMenuSetting(bodyBlock)}
-                            )
+                            key(block.id){
+                                Drag(
+                                    block = block,
+                                    blocksOnScreen = listOfBlocks,
+                                    blockWithDeleteShownId = blockWithDeleteShownId,
+                                    onShowDeleteChange = { id -> blockWithDeleteShownId = id },
+                                    onSwapMenu = { bodyBlock -> changeMenuSetting(bodyBlock)}
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.height(150.dp))
                     }
