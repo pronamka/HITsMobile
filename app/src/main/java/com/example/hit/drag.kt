@@ -24,17 +24,16 @@ import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import kotlin.math.max
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Drag(
     block: BasicBlock,
-    active : Boolean,
-    initID : () -> Unit,
     blocksOnScreen: List<BasicBlock>,
-    del: ()-> Unit,
+    del: () -> Unit,
     blockWithDeleteShownId: UUID?,
-    onShowDeleteChange: (UUID?) -> Unit
+    onShowDeleteChange: (UUID?) -> Unit,
 ) {
 
     data class Snap(var x: Float, var y: Float, var connectedBlock: BasicBlock, var isTop: Boolean)
@@ -63,6 +62,8 @@ fun Drag(
             stiffness = Spring.StiffnessLow
         )
     )
+
+    var currentZIndex by remember { mutableFloatStateOf(1f) }
 
     fun distance(point1: Pair<Float, Float>, point2: Pair<Float, Float>): Float {
         //Log.println(Log.DEBUG, null, listOf(point1, point2).toString())
@@ -114,6 +115,15 @@ fun Drag(
         return null
     }
 
+    fun increaseZIndex() {
+        var maxZIndex = 0f
+        for (currentBlock in blocksOnScreen) {
+            maxZIndex = max(maxZIndex, currentBlock.zIndex)
+        }
+        block.zIndex = maxZIndex + 1
+        currentZIndex = block.zIndex
+    }
+
     Box(
         modifier = Modifier
             .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
@@ -132,8 +142,8 @@ fun Drag(
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
+                        increaseZIndex()
                         block.move()
-                        initID()
                         snapTarget = null
                     },
                     onDrag = { change, dragAmount ->
@@ -165,17 +175,19 @@ fun Drag(
                     }
                 )
             }
+            .zIndex(currentZIndex)
     ) {
         BlockItem(
             block = block,
             onClick = { onShowDeleteChange(null) },
         )
-        if(block.id == blockWithDeleteShownId){
+        if (block.id == blockWithDeleteShownId) {
             Button(
                 onClick = { del() },
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
-                Text(text = "Delete",
+                Text(
+                    text = "Delete",
                     color = Color.White,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Medium,

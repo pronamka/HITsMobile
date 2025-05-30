@@ -54,6 +54,7 @@ abstract class BasicBlock(
     var bottomConnection: BasicBlock? = null,
     var heightDP: Dp = 80.dp,
     var widthDP: Dp = 256.dp,
+    var zIndex: Float = 0f
 ) {
     fun move() {
         if (topConnection != null) {
