@@ -226,12 +226,21 @@ class IfElseBlock(
         addElseIfBlock("")
     }
 
-    private var defaultBlockInput: BodyBlock? = null
+    var defaultBlockInput: BodyBlock? = null
 
-    override fun getDynamicHeightPx(density: Density): Float {
-        val base = 115.dp
-        val elseIfBlockHeight = 160.dp * blocksInput.size
-        val elseBlockHeight = if (defaultBlockInput != null) 100.dp else 0.dp
+
+    fun getDynamicHeightPx(density: Density, hasElse: Boolean, elseIfCounts: Int): Float {
+        val base = 120.dp
+        val elseIfBlockHeight = 160.dp * elseIfCounts
+        val elseBlockHeight = if (hasElse) 100.dp else 0.dp
+
+        var innerBlocksHeight = 0f
+        for ((_, bodyBlock) in blocksInput) {
+            for (block in bodyBlock.blocks) {
+                innerBlocksHeight += with(density) { block.heightDP.toPx() }
+            }
+        }
+
         return with(density) {
             (base + elseIfBlockHeight + elseBlockHeight).toPx()
         }

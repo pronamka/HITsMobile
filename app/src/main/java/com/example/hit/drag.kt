@@ -24,6 +24,7 @@ import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.hit.blocks.BodyBlock
 import kotlin.math.max
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -34,6 +35,7 @@ fun Drag(
     del: () -> Unit,
     blockWithDeleteShownId: UUID?,
     onShowDeleteChange: (UUID?) -> Unit,
+    onSwapMenu: (BodyBlock) -> Unit
 ) {
 
     data class Snap(var x: Float, var y: Float, var connectedBlock: BasicBlock, var isTop: Boolean)
@@ -180,6 +182,7 @@ fun Drag(
         BlockItem(
             block = block,
             onClick = { onShowDeleteChange(null) },
+            onSwapMenu = onSwapMenu
         )
         if (block.id == blockWithDeleteShownId) {
             Button(

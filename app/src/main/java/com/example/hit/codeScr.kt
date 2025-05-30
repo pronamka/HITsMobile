@@ -1,6 +1,7 @@
 package com.example.hit
 
 import Drag
+import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -37,17 +38,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.hit.blocks.BasicBlock
 import com.example.hit.blocks.BlockData
+import com.example.hit.blocks.BodyBlock
 import com.example.hit.blocks.blockTypeToColor
 import com.example.hit.blocks.container.Container
 import com.example.hit.codeRunner.CodeRunner
@@ -70,28 +70,28 @@ var font = FontFamily(Font(R.font.fredoka))
 fun CodeScreen(
     navController: NavHostController,
 ) {
-    var nextBlockPosition by remember { mutableFloatStateOf(0f) }
     var showDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showConsole by remember { mutableStateOf(false) }
     val listOfBlocks = remember { mutableStateListOf<BasicBlock>() }
     var blockId by remember { mutableStateOf<UUID?>(null) }
     val consoleOutput = remember { mutableStateListOf<String>() }
-    val density = LocalDensity.current
+    var menuForInnerBlock by remember { mutableStateOf(false) }
 
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
     val scrollState = rememberScrollState()
 
+    val Scope = rememberCoroutineScope()
     var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
 
     val menuOff by animateDpAsState(
-        targetValue = if (showMenu) 0.dp else (-300).dp,
+        targetValue = if ((showMenu && !showConsole && !menuForInnerBlock) || (menuForInnerBlock && !showConsole && !showMenu)) 0.dp else (-300).dp,
     )
 
     val consoleOff by animateDpAsState(
-        targetValue = if (showConsole) 0.dp else (360).dp,
+        targetValue = if (!showMenu && showConsole && !menuForInnerBlock) 0.dp else (360).dp,
     )
 
     val alpha by animateFloatAsState(
@@ -99,6 +99,17 @@ fun CodeScreen(
     )
 
     val defaultBlocks = remember { BlockData.defaultBlocks }
+
+    var currentBodyBlock by remember { mutableStateOf<BodyBlock?>(null) }
+    var temp = remember {mutableStateListOf<BasicBlock>()}
+
+    fun changeMenuSetting(bodyBlock: BodyBlock){
+        currentBodyBlock = bodyBlock
+        temp.clear()
+        temp.addAll(currentBodyBlock!!.blocks)
+        menuForInnerBlock = true
+        Log.println(Log.DEBUG, null, "$currentBodyBlock")
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (showDialog) {
@@ -254,7 +265,8 @@ fun CodeScreen(
                                 del = { listOfBlocks.remove(block);
                                       block.move()},
                                 blockWithDeleteShownId = blockWithDeleteShownId,
-                                onShowDeleteChange = { id -> blockWithDeleteShownId = id }
+                                onShowDeleteChange = { id -> blockWithDeleteShownId = id },
+                                onSwapMenu = { bodyBlock -> changeMenuSetting(bodyBlock)}
                             )
                         }
                         Spacer(modifier = Modifier.height(150.dp))
@@ -347,14 +359,19 @@ fun CodeScreen(
         }
 
 
-        if (showMenu && !showConsole) {
+        if((showMenu && !showConsole && !menuForInnerBlock) || (menuForInnerBlock && !showConsole && !showMenu)) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = alpha))
-                    .clickable { showMenu = false }
+                    .clickable {
+                        if (showMenu) showMenu = false
+                        else menuForInnerBlock = false
+                    }
             )
         }
+
+
 
         Box(
             modifier = Modifier
@@ -383,12 +400,20 @@ fun CodeScreen(
                         block = block,
                         onClick = {
                             val newBlock = block.deepCopy()
-                            listOfBlocks.add(newBlock)
-                            coroutineScope.launch {
+                            if (showMenu) listOfBlocks.add(newBlock)
+                            else {
+                                if (currentBodyBlock==null){
+                                    listOfBlocks.add(newBlock)
+                                }
+                                currentBodyBlock!!.addBlock(newBlock)
+                                temp.add(newBlock)
+                            }
+                            Scope.launch {
                                 delay(100)
                                 lazyListState.animateScrollToItem(listOfBlocks.size - 1)
                             }
-                        }
+                        },
+                        onSwapMenu = { bodyBlock -> changeMenuSetting(bodyBlock)}
                     )
                 }
             }
