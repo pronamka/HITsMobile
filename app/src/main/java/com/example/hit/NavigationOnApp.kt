@@ -24,7 +24,8 @@ fun NavGraph(navController: NavHostController) {
         composable(Destinations.CODE_SCREEN) {
             CodeScreen(navController)
         }
+        composable(Destinations.DOCUMENTATION_SCREEN) {
+            DocumentationScreen(navController)
+        }
     }
-
-
 }
