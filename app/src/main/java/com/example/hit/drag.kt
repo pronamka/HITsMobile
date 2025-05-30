@@ -30,7 +30,7 @@ import kotlin.math.max
 @Composable
 fun Drag(
     block: BasicBlock,
-    blocksOnScreen: List<BasicBlock>,
+    blocksOnScreen: MutableList<BasicBlock>,
     del: () -> Unit,
     blockWithDeleteShownId: UUID?,
     onShowDeleteChange: (UUID?) -> Unit,

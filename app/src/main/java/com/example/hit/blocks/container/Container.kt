@@ -5,6 +5,9 @@ import com.example.hit.blocks.BasicBlock
 class Container(private val blocks : MutableList<BasicBlock>) {
 
     fun isValidBlockArrangement() : Boolean {
+        if (blocks.size == 0) {
+            return true
+        }
         val roots = blocks.filter { it.topConnection == null }
         if (roots.size != 1) {
             return false
