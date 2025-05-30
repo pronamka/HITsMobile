@@ -89,7 +89,7 @@ fun CodeScreen(
     var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
 
     val menuOff by animateDpAsState(
-        targetValue = if ((showMenu && !showConsole && !menuForInnerBlock) || (menuForInnerBlock && !showConsole && !showMenu)) 0.dp else (-300).dp,
+        targetValue = if ((showMenu || menuForInnerBlock) ) 0.dp else (-300).dp,
     )
 
     val consoleOff by animateDpAsState(
@@ -97,7 +97,7 @@ fun CodeScreen(
     )
 
     val alpha by animateFloatAsState(
-        targetValue = if (showMenu || showConsole) 0.5f else 0f,
+        targetValue = if (showMenu || showConsole || menuForInnerBlock) 0.5f else 0f,
     )
 
     val defaultBlocks = remember { BlockData.defaultBlocks }
@@ -361,14 +361,14 @@ fun CodeScreen(
         }
 
 
-        if((showMenu && !showConsole && !menuForInnerBlock) || (menuForInnerBlock && !showConsole && !showMenu)) {
+        if(showMenu || menuForInnerBlock) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
                     .background(Color.Black.copy(alpha = alpha))
+                    .fillMaxSize()
                     .clickable {
                         if (showMenu) showMenu = false
-                        else menuForInnerBlock = false
+                        if (menuForInnerBlock) menuForInnerBlock = false
                     }
             )
         }
