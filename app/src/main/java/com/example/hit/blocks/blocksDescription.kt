@@ -346,7 +346,7 @@ class ForBlock(
     val stateChangeInput = AssignmentStatementInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
     var standardHeight =
-        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardColumnPadding * 2 + NumberConstants.ForBlock.inputTextFieldHeight)
+        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardColumnPadding * 2 + NumberConstants.standardColumnVerticalArrangement * 2 + NumberConstants.ForBlock.inputTextFieldHeight)
     var standardWidth = NumberConstants.ForBlock.rowWidth
 
 
