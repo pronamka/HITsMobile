@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -333,7 +334,7 @@ fun BlockItem(
                                     onSwapMenu(block.blocksInput[0].second)
                                 }
                             }, colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE), contentColor = Color.White
+                                containerColor = colorResource(R.color.purple_002), contentColor = Color.White
                             ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
@@ -421,7 +422,7 @@ fun BlockItem(
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF7943DE),
+                                        containerColor = colorResource(R.color.purple_002),
                                         contentColor = Color.White
                                     ),
                                 ) {
@@ -514,7 +515,7 @@ fun BlockItem(
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF7943DE),
+                                        containerColor = colorResource(R.color.purple_002),
                                         contentColor = Color.White
                                     ),
                                     modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
@@ -578,9 +579,7 @@ fun BlockItem(
                                     block.addElseIfBlock("")
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(
-                                        0xFF7943DE
-                                    )
+                                    containerColor = colorResource(R.color.purple_002),
                                 )
                             ) {
                                 Text(
@@ -600,7 +599,7 @@ fun BlockItem(
                                     block.addElseBlock()
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF7943DE)
+                                    containerColor = colorResource(R.color.purple_002),
                                 )
                             ) {
                                 Text(
@@ -866,7 +865,7 @@ fun BlockItem(
                                     onSwapMenu(block.blocks)
                                 }
                             }, colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE), contentColor = Color.White
+                                containerColor = colorResource(R.color.purple_002), contentColor = Color.White
                             ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
@@ -919,7 +918,6 @@ fun BlockItem(
         }
 
         is WhileBlock -> {
-            val density = LocalDensity.current
             Box(
                 modifier = Modifier
                     .padding(
@@ -998,7 +996,7 @@ fun BlockItem(
                                     onSwapMenu(block.blocks)
                                 }
                             }, colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE), contentColor = Color.White
+                                containerColor = colorResource(R.color.purple_002), contentColor = Color.White
                             ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
@@ -1275,7 +1273,7 @@ fun BlockItem(
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE),
+                                containerColor = colorResource(R.color.purple_002),
                                 contentColor = Color.White
                             ),
                             modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
