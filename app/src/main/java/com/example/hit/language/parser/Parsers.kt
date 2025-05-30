@@ -77,6 +77,9 @@ class OperationsParser(
         while (currentIndex < tokens.size) {
             results.add(atBottomLevel())
         }
+        if (results.isEmpty()){
+            throw InvalidSyntaxException("Expected an operation, but got null.")
+        }
         return results
     }
 

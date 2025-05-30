@@ -69,6 +69,11 @@ class Main {
             ),
             PrintStatement(getOperation("a")),
             PrintStatement(getOperation("b.size()")),
+            PrintStatement(getOperation("a[0].toString()")),
+            PrintStatement(getOperation("\"--------------\"")),
+            getDeclarationStatement("t String = \"10.12\""),
+            getDeclarationStatement("k Double = t.toDouble()"),
+            PrintStatement(getOperation("k"))
         )
         for (statement in program) {
             println(statement)
