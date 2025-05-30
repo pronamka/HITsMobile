@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -63,8 +64,8 @@ fun StartScr(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF952CA1),
-                        Color(0xFF6D60F8)
+                        colorResource(R.color.pink_001),
+                        colorResource(R.color.purple_001),
                     )
                 )
             ),
@@ -77,7 +78,7 @@ fun StartScr(
             letterSpacing = 1.sp,
             lineHeight = 44.sp,
             style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-            color = Color(0xFFFFFFFF),
+            color = colorResource(R.color.white_001),
             fontFamily = fontSt
         )
 
@@ -87,8 +88,8 @@ fun StartScr(
             onClick = { navController.navigate(Destinations.CODE_SCREEN) },
             modifier = Modifier.height(50.dp).width(250.dp),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF4143E3),
-                contentColor = Color(0xFFFFFFFF)
+                containerColor = colorResource(R.color.purple_001),
+                contentColor = colorResource(R.color.white_001),
             ),
             shape = RoundedCornerShape(100.dp)
         ) {
@@ -107,8 +108,8 @@ fun StartScr(
             onClick = { navController.navigate(Destinations.DOCUMENTATION_SCREEN) },
             modifier = Modifier.height(50.dp).width(250.dp),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF4143E3),
-                contentColor = Color(0xFFFFFFFF)
+                containerColor = colorResource(R.color.purple_001),
+                contentColor = colorResource(R.color.white_001),
             ),
             shape = RoundedCornerShape(100.dp)
         ) {

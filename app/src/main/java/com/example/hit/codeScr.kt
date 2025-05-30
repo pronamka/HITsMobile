@@ -49,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -84,7 +85,6 @@ fun CodeScreen(
     val density = LocalDensity.current
 
     val lazyListState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
 
     val verticalScrollState = rememberScrollState()
     val horizontalScrollState = rememberScrollState()
@@ -108,6 +108,9 @@ fun CodeScreen(
 
     var currentBodyBlock by remember { mutableStateOf<BodyBlock?>(null) }
     var temp = remember {mutableStateListOf<BasicBlock>()}
+    val purple2Color = colorResource(R.color.purple_002)
+    val whiteColor =colorResource(R.color.white_001)
+
 
     fun addBlockOnScreen(bodyBlock: BodyBlock){
         currentBodyBlock = bodyBlock
@@ -141,7 +144,7 @@ fun CodeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF7890D5))
+                        .background(colorResource(R.color.blue_001))
                         .padding(26.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
@@ -156,7 +159,7 @@ fun CodeScreen(
                                 showDialog = true
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25813D)),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.green_001)),
                         shape = RoundedCornerShape(28.dp),
                         modifier = Modifier
                             .padding(bottom = 24.dp)
@@ -176,7 +179,7 @@ fun CodeScreen(
                         onClick = {
                             listOfBlocks.clear()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA6294E)),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.red_001)),
                         shape = RoundedCornerShape(28.dp),
                         modifier = Modifier
                             .padding(bottom = 24.dp)
@@ -198,7 +201,7 @@ fun CodeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .background(Color(0xFF7890D5)),
+                    .background(colorResource(R.color.blue_001)),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
@@ -208,7 +211,7 @@ fun CodeScreen(
                         .height(72.dp)
                         .fillMaxWidth(0.9f)
                         .background(
-                            color = Color(0xFF7943DE),
+                            color = purple2Color,
                             shape = RoundedCornerShape(56.dp)
                         ),
                     verticalAlignment = Alignment.CenterVertically,
@@ -217,7 +220,7 @@ fun CodeScreen(
                     Button(
                         modifier = Modifier,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF7943DE),
+                            containerColor = colorResource(R.color.purple_002),
                             contentColor = Color.White
                         ),
                         onClick = { navController.navigate(Destinations.START_SCREEN) },
@@ -239,7 +242,7 @@ fun CodeScreen(
                     Button(
                         onClick = { showMenu = !showMenu },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF7943DE),
+                            containerColor = colorResource(R.color.purple_002),
                             contentColor = Color.White
                         ),
                     ) {
@@ -299,7 +302,7 @@ fun CodeScreen(
                 .height(360.dp)
                 .navigationBarsPadding()
                 .background(
-                    color = Color(0xFFFFFFFF),
+                    color = whiteColor,
                     shape = RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp)
                 )
         ) {
@@ -317,7 +320,7 @@ fun CodeScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.console_output),
-                        color = Color(0xFF7943DE),
+                        color = purple2Color,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = font
@@ -329,7 +332,7 @@ fun CodeScreen(
                                       block.color.value = blockTypeToColor[block.type]!!
                                   }},
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFA6294E),
+                            containerColor = colorResource(R.color.red_001),
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(16.dp)
@@ -388,7 +391,7 @@ fun CodeScreen(
                 .navigationBarsPadding()
                 .fillMaxHeight()
                 .background(
-                    color = Color(0xFFFFFFFF),
+                    color = whiteColor,
                     shape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
                 )
         ) {

@@ -21,6 +21,7 @@ import com.example.hit.blocks.BasicBlock
 import java.util.UUID
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
@@ -43,7 +44,7 @@ fun Drag(
 ) {
 
     var temp = remember { mutableStateListOf(blocksOnScreen) }
-
+    val GreyColor = colorResource(R.color.grey_001)
     data class Snap(var x: Float, var y: Float, var connectedBlock: BasicBlock, var isTop: Boolean)
 
     var lastInteractedTimestamp by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -153,7 +154,7 @@ fun Drag(
             .drawBehind {
                 if (isNearSnap) {
                     drawRect(
-                        color = Color(0x33FFFFFF),
+                        color = GreyColor,
                         size = size
                     )
                 }
