@@ -44,14 +44,16 @@ fun Drag(
 ) {
 
     var temp = remember { mutableStateListOf(blocksOnScreen) }
+    data class Snap(var topConnectedBlock: BasicBlock?, var bottomConnectedBlock: BasicBlock?)
+
     val GreyColor = colorResource(R.color.grey_001)
-    data class Snap(var x: Float, var y: Float, var connectedBlock: BasicBlock, var isTop: Boolean)
+
 
     var lastInteractedTimestamp by remember { mutableStateOf(System.currentTimeMillis()) }
     val density = LocalDensity.current
 
     var isNearSnap by remember { mutableStateOf(false) }
-    var snapTarget by remember { mutableStateOf<Snap?>(null) }
+    var snapTarget by remember { mutableStateOf<Snap>(Snap(null, null)) }
 
     var currentX by remember { mutableStateOf(block.x) }
     var currentY by remember { mutableStateOf(block.y) }
@@ -95,7 +97,8 @@ fun Drag(
 
     fun findSnapTarget(
         currentBlock: BasicBlock
-    ): Snap? {
+    ): Snap {
+        var snap = Snap(null, null)
         for (otherBlock in blocksOnScreen) {
             if (otherBlock.id == currentBlock.id) continue
 
@@ -119,20 +122,15 @@ fun Drag(
             val distanceCurrentTopToOtherBottom = abs(thisTop-otherBottom)
 
             if (distanceCurrentTopToOtherBottom < 30f && intersectionSize > min(thisWidthPx, otherWidthPx)*0.7 && otherBlock.isBottomCompatible()) {
-                return Snap(otherBlock.x, otherBottom, otherBlock, true) // block to to other bottom
+                snap.topConnectedBlock = otherBlock
             }
 
             val distanceCurrentBottomToOtherTop = abs(thisBottom-otherTop)
             if (distanceCurrentBottomToOtherTop < 30f && intersectionSize > min(thisWidthPx, otherWidthPx)*0.7 && otherBlock.isTopCompatible()) {
-                return Snap(
-                    otherBlock.x,
-                    otherTop - currentBlock.getDynamicHeightPx(density),
-                    otherBlock,
-                    false
-                ) // block to to other top
+                snap.bottomConnectedBlock = otherBlock
             }
         }
-        return null
+        return snap
     }
 
     fun increaseZIndex() {
@@ -165,7 +163,7 @@ fun Drag(
                         onChangeSize()
                         increaseZIndex()
                         block.move()
-                        snapTarget = null
+                        snapTarget = Snap(null, null)
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
@@ -183,24 +181,28 @@ fun Drag(
                         block.x = currentX
                         block.y = currentY
 
-
                         val potentialSnap = findSnapTarget(block)
                         snapTarget = potentialSnap
-                        isNearSnap = potentialSnap != null
+                        isNearSnap = (potentialSnap.topConnectedBlock != null || potentialSnap.bottomConnectedBlock != null)
                     },
                     onDragEnd = {
-                        if (snapTarget != null) {
-                            if (snapTarget!!.isTop) {
-                                block.connectTopBlock(snapTarget!!.connectedBlock)
-                            } else {
-                                block.connectBottomBlock(snapTarget!!.connectedBlock)
-                            }
-                            currentX = snapTarget!!.x
-                            currentY = snapTarget!!.y
+                        if (snapTarget.topConnectedBlock != null) {
+                            val topBlock = snapTarget.topConnectedBlock!!
+                            currentX = topBlock.x
+                            currentY = topBlock.y+topBlock.getDynamicHeightPx(density)
+                            block.x = currentX
+                            block.y = currentY
+                            block.connectTopBlock(topBlock)
                         }
-                        block.x = currentX
-                        block.y = currentY
-                        snapTarget = null
+                        if (snapTarget.bottomConnectedBlock != null) {
+                            val bottomBlock = snapTarget.bottomConnectedBlock!!
+                            currentX = bottomBlock.x
+                            currentY = bottomBlock.y-block.getDynamicHeightPx(density)
+                            block.x = currentX
+                            block.y = currentY
+                            block.connectBottomBlock(bottomBlock)
+                        }
+                        snapTarget = Snap(null, null)
                         isNearSnap = false
                     }
                 )

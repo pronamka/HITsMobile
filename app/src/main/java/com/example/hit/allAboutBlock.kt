@@ -51,6 +51,7 @@ import com.example.hit.blocks.BreakBlock
 import com.example.hit.blocks.ContinueBlock
 import com.example.hit.blocks.DeclarationBlock
 import com.example.hit.blocks.ForBlock
+import com.example.hit.blocks.FunctionBlock
 import com.example.hit.blocks.IfElseBlock
 import com.example.hit.blocks.InitializationBlock
 import com.example.hit.blocks.PrintBlock
@@ -87,7 +88,7 @@ object NumberConstants {
     val standardBoxPadding = 16.dp
 
     val standardInputFieldHeight = 56.dp
-    val standardInputFieldWidth = 220.dp
+    val standardInputFieldWidth = 190.dp
 
     val standardSpacerHeight = 10.dp
 
@@ -98,7 +99,7 @@ object NumberConstants {
 
     val addBlockButtonWidth = 60.dp
 
-    val rowWidth = standardIfLabelWidth + standardInputFieldWidth + addBlockButtonWidth
+
 
     val borderWidth = 2.dp
 
@@ -108,6 +109,59 @@ object NumberConstants {
 
     val bodyBlockTransparencyIndex = 0.2f
     val borderTransparencyIndex = 0.5f
+    val singleSymbolWidth = 4.dp
+
+    object IfElseBlock{
+        val rowWidth = standardIfLabelWidth + standardInputFieldWidth + addBlockButtonWidth
+        val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
+    }
+
+
+    object ForBlock {
+        val horizontalArrangement = 8.dp
+
+        val inputTextFieldWidth = 72.dp
+        val inputTextFieldHeight = 56.dp
+
+        val labelWidth = 50.dp
+
+        val rowPadding = 16.dp
+
+        val rowWidth =
+            labelWidth + inputTextFieldWidth * 3 + singleSymbolWidth * 4 + horizontalArrangement * 9 + addBlockButtonWidth
+        val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
+    }
+
+    object WhileBlock {
+        val horizontalArrangement = 8.dp
+
+        val inputTextFieldWidth = 146.dp
+        val inputTextFieldHeight = 56.dp
+
+        val labelWidth = 70.dp
+
+        val rowPadding = 16.dp
+
+        val rowWidth =
+            labelWidth + inputTextFieldWidth + singleSymbolWidth * 2 + horizontalArrangement * 6 + addBlockButtonWidth
+        val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
+    }
+
+    object Function {
+        val horizontalArrangement = 8.dp
+
+        val inputTextFieldWidth = 52.dp
+        val inputTextFieldHeight = 56.dp
+
+        val labelWidth = 50.dp
+
+
+        val parametersInputTextFieldWidth = 112.dp
+
+        val rowWidth =
+            labelWidth + inputTextFieldWidth * 2 + parametersInputTextFieldWidth + horizontalArrangement * 4 + addBlockButtonWidth
+        val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
+    }
 }
 
 
@@ -118,7 +172,6 @@ fun BlockItem(
     onClick: () -> Unit,
     onSwapMenu: (BodyBlock) -> Unit,
 ) {
-    var blockInnerId by remember { mutableStateOf<UUID?>(null) }
     val density = LocalDensity.current
     var innerBlockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
 
@@ -249,7 +302,7 @@ fun BlockItem(
                         .wrapContentWidth()
                         .wrapContentHeight()
                         .padding(NumberConstants.standardColumnPadding),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnHorizontalArrangement),
@@ -282,11 +335,9 @@ fun BlockItem(
                                 if (!showMenu) {
                                     onSwapMenu(block.blocksInput[0].second)
                                 }
-                            },
-                            colors = ButtonDefaults.buttonColors(
+                            }, colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF7943DE), contentColor = Color.White
-                            ),
-                            modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
+                            ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -329,7 +380,6 @@ fun BlockItem(
                                     onSwapMenu = onSwapMenu,
                                     onChangeSize = { onChange(blockInner, density) })
                             }
-
                         }
                         Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
                     }
@@ -417,15 +467,18 @@ fun BlockItem(
                                         shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                                     )) {
                                 block.blocksInput[index + 1].second.blocks.forEach { blockInner ->
-                                    Drag(
-                                        block = blockInner,
-                                        blocksOnScreen = block.blocksInput[index + 1].second.blocks,
-                                        blockWithDeleteShownId = innerBlockWithDeleteShownId,
-                                        onShowDeleteChange = { id ->
-                                            innerBlockWithDeleteShownId = id
-                                        },
-                                        onSwapMenu = onSwapMenu,
-                                        onChangeSize = { onChange(blockInner, density) })
+                                    key(blockInner.id) {
+                                        Drag(
+                                            block = blockInner,
+                                            blocksOnScreen = block.blocksInput[index + 1].second.blocks,
+                                            blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                            onShowDeleteChange = { id ->
+                                                innerBlockWithDeleteShownId = id
+                                            },
+                                            onSwapMenu = onSwapMenu,
+                                            onChangeSize = { onChange(blockInner, density) })
+                                    }
+
                                 }
                                 Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
                             }
@@ -500,9 +553,7 @@ fun BlockItem(
                                         shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                                     )) {
                                 block.defaultBlockInput!!.blocks.forEach { blockFor ->
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
+                                    key(blockFor.id) {
                                         Drag(
                                             block = blockFor,
                                             blocksOnScreen = block.defaultBlockInput!!.blocks,
@@ -697,12 +748,19 @@ fun BlockItem(
             val density = LocalDensity.current
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .wrapContentWidth()
-                    .wrapContentHeight()
+                    .padding(
+                        horizontal = NumberConstants.standardBoxPadding,
+                        vertical = NumberConstants.standardBoxPadding
+                    )
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
                     }
+                    .defaultMinSize(
+                        minHeight = NumberConstants.wideBlockHeight,
+                        minWidth = NumberConstants.wideBlockWidth
+                    )
+                    .height(block.getDynamicHeightDp(density))
+                    .width(block.getDynamicWidthDp(density))
                     .background(
                         color = block.color.value, shape = RoundedCornerShape(24.dp)
                     )
@@ -710,12 +768,12 @@ fun BlockItem(
                 Column(
                     modifier = Modifier
                         .wrapContentWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(NumberConstants.standardColumnPadding),
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
                 ) {
                     Row(
                         modifier = Modifier.wrapContentWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(NumberConstants.ForBlock.horizontalArrangement),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -723,7 +781,8 @@ fun BlockItem(
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = font
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.ForBlock.labelWidth)
                         )
 
                         Text(
@@ -731,15 +790,16 @@ fun BlockItem(
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = font
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.singleSymbolWidth)
                         )
 
                         OutlinedTextField(
                             value = block.initializerInput.getInputField(),
                             onValueChange = { block.initializerInput.set(it) },
                             modifier = Modifier
-                                .width(72.dp)
-                                .height(56.dp),
+                                .width(NumberConstants.ForBlock.inputTextFieldWidth)
+                                .height(NumberConstants.ForBlock.inputTextFieldHeight),
                             enabled = !showMenu,
                             singleLine = true,
                             colors = textFieldColors,
@@ -753,15 +813,16 @@ fun BlockItem(
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = font
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.singleSymbolWidth)
                         )
 
                         OutlinedTextField(
                             value = block.conditionInput.getInputField(),
                             onValueChange = { block.conditionInput.set(it) },
                             modifier = Modifier
-                                .width(72.dp)
-                                .height(56.dp),
+                                .width(NumberConstants.ForBlock.inputTextFieldWidth)
+                                .height(NumberConstants.ForBlock.inputTextFieldHeight),
                             enabled = !showMenu,
                             singleLine = true,
                             colors = textFieldColors,
@@ -775,15 +836,16 @@ fun BlockItem(
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = font
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.singleSymbolWidth)
                         )
 
                         OutlinedTextField(
                             value = block.stateChangeInput.getInputField(),
                             onValueChange = { block.stateChangeInput.set(it) },
                             modifier = Modifier
-                                .width(72.dp)
-                                .height(56.dp),
+                                .width(NumberConstants.ForBlock.inputTextFieldWidth)
+                                .height(NumberConstants.ForBlock.inputTextFieldHeight),
                             enabled = !showMenu,
                             singleLine = true,
                             colors = textFieldColors,
@@ -797,7 +859,8 @@ fun BlockItem(
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = font
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.singleSymbolWidth)
                         )
 
                         Button(
@@ -805,12 +868,9 @@ fun BlockItem(
                                 if (!showMenu) {
                                     onSwapMenu(block.blocks)
                                 }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE),
-                                contentColor = Color.White
-                            ),
-                            modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
+                            }, colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF7943DE), contentColor = Color.White
+                            ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -860,30 +920,37 @@ fun BlockItem(
                 }
             }
         }
-
         is WhileBlock -> {
             val density = LocalDensity.current
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .wrapContentWidth()
-                    .wrapContentHeight()
+                    .padding(
+                        horizontal = NumberConstants.WhileBlock.rowPadding,
+                        vertical = NumberConstants.WhileBlock.rowPadding
+                    )
                     .onGloballyPositioned { coordinates ->
                         onChange(block, density)
                     }
+                    .defaultMinSize(
+                        minHeight = NumberConstants.wideBlockHeight,
+                        minWidth = NumberConstants.wideBlockWidth
+                    )
+                    .height(block.getDynamicHeightDp(density))
+                    .width(block.getDynamicWidthDp(density))
                     .background(
                         color = block.color.value, shape = RoundedCornerShape(24.dp)
                     )
-                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)
+            ) {
                 Column(
                     modifier = Modifier
                         .wrapContentWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(NumberConstants.standardColumnPadding),
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
                 ) {
                     Row(
                         modifier = Modifier.wrapContentWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(NumberConstants.WhileBlock.horizontalArrangement),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -891,7 +958,8 @@ fun BlockItem(
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = font
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.WhileBlock.labelWidth)
                         )
 
                         Text(
@@ -899,15 +967,16 @@ fun BlockItem(
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = font
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.singleSymbolWidth)
                         )
 
                         OutlinedTextField(
                             value = block.conditionInput.getInputField(),
                             onValueChange = { block.conditionInput.set(it) },
                             modifier = Modifier
-                                .width(146.dp)
-                                .height(56.dp),
+                                .width(NumberConstants.WhileBlock.inputTextFieldWidth)
+                                .height(NumberConstants.WhileBlock.inputTextFieldHeight),
                             enabled = !showMenu,
                             singleLine = true,
                             colors = textFieldColors,
@@ -921,7 +990,8 @@ fun BlockItem(
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = font
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.singleSymbolWidth)
                         )
 
                         Button(
@@ -929,12 +999,9 @@ fun BlockItem(
                                 if (!showMenu) {
                                     onSwapMenu(block.blocks)
                                 }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7943DE),
-                                contentColor = Color.White
-                            ),
-                            modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
+                            }, colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF7943DE), contentColor = Color.White
+                            ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -1128,6 +1195,149 @@ fun BlockItem(
                             fontWeight = FontWeight.Medium,
                             fontFamily = font
                         )
+                    }
+                }
+            }
+        }
+        is FunctionBlock -> {
+            val density = LocalDensity.current
+            Box(
+                modifier = Modifier
+                    .padding(
+                        horizontal = NumberConstants.standardBoxPadding,
+                        vertical = NumberConstants.standardBoxPadding
+                    )
+                    .onGloballyPositioned { coordinates ->
+                        onChange(block, density)
+                    }
+                    .defaultMinSize(
+                        minHeight = NumberConstants.wideBlockHeight,    minWidth = NumberConstants.wideBlockWidth
+                    )
+                    .height(block.getDynamicHeightDp(density))
+                    .width(block.getDynamicWidthDp(density))
+
+                    .background(
+                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                    )
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
+                Column(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .padding(NumberConstants.standardColumnPadding),
+                    verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
+                ) {
+                    Row(
+                        modifier = Modifier.wrapContentWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(NumberConstants.Function.horizontalArrangement),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = block.type.value,
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.Function.labelWidth)
+                        )
+
+                        OutlinedTextField(
+                            value = block.nameInput.getInputField(),
+                            onValueChange = { block.nameInput.set(it) },
+                            modifier = Modifier
+                                .width(NumberConstants.Function.inputTextFieldWidth)
+                                .height(NumberConstants.Function.inputTextFieldHeight),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 18.sp, fontFamily = font
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = block.inputParameters.getInputField(),
+                            onValueChange = { block.inputParameters.set(it) },
+                            modifier = Modifier
+                                .width(NumberConstants.Function.parametersInputTextFieldWidth)
+                                .height(NumberConstants.Function.inputTextFieldHeight),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 18.sp, fontFamily = font
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = block.returnValueTypeInput.getInputField(),
+                            onValueChange = { block.returnValueTypeInput.set(it) },
+                            modifier = Modifier
+                                .width(NumberConstants.Function.inputTextFieldWidth)
+                                .height(NumberConstants.Function.inputTextFieldHeight),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 18.sp, fontFamily = font
+                            )
+                        )
+
+                        Button(
+                            onClick = {
+                                if (!showMenu) {
+                                    onSwapMenu(block.blocks)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF7943DE),
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(Icons.Outlined.Add, contentDescription = null)
+                            }
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(
+                                horizontal = NumberConstants.bodyBlockHorizontalPadding,
+                                vertical = NumberConstants.bodyBlockVerticalPadding
+                            )
+                            .defaultMinSize(
+                                minHeight = NumberConstants.standardBlockHeight,
+                                minWidth = NumberConstants.standardBlockWidth
+                            )
+                            .height(block.blocks.getDynamicHeightDp(density))
+                            .width(block.blocks.getDynamicWidthDp(density))
+                            .clickable { innerBlockWithDeleteShownId = null }
+                            .background(
+                                color = Color.White.copy(alpha = NumberConstants.bodyBlockTransparencyIndex),
+                                shape = RoundedCornerShape(NumberConstants.roundCornerShape)
+                            )
+                            .border(
+                                width = NumberConstants.borderWidth,
+                                color = Color.White.copy(alpha = NumberConstants.borderTransparencyIndex),
+                                shape = RoundedCornerShape(NumberConstants.roundCornerShape)
+                            )) {
+                        block.blocks.blocks.forEach { blockInner ->
+                            key(blockInner.id) {
+                                Drag(
+                                    block = blockInner,
+                                    blocksOnScreen = block.blocks.blocks,
+                                    blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                    onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
+                                    onSwapMenu = onSwapMenu,
+                                    onChangeSize = { onChange(blockInner, density) })
+                            }
+
+                        }
+                        Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
                     }
                 }
             }
