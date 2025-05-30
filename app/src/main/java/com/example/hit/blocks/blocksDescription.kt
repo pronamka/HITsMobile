@@ -252,9 +252,7 @@ class IfElseBlock(
     var standardHeight =
         (NumberConstants.standardInputFieldHeight + NumberConstants.standardSpacerHeight + NumberConstants.standardColumnHorizontalArrangement * 2 + NumberConstants.standardColumnPadding * 2)
 
-    var standardWidth = listOf(
-        NumberConstants.rowWidth
-    )
+    var standardWidth = NumberConstants.IfElseBlock.rowWidth
 
     var standardBottomRowHeight =
         (NumberConstants.standardColumnVerticalArrangement * 2 + NumberConstants.standardAddElseBlockButtonHeight)
@@ -287,15 +285,14 @@ class IfElseBlock(
     }
 
     override fun getDynamicWidthPx(density: Density): Float {
-        var inBox = max(
-            0f, standardWidth.maxOf { with(density) { it.toPx() } })
+        var inBox = with(density) { (standardWidth).toPx() }
         if (defaultBlockInput != null) {
             inBox = max(inBox, defaultBlockInput!!.getDynamicHeightPx(density))
         }
         for (blockInput in blocksInput) {
             inBox = max(inBox, blockInput.second.getDynamicWidthPx(density))
         }
-        inBox += with(density) { NumberConstants.standardBoxPadding.toPx() * 2 + NumberConstants.borderWidth.toPx() * 2 }
+        inBox += with(density) { (NumberConstants.IfElseBlock.overallPadding).toPx() }
         inBox = max(inBox, super.getDynamicWidthPx(density))
         return inBox
     }
@@ -349,8 +346,9 @@ class ForBlock(
     val stateChangeInput = AssignmentStatementInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
     var standardHeight =
-        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardColumnPadding * 2 + NumberConstants.standardColumnVerticalArrangement * 2 + NumberConstants.ForBlock.inputTextFieldHeight)
+        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardColumnPadding * 2 + NumberConstants.ForBlock.inputTextFieldHeight)
     var standardWidth = NumberConstants.ForBlock.rowWidth
+
 
     init {
         heightDP = NumberConstants.wideBlockHeight
@@ -369,7 +367,7 @@ class ForBlock(
     }
 
     override fun getDynamicHeightPx(density: Density): Float {
-        var inBox = blocks.getDynamicWidthPx(density)
+        var inBox = blocks.getDynamicHeightPx(density)
         inBox += with(density) { (standardHeight).toPx() }
 
         inBox = max(inBox, super.getDynamicHeightPx(density))
@@ -378,6 +376,7 @@ class ForBlock(
 
     override fun getDynamicWidthPx(density: Density): Float {
         var inBox = max(with(density) { (standardWidth).toPx() }, blocks.getDynamicWidthPx(density))
+        inBox += with(density) { (NumberConstants.ForBlock.overallPadding).toPx() }
         inBox = max(inBox, super.getDynamicWidthPx(density))
         return inBox
     }
@@ -391,8 +390,9 @@ class WhileBlock(
     val conditionInput = OperationInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
-    var standardHeight = 0.dp
-    var standardWidth = 0.dp
+    var standardHeight =
+        (NumberConstants.standardBoxPadding * 2 + NumberConstants.standardColumnPadding * 2 + NumberConstants.standardColumnVerticalArrangement + NumberConstants.WhileBlock.inputTextFieldHeight)
+    var standardWidth = NumberConstants.WhileBlock.rowWidth
 
     init {
         heightDP = NumberConstants.wideBlockHeight
@@ -409,7 +409,7 @@ class WhileBlock(
     }
 
     override fun getDynamicHeightPx(density: Density): Float {
-        var inBox = blocks.getDynamicWidthPx(density)
+        var inBox = blocks.getDynamicHeightPx(density)
         inBox += with(density) { (standardHeight).toPx() }
 
         inBox = max(inBox, super.getDynamicHeightPx(density))
@@ -418,6 +418,7 @@ class WhileBlock(
 
     override fun getDynamicWidthPx(density: Density): Float {
         var inBox = max(with(density) { (standardWidth).toPx() }, blocks.getDynamicWidthPx(density))
+        inBox += with(density) { (NumberConstants.WhileBlock.overallPadding).toPx() }
         inBox = max(inBox, super.getDynamicWidthPx(density))
         return inBox
     }
