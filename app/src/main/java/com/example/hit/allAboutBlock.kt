@@ -54,6 +54,7 @@ import com.example.hit.blocks.InitializationBlock
 import com.example.hit.blocks.PrintBlock
 import com.example.hit.blocks.ReturnBlock
 import com.example.hit.blocks.WhileBlock
+import com.example.hit.language.parser.exceptions.ReturnException
 import java.util.UUID
 
 
@@ -874,7 +875,58 @@ fun BlockItem(
             }
         }
 
-        is ReturnBlock, is ContinueBlock, is BreakBlock -> {
+        is ReturnBlock -> {
+            block.heightDP = 80.dp
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .width(252.dp)
+                    .height(80.dp)
+                    .onGloballyPositioned { coordinates ->
+                        onChange(block, density)
+                    }
+                    .background(
+                        color = block.color.value, shape = RoundedCornerShape(24.dp)
+                    )
+                    .then(if (showMenu) Modifier.clickable(onClick = onClick) else Modifier)) {
+                Column(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.wrapContentWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = block.type.value,
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font
+                        )
+
+                        OutlinedTextField(
+                            value = block.valueInputField.getInputField(),
+                            onValueChange = { block.valueInputField.set(it) },
+                            modifier = Modifier
+                                .width(126.dp)
+                                .height(56.dp),
+                            enabled = !showMenu,
+                            singleLine = true,
+                            colors = textFieldColors,
+                            textStyle = TextStyle(
+                                fontSize = 16.sp, fontFamily = font
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        is ContinueBlock, is BreakBlock -> {
             block.heightDP = 80.dp
             Box(
                 modifier = Modifier
