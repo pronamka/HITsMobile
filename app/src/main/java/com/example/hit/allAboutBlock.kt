@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
@@ -56,14 +58,6 @@ import com.example.hit.blocks.ReturnBlock
 import com.example.hit.blocks.WhileBlock
 import java.util.UUID
 
-
-data class BlockPosition(
-    var id: UUID,
-    var posX: Float = 0f,
-    var posY: Float = 0f,
-    var heightPx: Float = 0f,
-    var widthPx: Float = 0f
-)
 
 fun onChange(block: BasicBlock, density: Density) {
     if (block is IfElseBlock || block is WhileBlock || block is ForBlock) {
@@ -175,7 +169,7 @@ fun BlockItem(
                         )
                     )
                     Text(
-                        text = ":",
+                        text = stringResource(R.string.simbol1),
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Medium,
@@ -197,7 +191,7 @@ fun BlockItem(
                     )
 
                     Text(
-                        text = "=",
+                        text = stringResource(R.string.simbol2),
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Medium,
@@ -350,7 +344,7 @@ fun BlockItem(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "ELSE IF",
+                                    text = stringResource(R.string.else_if),
                                     color = Color.White,
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Medium,
@@ -382,7 +376,6 @@ fun BlockItem(
                                         containerColor = Color(0xFF7943DE),
                                         contentColor = Color.White
                                     ),
-                                    modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                                 ) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -455,7 +448,7 @@ fun BlockItem(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "ELSE",
+                                    text = stringResource(R.string.els),
                                     color = Color.White,
                                     fontSize = 26.sp,
                                     fontWeight = FontWeight.Medium,
@@ -542,7 +535,7 @@ fun BlockItem(
                                 )
                             ) {
                                 Text(
-                                    "ELSE IF",
+                                    stringResource(R.string.else_if),
                                     color = Color.White,
                                     fontFamily = font,
                                     fontSize = 18.sp
@@ -562,7 +555,10 @@ fun BlockItem(
                                 )
                             ) {
                                 Text(
-                                    "ELSE", color = Color.White, fontFamily = font, fontSize = 18.sp
+                                    stringResource(R.string.els),
+                                    color = Color.White,
+                                    fontFamily = font,
+                                    fontSize = 18.sp
                                 )
                             }
                         }
@@ -608,7 +604,7 @@ fun BlockItem(
                         )
                     )
                     Text(
-                        text = ":",
+                        text = stringResource(R.string.simbol1),
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Medium,
@@ -670,7 +666,7 @@ fun BlockItem(
                     )
 
                     Text(
-                        text = "=",
+                        text = stringResource(R.string.simbol2),
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Medium,
@@ -730,7 +726,7 @@ fun BlockItem(
                         )
 
                         Text(
-                            text = "(",
+                            text = stringResource(R.string.simbol3),
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -752,7 +748,7 @@ fun BlockItem(
                         )
 
                         Text(
-                            text = ";",
+                            text = stringResource(R.string.simbol5),
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -774,7 +770,7 @@ fun BlockItem(
                         )
 
                         Text(
-                            text = ";",
+                            text = stringResource(R.string.simbol5),
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -796,7 +792,7 @@ fun BlockItem(
                         )
 
                         Text(
-                            text = ")",
+                            text = stringResource(R.string.simbol4),
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -858,7 +854,7 @@ fun BlockItem(
                         )
 
                         Text(
-                            text = "(",
+                            text = stringResource(R.string.simbol3),
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -880,7 +876,7 @@ fun BlockItem(
                         )
 
                         Text(
-                            text = ")",
+                            text = stringResource(R.string.simbol4),
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,
@@ -972,7 +968,7 @@ fun BlockItem(
                         )
 
                         Text(
-                            text = "(",
+                            text = stringResource(R.string.simbol3),
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Medium,

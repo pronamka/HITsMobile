@@ -1,6 +1,5 @@
 import android.util.Log
 import com.example.hit.BlockItem
-import com.example.hit.BlockPosition
 import com.example.hit.font
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -22,9 +21,11 @@ import com.example.hit.blocks.BasicBlock
 import java.util.UUID
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
+import com.example.hit.R
 import com.example.hit.blocks.BodyBlock
 import kotlin.math.max
 import kotlin.math.min
@@ -177,13 +178,9 @@ fun Drag(
                         currentX = currentX.coerceAtLeast(0f)
                         currentY = currentY.coerceAtLeast(0f)
 
-                        //Log.println(Log.DEBUG, null, listOf(block.getDynamicWidthPx(density), block.getDynamicHeightPx(density)).toString())
-                        //Log.println(Log.DEBUG, null, listOf(block.parentBlock!!.getDynamicWidthPx(density), block.parentBlock!!.getDynamicHeightPx(density)).toString())
-
                         block.x = currentX
                         block.y = currentY
 
-                        //Log.println(Log.DEBUG, null, "${block.x}, ${block.y}")
 
                         val potentialSnap = findSnapTarget(block)
                         snapTarget = potentialSnap
@@ -219,7 +216,7 @@ fun Drag(
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 Text(
-                    text = "Delete",
+                    text =  stringResource(R.string.delete),
                     color = Color.White,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Medium,
