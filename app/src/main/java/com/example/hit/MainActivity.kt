@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -71,7 +72,7 @@ fun StartScr(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Building grils \uD83D\uDCA1",
+            text = stringResource(R.string.nameApp),
             fontSize = 36.sp,
             letterSpacing = 1.sp,
             lineHeight = 44.sp,
@@ -94,7 +95,7 @@ fun StartScr(
             Icon(Icons.Default.PlayArrow, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                "Start coding",
+                text = stringResource(R.string.start_coding_button),
                 fontFamily = fontSt,
                 fontSize = 24.sp
             )
@@ -113,17 +114,16 @@ fun StartScr(
         ) {
             Icon(Icons.Default.Info, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("About app", fontFamily = fontSt, fontSize = 24.sp)
+            Text(text = stringResource(R.string.about_app_button), fontFamily = fontSt, fontSize = 24.sp)
         }
         if (showDialog.value) {
             AlertDialog(
                 onDismissRequest = { showDialog.value = false },
-                title = { Text("About app", fontFamily = fontSt) },
-                text = { Text("Это приложение для новичков, которые хотят погрузиться в мир программирования.",
-                    fontFamily = fontSt)},
+                title = { Text(text = stringResource(R.string.about_app_button), fontFamily = fontSt) },
+                text = { Text(text = stringResource(R.string.inAbout), fontFamily = fontSt)},
                 confirmButton = {
                     TextButton(onClick = { showDialog.value = false }) {
-                        Text("OK", fontFamily = fontSt)
+                        Text(stringResource(R.string.Ok), fontFamily = fontSt)
                     }
                 }
             )

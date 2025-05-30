@@ -1,7 +1,22 @@
 <resources>
-    <string name="app_name">Hit</string>
     <string name="start_coding_button">Start coding</string>
     <string name="about_app_button">About app</string>
     <string name="launch_code_button">Launch code</string>
     <string name="clear_button">Clear</string>
+    <string name="nameApp">Building grils 💡</string>
+    <string name="delete">Delete</string>
+    <string name="inAbout">Это приложение для новичков, которые хотят погрузиться в мир программирования.</string>
+    <string name="Ok">Ok</string>
+    <string name="Error">Error</string>
+    <string name="Invalid">Invalid block position</string>
+    <string name="code_editor">Code editor</string>
+    <string name="console_output">Console Output</string>
+    <string name="close">Close</string>
+    <string name="simbol1">:</string>
+    <string name="simbol2">=</string>
+    <string name="simbol3">(</string>
+    <string name="simbol4">)</string>
+    <string name="simbol5">;</string>
+    <string name="else_if">ELSE IF</string>
+    <string name="els">ELSE</string>
 </resources>

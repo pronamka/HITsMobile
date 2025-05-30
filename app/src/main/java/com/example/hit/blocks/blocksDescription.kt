@@ -1,17 +1,13 @@
 package com.example.hit.blocks
 
-import android.util.Log
-import androidx.compose.foundation.clickable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.hit.BlockPosition
 import com.example.hit.Constants
 import com.example.hit.blocks.container.Container
-import com.example.hit.language.parser.ArrayElementAssignmentStatement
 import com.example.hit.language.parser.AssignmentStatement
 import com.example.hit.language.parser.BlockStatement
 import com.example.hit.language.parser.BreakStatement
@@ -25,8 +21,6 @@ import com.example.hit.language.parser.Lexer
 import com.example.hit.language.parser.PrintStatement
 import com.example.hit.language.parser.ReturnStatement
 import com.example.hit.language.parser.StatementsParser
-import com.example.hit.language.parser.VariableAssignmentStatement
-import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
 import com.example.hit.language.parser.operations.IOperation
 import java.io.Console
@@ -100,11 +94,11 @@ abstract class BasicBlock(
         return with(density) { widthDP.toPx() }
     }
 
-    fun getDynamicHeightDp(density: Density): Dp {
+    open fun getDynamicHeightDp(density: Density): Dp {
         return with(density) { getDynamicHeightPx(density).toDp() }
     }
 
-    fun getDynamicWidthDp(density: Density): Dp {
+    open fun getDynamicWidthDp(density: Density): Dp {
         return with(density) { getDynamicWidthPx(density).toDp() }
     }
 }
@@ -277,9 +271,6 @@ class IfElseBlock(
             inBox += blockInput.second.getDynamicHeightPx(density)
             inBox += with(density) {(Constants.standardColumnHorizontalArrangement).toPx()}
         }
-        /*if (defaultBlockInput != null) {
-            inBox += defaultBlockInput!!.getDynamicHeightPx(density)
-        }*/
         return inBox
     }
 
@@ -290,9 +281,6 @@ class IfElseBlock(
                 inBox = blockInput.second.getDynamicWidthPx(density)
             }
         }
-        /*if (defaultBlockInput != null) {
-            inBox += defaultBlockInput!!.getDynamicHeightPx(density)
-        }*/
         return inBox
     }
 

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,10 +45,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -76,17 +77,14 @@ fun CodeScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showConsole by remember { mutableStateOf(false) }
     val listOfBlocks = remember { mutableStateListOf<BasicBlock>() }
-    var blockId by remember { mutableStateOf<UUID?>(null) }
     val consoleOutput = remember { console }
     var menuForInnerBlock by remember { mutableStateOf(false) }
 
     val lazyListState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-
-    val scrollState = rememberScrollState()
-
     val Scope = rememberCoroutineScope()
     var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
+    val verticalScrollState = rememberScrollState()
+    val horizontalScrollState = rememberScrollState()
 
     val menuOff by animateDpAsState(
         targetValue = if ((showMenu || menuForInnerBlock) ) 0.dp else (-300).dp,
@@ -105,7 +103,7 @@ fun CodeScreen(
     var currentBodyBlock by remember { mutableStateOf<BodyBlock?>(null) }
     var temp = remember {mutableStateListOf<BasicBlock>()}
 
-    fun changeMenuSetting(bodyBlock: BodyBlock){
+    fun addBlockOnScreen(bodyBlock: BodyBlock){
         currentBodyBlock = bodyBlock
         temp.clear()
         temp.addAll(currentBodyBlock!!.blocks)
@@ -117,16 +115,16 @@ fun CodeScreen(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("Error", fontFamily = font) },
+                title = { Text(text = stringResource(R.string.Error), fontFamily = font) },
                 text = {
                     Text(
-                        "Invalid block position",
+                        text = stringResource(R.string.Invalid),
                         fontFamily = font
                     )
                 },
                 confirmButton = {
                     TextButton(onClick = { showDialog = false }) {
-                        Text("OK", fontFamily = font)
+                        Text(text = stringResource(R.string.Ok), fontFamily = font)
                     }
                 }
             )
@@ -160,7 +158,7 @@ fun CodeScreen(
                             .height(58.dp)
                     ) {
                         Text(
-                            "Launch code",
+                            text = stringResource(R.string.launch_code_button),
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontFamily = font,
@@ -180,7 +178,7 @@ fun CodeScreen(
                             .height(58.dp)
                     ) {
                         Text(
-                            "Clear",
+                            text = stringResource(R.string.clear_button),
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontFamily = font,
@@ -224,7 +222,7 @@ fun CodeScreen(
                         )
                     }
                     Text(
-                        "Code Editor",
+                        text = stringResource(R.string.code_editor),
                         color = Color.White,
                         modifier = Modifier.padding(start = 16.dp),
                         fontSize = 24.sp,
@@ -252,13 +250,15 @@ fun CodeScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp)
-                        .verticalScroll(scrollState)
+                        .verticalScroll(verticalScrollState)
+                        .horizontalScroll(horizontalScrollState)
                         .clickable { blockWithDeleteShownId = null },
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .height(2000.dp)
+                            .width(2000.dp)
                     ) {
                         listOfBlocks.forEach { block ->
                             key(block.id){
@@ -267,7 +267,7 @@ fun CodeScreen(
                                     blocksOnScreen = listOfBlocks,
                                     blockWithDeleteShownId = blockWithDeleteShownId,
                                     onShowDeleteChange = { id -> blockWithDeleteShownId = id },
-                                    onSwapMenu = { bodyBlock -> changeMenuSetting(bodyBlock)}
+                                    onSwapMenu = { bodyBlock -> addBlockOnScreen(bodyBlock)}
                                 )
                             }
                         }
@@ -311,7 +311,7 @@ fun CodeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Console Output",
+                        text = stringResource(R.string.console_output),
                         color = Color(0xFF7943DE),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
@@ -329,7 +329,7 @@ fun CodeScreen(
                         ),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("Close", fontFamily = font)
+                        Text(text = stringResource(R.string.close), fontFamily = font)
                     }
                 }
 
@@ -415,7 +415,7 @@ fun CodeScreen(
                                 lazyListState.animateScrollToItem(listOfBlocks.size - 1)
                             }
                         },
-                        onSwapMenu = { bodyBlock -> changeMenuSetting(bodyBlock)}
+                        onSwapMenu = { bodyBlock -> addBlockOnScreen(bodyBlock)}
                     )
                 }
             }
