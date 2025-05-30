@@ -222,6 +222,11 @@ class BodyBlock(
         return BlockStatement(statements)
     }
 
+    fun isValidBlockArrangement() : Boolean {
+        val container = Container(blocks)
+        return container.isValidBlockArrangement()
+    }
+
     fun getLowestPoint(density: Density): Float{
         var height = 0f
         for (block in blocks) {

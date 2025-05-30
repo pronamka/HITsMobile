@@ -70,10 +70,10 @@ data class BlockPosition(
 )
 
 fun onChange(block: BasicBlock, density: Density) {
-    if (block is IfElseBlock || block is WhileBlock || block is ForBlock) {
-        block.heightDP = with(density){block.getDynamicHeightPx(density).toDp()}
-        block.widthDP = with(density){block.getDynamicWidthPx(density).toDp()}
-    }
+//    if (block is IfElseBlock || block is WhileBlock || block is ForBlock) {
+//        block.heightDP = with(density){block.getDynamicHeightPx(density).toDp()}
+//        block.widthDP = with(density){block.getDynamicWidthPx(density).toDp()}
+//    }
 }
 
 object Constants {

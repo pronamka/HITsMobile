@@ -40,7 +40,6 @@ class CodeRunner(private val container: Container, private val console: MutableL
             console.add("Error: ${e.message}")
         }
         finally{
-
             Scopes.reset()
         }
     }
