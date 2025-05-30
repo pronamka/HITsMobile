@@ -1,6 +1,6 @@
 package com.example.hit
 
-import android.util.Log
+import Drag
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,14 +16,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -37,14 +37,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hit.blocks.AssignmentBlock
 import com.example.hit.blocks.BasicBlock
+import com.example.hit.blocks.BodyBlock
 import com.example.hit.blocks.BreakBlock
 import com.example.hit.blocks.ContinueBlock
 import com.example.hit.blocks.DeclarationBlock
@@ -65,11 +66,13 @@ data class BlockPosition(
     var widthPx: Float = 0f
 )
 
-fun onChange(block : BasicBlock, coordinates : LayoutCoordinates) {
-//    block.x = coordinates.positionOnScreen().x
-//    block.y = coordinates.positionOnScreen().y
-//    block.heightDP = coordinates.size.height.dp
-//    block.widthDP = coordinates.size.width.dp
+fun onChange(block : BasicBlock, coordinates : LayoutCoordinates, density: Density) {
+    if (block is IfElseBlock) {
+        val hasElse = block.defaultBlockInput != null
+        val elseIfCounts = block.blocksInput.size - 1
+        block.heightDP = block.getDynamicHeightPx(density, hasElse, elseIfCounts).dp
+        block.widthDP = coordinates.size.width.dp
+    }
 }
 
 
@@ -78,7 +81,12 @@ fun BlockItem(
     showMenu: Boolean = false,
     block: BasicBlock,
     onClick: () -> Unit,
+    onSwapMenu: (BodyBlock) -> Unit,
 ) {
+    var blockInnerId by remember { mutableStateOf<UUID?>(null) }
+    val density = LocalDensity.current
+    var innerBlockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
+
 
     val textFieldColors = TextFieldDefaults.colors(
         focusedTextColor = Color.DarkGray,
@@ -100,7 +108,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates)
+                        onChange(block, coordinates, density)
                     }
                     .background(
                         color = block.color,
@@ -181,7 +189,6 @@ fun BlockItem(
         }
 
         is IfElseBlock -> {
-            val density = LocalDensity.current
             var hasElse by remember { mutableStateOf(false) }
             var ifCondition by remember { mutableStateOf("") }
             var elseIfCounts by remember { mutableStateOf(listOf<String>()) }
@@ -190,7 +197,7 @@ fun BlockItem(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates)
+                        onChange(block, coordinates, density)
                     }
                     .wrapContentWidth()
                     .wrapContentHeight()
@@ -204,6 +211,7 @@ fun BlockItem(
                 Column(
                     modifier = Modifier
                         .wrapContentWidth()
+                        .wrapContentHeight()
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -232,6 +240,24 @@ fun BlockItem(
                             singleLine = true,
                             colors = textFieldColors
                         )
+                        Button(
+                            onClick = {
+                                if(!showMenu){
+                                    onSwapMenu(block.blocksInput[0].second)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF7943DE),
+                                contentColor = Color.White
+                            ),
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(Icons.Outlined.Add, contentDescription = null)
+                            }
+                        }
                     }
 
                     Box(
@@ -250,18 +276,33 @@ fun BlockItem(
                                 color = Color.White.copy(alpha = 0.5f),
                                 shape = RoundedCornerShape(16.dp)
                             )
-                    )
-
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .wrapContentSize()
+                                .padding(16.dp)
+                                .clickable { innerBlockWithDeleteShownId = null },
+                        ) {
+                            block.blocksInput[0].second.blocks.forEach{blockInner ->
+                                Drag(
+                                    block = blockInner,
+                                    active = blockInnerId == blockInner.id,
+                                    initID = {blockInnerId = blockInner.id},
+                                    blocksOnScreen = block.blocksInput[0].second.blocks,
+                                    del = { block.blocksInput[0].second.blocks.remove(blockInner) },
+                                    blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                    onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
+                                    onSwapMenu = onSwapMenu
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+                    }
 
                     elseIfCounts.forEachIndexed { index, condition ->
                         Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .border(
-                                    width = 1.dp,
-                                    color = Color.White.copy(alpha = 0.3f),
-                                    shape = RoundedCornerShape(20.dp)
-                                ),
+                                .fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Row(
@@ -272,7 +313,7 @@ fun BlockItem(
                                 Text(
                                     text = "ELSE IF",
                                     color = Color.White,
-                                    fontSize = 26.sp,
+                                    fontSize = 20.sp,
                                     fontWeight = FontWeight.Medium,
                                     fontFamily = font,
                                 )
@@ -291,6 +332,109 @@ fun BlockItem(
                                     singleLine = true,
                                     colors = textFieldColors
                                 )
+                                Button(
+                                    onClick = {
+                                        if(!showMenu){
+                                            onSwapMenu(block.blocksInput[index + 1].second)
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF7943DE),
+                                        contentColor = Color.White
+                                    ),
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(Icons.Outlined.Add, contentDescription = null)
+                                    }
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    .wrapContentWidth(unbounded = true)
+                                    .wrapContentHeight(unbounded = true)
+                                    .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp)
+                                    .background(
+                                        color = Color.White.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color.White.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(16.dp)
+                                        .clickable { innerBlockWithDeleteShownId = null },
+                                ) {
+                                    block.blocksInput[index + 1].second.blocks.forEach{blockInner ->
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Drag(
+                                                block = blockInner,
+                                                active = blockInnerId == blockInner.id,
+                                                initID = {blockInnerId = blockInner.id},
+                                                blocksOnScreen = block.blocksInput[index + 1].second.blocks,
+                                                del = { block.blocksInput[index + 1].second.blocks.remove(blockInner) },
+                                                blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                                onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
+                                                onSwapMenu = onSwapMenu
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(150.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    if (hasElse) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(unbounded = true)
+                                .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row (
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ){
+                                Text(
+                                    text = "ELSE",
+                                    color = Color.White,
+                                    fontSize = 26.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = font,
+                                )
+
+                                Button(
+                                    onClick = {
+                                        if(!showMenu){
+                                            onSwapMenu(block.blocksInput[block.blocksInput.size - 1].second)
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF7943DE),
+                                        contentColor = Color.White
+                                    ),
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(Icons.Outlined.Add, contentDescription = null)
+                                    }
+                                }
                             }
                             Box(
                                 modifier = Modifier
@@ -308,42 +452,32 @@ fun BlockItem(
                                         color = Color.White.copy(alpha = 0.5f),
                                         shape = RoundedCornerShape(16.dp)
                                     )
-                            )
-                        }
-                    }
-
-                    if (hasElse) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight(unbounded = true)
-                                .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "ELSE",
-                                color = Color.White,
-                                fontSize = 26.sp,
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = font,
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .wrapContentWidth()
-                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                                    .wrapContentHeight(unbounded = true)
-                                    .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
-                                    .background(
-                                        color = Color.White.copy(alpha = 0.2f),
-                                        shape = RoundedCornerShape(16.dp)
-                                    )
-                                    .border(
-                                        width = 2.dp,
-                                        color = Color.White.copy(alpha = 0.5f),
-                                        shape = RoundedCornerShape(16.dp)
-                                    )
-                            )
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(16.dp)
+                                        .clickable { innerBlockWithDeleteShownId = null },
+                                ) {
+                                    block.blocksInput[block.blocksInput.size - 1].second.blocks.forEach{blockFor ->
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Drag(
+                                                block = blockFor,
+                                                active = blockInnerId == blockFor.id,
+                                                initID = {blockInnerId = blockFor.id},
+                                                blocksOnScreen = block.blocksInput[block.blocksInput.size - 1].second.blocks,
+                                                del = { block.blocksInput[block.blocksInput.size - 1].second.blocks.remove(blockFor) },
+                                                blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                                onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
+                                                onSwapMenu = onSwapMenu
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(150.dp))
+                                }
+                            }
                         }
                     } else {
                         Row(
@@ -405,7 +539,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates)
+                        onChange(block, coordinates, density)
                     }
                     .background(
                         color = block.color,
@@ -471,7 +605,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates)
+                        onChange(block, coordinates,density)
                     }
                     .background(
                         color = block.color,
@@ -538,7 +672,7 @@ fun BlockItem(
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates)
+                        onChange(block, coordinates, density)
                     }
                     .background(
                         color = block.color,
@@ -671,7 +805,7 @@ fun BlockItem(
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates)
+                        onChange(block, coordinates, density)
                     }
                     .background(
                         color = block.color,
@@ -758,7 +892,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates)
+                        onChange(block, coordinates, density)
                     }
                     .background(
                         color = block.color,
@@ -790,7 +924,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates)
+                        onChange(block, coordinates, density)
                     }
                     .background(
                         color = block.color,

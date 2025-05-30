@@ -157,6 +157,8 @@ class BodyBlock(
     blockId: UUID,
 ) : BasicBlock(blockId, type = BlockType.BLOCK, color = Color(0xFF45A3FF)) {
     val blocks = mutableListOf<BasicBlock>()
+
+
     fun addBlock(block : BasicBlock) {
         blocks.add(block)
     }
@@ -185,16 +187,23 @@ class IfElseBlock(
         addElseIfBlock("")
     }
 
-    private var defaultBlockInput: BodyBlock? = null
+    var defaultBlockInput: BodyBlock? = null
 
 
-    fun getDynamicHeightPx(density: Density,hasElse: Boolean, elseIfCounts: Int): Float {
+    fun getDynamicHeightPx(density: Density, hasElse: Boolean, elseIfCounts: Int): Float {
         val base = 120.dp
         val elseIfBlockHeight = 160.dp * elseIfCounts
         val elseBlockHeight = if (hasElse) 100.dp else 0.dp
+        
+        var innerBlocksHeight = 0f
+        for ((_, bodyBlock) in blocksInput) {
+            for (block in bodyBlock.blocks) {
+                innerBlocksHeight += with(density) { block.heightDP.toPx() }
+            }
+        }
 
         return with(density) {
-            (base + elseIfBlockHeight + elseBlockHeight).toPx()
+            (base + elseIfBlockHeight + elseBlockHeight + innerBlocksHeight.dp).toPx()
         }
     }
 

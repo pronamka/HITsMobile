@@ -1,6 +1,5 @@
 import android.util.Log
 import com.example.hit.BlockItem
-import com.example.hit.BlockPosition
 import com.example.hit.font
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -24,6 +23,8 @@ import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.hit.blocks.BodyBlock
+import com.example.hit.blocks.IfElseBlock
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -34,7 +35,8 @@ fun Drag(
     blocksOnScreen: List<BasicBlock>,
     del: ()-> Unit,
     blockWithDeleteShownId: UUID?,
-    onShowDeleteChange: (UUID?) -> Unit
+    onShowDeleteChange: (UUID?) -> Unit,
+    onSwapMenu: (BodyBlock) -> Unit
 ){
     fun compatible(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop : Boolean): Boolean {
         val draggedBlock = blocksOnScreen.first { it.id == draggedBlockId }
@@ -82,7 +84,6 @@ fun Drag(
     )
 
     fun distance(point1: Pair<Float, Float>, point2: Pair<Float, Float>): Float {
-        //Log.println(Log.DEBUG, null, listOf(point1, point2).toString())
         val dx = point1.first - point2.first
         val dy = point1.second - point2.second
         return kotlin.math.sqrt(dx * dx + dy * dy)
@@ -100,21 +101,49 @@ fun Drag(
             val otherBottom = otherTop + otherHeightPx
 
             val otherTopCenter = Pair(otherBlock.x + otherBlock.getDynamicWidthPx(density) / 2, otherBlock.y)
-
-
             val otherBottomCenter = Pair(otherBlock.x + otherWidthPx / 2, otherBottom)
             val currentTopCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y)
+            val currentBottomCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y + currentBlock.getDynamicHeightPx(density))
 
-            val currentBottomCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y+currentBlock.getDynamicHeightPx(density))
-
-            Log.println(Log.DEBUG, null, listOf(currentBlock.y, otherTop).toString())
             val distanceCurrentTopToOtherBottom = distance(currentTopCenter, otherBottomCenter)
             if (distanceCurrentTopToOtherBottom < 50f) {
                 return Pair(otherBlock.x, otherBottom)
             }
+
             val distanceCurrentBottomToOtherTop = distance(currentBottomCenter, otherTopCenter)
             if (distanceCurrentBottomToOtherTop < 50f) {
-                return Pair(otherBlock.x, otherTop-currentBlock.getDynamicHeightPx(density))
+                return Pair(otherBlock.x, otherTop - currentBlock.getDynamicHeightPx(density))
+            }
+
+
+            if (otherBlock is IfElseBlock) {
+
+                val ifBlockTop = otherBlock.y
+                val ifBlockBottom = ifBlockTop + otherBlock.getDynamicHeightPx(density)
+                val ifBlockLeft = otherBlock.x
+                val ifBlockRight = ifBlockLeft + otherBlock.getDynamicWidthPx(density)
+                Log.println(Log.DEBUG, null, listOf(ifBlockTop, ifBlockBottom).toString())
+
+                if (currentBlock.x > ifBlockLeft && currentBlock.x < ifBlockRight &&
+                    currentBlock.y > ifBlockTop && currentBlock.y < ifBlockBottom) {
+                    var closestBlock: BasicBlock? = null
+                    var minDistance = Float.MAX_VALUE
+
+                    for (innerBlock in otherBlock.blocksInput[0].second.blocks) {
+                        val distance = distance(
+                            Pair(currentBlock.x, currentBlock.y),
+                            Pair(innerBlock.x, innerBlock.y)
+                        )
+                        if (distance < minDistance) {
+                            minDistance = distance
+                            closestBlock = innerBlock
+                        }
+                    }
+
+                    if (closestBlock != null) {
+                        return Pair(closestBlock.x, closestBlock.y)
+                    }
+                }
             }
         }
         return null
@@ -171,6 +200,7 @@ fun Drag(
         BlockItem(
             block = block,
             onClick = { onShowDeleteChange(null) },
+            onSwapMenu = onSwapMenu
         )
         if(block.id == blockWithDeleteShownId){
             Button(
