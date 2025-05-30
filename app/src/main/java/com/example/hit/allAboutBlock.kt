@@ -794,24 +794,64 @@ fun BlockItem(
                             fontWeight = FontWeight.Medium,
                             fontFamily = font
                         )
+
+                        Button(
+                            onClick = {
+                                if (!showMenu) {
+                                    onSwapMenu(block.blocks)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF7943DE),
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(Icons.Outlined.Add, contentDescription = null)
+                            }
+                        }
                     }
 
                     Box(
                         modifier = Modifier
-                            .wrapContentWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                            .wrapContentHeight(unbounded = true)
-                            .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
+                            .padding(
+                                horizontal = NumberConstants.bodyBlockHorizontalPadding,
+                                vertical = NumberConstants.bodyBlockVerticalPadding
+                            )
+                            .defaultMinSize(
+                                minHeight = NumberConstants.standardBlockHeight,
+                                minWidth = NumberConstants.standardBlockWidth
+                            )
+                            .height(block.blocks.getDynamicHeightDp(density))
+                            .width(block.blocks.getDynamicWidthDp(density))
+                            .clickable { innerBlockWithDeleteShownId = null }
                             .background(
-                                color = Color.White.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(16.dp)
+                                color = Color.White.copy(alpha = NumberConstants.bodyBlockTransparencyIndex),
+                                shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                             )
                             .border(
-                                width = 2.dp,
-                                color = Color.White.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                    )
+                                width = NumberConstants.borderWidth,
+                                color = Color.White.copy(alpha = NumberConstants.borderTransparencyIndex),
+                                shape = RoundedCornerShape(NumberConstants.roundCornerShape)
+                            )) {
+                        block.blocks.blocks.forEach { blockInner ->
+                            key(blockInner.id) {
+                                Drag(
+                                    block = blockInner,
+                                    blocksOnScreen = block.blocks.blocks,
+                                    blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                    onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
+                                    onSwapMenu = onSwapMenu,
+                                    onChangeSize = { onChange(blockInner, density) })
+                            }
+
+                        }
+                        Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
+                    }
                 }
             }
         }
@@ -878,24 +918,64 @@ fun BlockItem(
                             fontWeight = FontWeight.Medium,
                             fontFamily = font
                         )
+
+                        Button(
+                            onClick = {
+                                if (!showMenu) {
+                                    onSwapMenu(block.blocks)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF7943DE),
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(Icons.Outlined.Add, contentDescription = null)
+                            }
+                        }
                     }
 
                     Box(
                         modifier = Modifier
-                            .wrapContentWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                            .wrapContentHeight(unbounded = true)
-                            .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
+                            .padding(
+                                horizontal = NumberConstants.bodyBlockHorizontalPadding,
+                                vertical = NumberConstants.bodyBlockVerticalPadding
+                            )
+                            .defaultMinSize(
+                                minHeight = NumberConstants.standardBlockHeight,
+                                minWidth = NumberConstants.standardBlockWidth
+                            )
+                            .height(block.blocks.getDynamicHeightDp(density))
+                            .width(block.blocks.getDynamicWidthDp(density))
+                            .clickable { innerBlockWithDeleteShownId = null }
                             .background(
-                                color = Color.White.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(16.dp)
+                                color = Color.White.copy(alpha = NumberConstants.bodyBlockTransparencyIndex),
+                                shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                             )
                             .border(
-                                width = 2.dp,
-                                color = Color.White.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                    )
+                                width = NumberConstants.borderWidth,
+                                color = Color.White.copy(alpha = NumberConstants.borderTransparencyIndex),
+                                shape = RoundedCornerShape(NumberConstants.roundCornerShape)
+                            )) {
+                        block.blocks.blocks.forEach { blockInner ->
+                            key(blockInner.id) {
+                                Drag(
+                                    block = blockInner,
+                                    blocksOnScreen = block.blocks.blocks,
+                                    blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                    onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
+                                    onSwapMenu = onSwapMenu,
+                                    onChangeSize = { onChange(blockInner, density) })
+                            }
+
+                        }
+                        Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
+                    }
                 }
             }
         }
