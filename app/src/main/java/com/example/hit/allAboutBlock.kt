@@ -159,7 +159,7 @@ object NumberConstants {
         val parametersInputTextFieldWidth = 112.dp
 
         val rowWidth =
-            labelWidth + inputTextFieldWidth * 2 + parametersInputTextFieldWidth + horizontalArrangement * 4 + addBlockButtonWidth
+            labelWidth + inputTextFieldWidth * 2 + parametersInputTextFieldWidth + horizontalArrangement * 7 + singleSymbolWidth + addBlockButtonWidth
         val overallPadding = standardColumnPadding * 2 + standardBoxPadding * 2
     }
 }
@@ -601,6 +601,8 @@ fun BlockItem(
                                 onClick = {
                                     hasElse = true;
                                     block.addElseBlock()
+
+
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF7943DE)
@@ -1254,6 +1256,15 @@ fun BlockItem(
                             )
                         )
 
+                        Text(
+                            text = stringResource(R.string.simbol3),
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.singleSymbolWidth)
+                        )
+
                         OutlinedTextField(
                             value = block.inputParameters.getInputField(),
                             onValueChange = { block.inputParameters.set(it) },
@@ -1266,6 +1277,24 @@ fun BlockItem(
                             textStyle = TextStyle(
                                 fontSize = 18.sp, fontFamily = font
                             )
+                        )
+
+                        Text(
+                            text = stringResource(R.string.simbol4),
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.singleSymbolWidth)
+                        )
+
+                        Text(
+                            text = stringResource(R.string.simbol1),
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = font,
+                            modifier = Modifier.width(NumberConstants.singleSymbolWidth)
                         )
 
                         OutlinedTextField(
