@@ -73,11 +73,15 @@ fun onChange(block: BasicBlock, density: Density) {
 }
 
 object NumberConstants {
+
     val bodyBlockHorizontalPadding = 8.dp
     val bodyBlockVerticalPadding = 12.dp
 
     val standardColumnPadding = 8.dp
     val standardColumnHorizontalArrangement = 8.dp
+    val standardColumnVerticalArrangement = 8.dp
+
+    val standardRowHorizontalArrangement = 8.dp
 
     val standardBlockWidth = 256.dp
     val standardBlockHeight = 80.dp
@@ -95,13 +99,20 @@ object NumberConstants {
     val standardAddElseBlockButtonHeight = 48.dp
     val standardAddElseBlockButtonWidth = 104.dp
 
-    val standardIfLabelWidth = 20.dp
+    val standardIfLabelWidth = 60.dp
 
     val addBlockButtonWidth = 60.dp
 
     val rowWidth = standardIfLabelWidth + standardInputFieldWidth + addBlockButtonWidth
 
     val borderWidth = 2.dp
+
+
+    val roundCornerShape = 16.dp
+
+
+    val bodyBlockTransparencyIndex = 0.2f
+    val borderTransparencyIndex = 0.5f
 }
 
 
@@ -305,13 +316,13 @@ fun BlockItem(
                             .width(block.blocksInput[0].second.getDynamicWidthDp(density))
                             .clickable { innerBlockWithDeleteShownId = null }
                             .background(
-                                color = Color.White.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(16.dp)
+                                color = Color.White.copy(alpha = NumberConstants.bodyBlockTransparencyIndex),
+                                shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                             )
                             .border(
-                                width = 2.dp,
-                                color = Color.White.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(16.dp)
+                                width = NumberConstants.borderWidth,
+                                color = Color.White.copy(alpha = NumberConstants.borderTransparencyIndex),
+                                shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                             )) {
                         block.blocksInput[0].second.blocks.forEach { blockInner ->
                             key(blockInner.id) {
@@ -331,11 +342,11 @@ fun BlockItem(
                     elseIfCounts.forEachIndexed { index, condition ->
                         Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(NumberConstants.standardRowHorizontalArrangement),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -344,6 +355,7 @@ fun BlockItem(
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Medium,
                                     fontFamily = font,
+                                    modifier = Modifier.width(NumberConstants.standardIfLabelWidth)
                                 )
                                 OutlinedTextField(
                                     value = condition,
@@ -354,8 +366,8 @@ fun BlockItem(
                                         block.setNewCondition(elseIfCounts[index], index + 1)
                                     },
                                     modifier = Modifier
-                                        .width(252.dp)
-                                        .height(56.dp),
+                                        .width(NumberConstants.standardInputFieldWidth)
+                                        .height(NumberConstants.standardInputFieldHeight),
                                     enabled = !showMenu,
                                     singleLine = true,
                                     colors = textFieldColors
@@ -370,6 +382,7 @@ fun BlockItem(
                                         containerColor = Color(0xFF7943DE),
                                         contentColor = Color.White
                                     ),
+                                    modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                                 ) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -381,36 +394,46 @@ fun BlockItem(
                             }
                             Box(
                                 modifier = Modifier
-                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                                    .wrapContentWidth(unbounded = true)
-                                    .wrapContentHeight(unbounded = true)
-                                    .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp)
+                                    .padding(
+                                        horizontal = NumberConstants.bodyBlockHorizontalPadding,
+                                        vertical = NumberConstants.bodyBlockVerticalPadding
+                                    )
+                                    .defaultMinSize(
+                                        minHeight = NumberConstants.standardBlockHeight,
+                                        minWidth = NumberConstants.standardBlockWidth
+                                    )
+                                    .height(
+                                        block.blocksInput[index + 1].second.getDynamicHeightDp(
+                                            density
+                                        )
+                                    )
+                                    .width(
+                                        block.blocksInput[index + 1].second.getDynamicWidthDp(
+                                            density
+                                        )
+                                    )
                                     .clickable { innerBlockWithDeleteShownId = null }
                                     .background(
-                                        color = Color.White.copy(alpha = 0.2f),
-                                        shape = RoundedCornerShape(16.dp)
+                                        color = Color.White.copy(alpha = NumberConstants.bodyBlockTransparencyIndex),
+                                        shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                                     )
                                     .border(
-                                        width = 2.dp,
-                                        color = Color.White.copy(alpha = 0.5f),
-                                        shape = RoundedCornerShape(16.dp)
+                                        width = NumberConstants.borderWidth,
+                                        color = Color.White.copy(alpha = NumberConstants.borderTransparencyIndex),
+                                        shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                                     )) {
                                 block.blocksInput[index + 1].second.blocks.forEach { blockInner ->
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Drag(
-                                            block = blockInner,
-                                            blocksOnScreen = block.blocksInput[index + 1].second.blocks,
-                                            blockWithDeleteShownId = innerBlockWithDeleteShownId,
-                                            onShowDeleteChange = { id ->
-                                                innerBlockWithDeleteShownId = id
-                                            },
-                                            onSwapMenu = onSwapMenu,
-                                            onChangeSize = { onChange(blockInner, density) })
-                                    }
+                                    Drag(
+                                        block = blockInner,
+                                        blocksOnScreen = block.blocksInput[index + 1].second.blocks,
+                                        blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                        onShowDeleteChange = { id ->
+                                            innerBlockWithDeleteShownId = id
+                                        },
+                                        onSwapMenu = onSwapMenu,
+                                        onChangeSize = { onChange(blockInner, density) })
                                 }
-                                Spacer(modifier = Modifier.height(150.dp))
+                                Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
                             }
                         }
                     }
@@ -420,8 +443,11 @@ fun BlockItem(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight(unbounded = true)
-                                .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                .defaultMinSize(
+                                    minHeight = NumberConstants.standardBlockHeight,
+                                    minWidth = NumberConstants.standardBlockWidth
+                                ),
+                            verticalArrangement = Arrangement.spacedBy(NumberConstants.standardColumnVerticalArrangement)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -434,6 +460,7 @@ fun BlockItem(
                                     fontSize = 26.sp,
                                     fontWeight = FontWeight.Medium,
                                     fontFamily = font,
+                                    modifier = Modifier.width(NumberConstants.standardIfLabelWidth)
                                 )
 
                                 Button(
@@ -446,6 +473,7 @@ fun BlockItem(
                                         containerColor = Color(0xFF7943DE),
                                         contentColor = Color.White
                                     ),
+                                    modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                                 ) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -457,19 +485,25 @@ fun BlockItem(
                             }
                             Box(
                                 modifier = Modifier
-                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                                    .wrapContentWidth(unbounded = true)
-                                    .wrapContentHeight(unbounded = true)
-                                    .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
+                                    .padding(
+                                        horizontal = NumberConstants.bodyBlockHorizontalPadding,
+                                        vertical = NumberConstants.bodyBlockVerticalPadding
+                                    )
+                                    .defaultMinSize(
+                                        minHeight = NumberConstants.standardBlockHeight,
+                                        minWidth = NumberConstants.standardBlockWidth
+                                    )
+                                    .height(block.defaultBlockInput!!.getDynamicHeightDp(density))
+                                    .width(block.defaultBlockInput!!.getDynamicWidthDp(density))
                                     .clickable { innerBlockWithDeleteShownId = null }
                                     .background(
-                                        color = Color.White.copy(alpha = 0.2f),
-                                        shape = RoundedCornerShape(16.dp)
+                                        color = Color.White.copy(alpha = NumberConstants.bodyBlockTransparencyIndex),
+                                        shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                                     )
                                     .border(
-                                        width = 2.dp,
-                                        color = Color.White.copy(alpha = 0.5f),
-                                        shape = RoundedCornerShape(16.dp)
+                                        width = NumberConstants.borderWidth,
+                                        color = Color.White.copy(alpha = NumberConstants.borderTransparencyIndex),
+                                        shape = RoundedCornerShape(NumberConstants.roundCornerShape)
                                     )) {
                                 block.defaultBlockInput!!.blocks.forEach { blockFor ->
                                     Box(
@@ -486,7 +520,7 @@ fun BlockItem(
                                             onChangeSize = { onChange(blockFor, density) })
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(150.dp))
+                                Spacer(modifier = Modifier.height(NumberConstants.standardSpacerHeight))
                             }
                         }
                     } else {

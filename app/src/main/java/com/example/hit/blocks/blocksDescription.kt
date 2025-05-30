@@ -203,7 +203,7 @@ class BodyBlock(
         return BlockStatement(statements)
     }
 
-    fun isValidBlockArrangement() : Boolean {
+    fun isValidBlockArrangement(): Boolean {
         val container = Container(blocks)
         return container.isValidBlockArrangement()
     }
@@ -266,15 +266,15 @@ class IfElseBlock(
 
     override fun getDynamicHeightPx(density: Density): Float {
         var inBox = 0f
-        inBox += with(density) { (standardHeight).toPx() }
 
         for (blockInput in blocksInput) {
             inBox += blockInput.second.getDynamicHeightPx(density)
-            inBox += with(density) { (NumberConstants.standardColumnHorizontalArrangement).toPx() }
+            inBox += with(density) { (standardHeight).toPx() }
         }
+
         if (defaultBlockInput != null) {
             inBox += defaultBlockInput!!.getDynamicHeightPx(density)
-            inBox += with(density) { (NumberConstants.standardColumnHorizontalArrangement).toPx() }
+            inBox += with(density) { (standardHeight).toPx() }
         }
         inBox = max(inBox, super.getDynamicHeightPx(density))
         return inBox
@@ -289,7 +289,7 @@ class IfElseBlock(
         for (blockInput in blocksInput) {
             inBox = max(inBox, blockInput.second.getDynamicWidthPx(density))
         }
-        inBox += with(density) { NumberConstants.standardBoxPadding.toPx() * 2 + NumberConstants.borderWidth.toPx()*2 + 10.dp.toPx() }
+        inBox += with(density) { NumberConstants.standardBoxPadding.toPx() * 2 + NumberConstants.borderWidth.toPx() * 2 + 10.dp.toPx() }
         inBox = max(inBox, super.getDynamicWidthPx(density))
         return inBox
     }
