@@ -47,6 +47,9 @@ class Variable(
         if (TypesManager.valueTypeCorresponds(type, variableValue)) {
             return variableValue
         }
+        if (type is VariableType.DOUBLE && variableValue is IntValue){
+            return DoubleValue(variableValue.value.toDouble())
+        }
         throw UnexpectedTypeException(
             "Cannot assign a value of type " +
                     "${variableValue::class.java.simpleName} to a " +
@@ -127,6 +130,13 @@ class IntValue(
             else -> throw IncompatibleTypesException("comparison", listOf(this, other))
         }
     }
+
+    override fun callMethod(methodName: String, parameters: List<IOperation>): Value<*> {
+        return when (methodName) {
+            "toString" -> StringValue(value.toString())
+            else -> super.callMethod(methodName, parameters)
+        }
+    }
 }
 
 class DoubleValue(
@@ -179,6 +189,13 @@ class DoubleValue(
             else -> throw IncompatibleTypesException("comparison", listOf(this, other))
         }
     }
+
+    override fun callMethod(methodName: String, parameters: List<IOperation>): Value<*> {
+        return when (methodName) {
+            "toString" -> StringValue(value.toString())
+            else -> super.callMethod(methodName, parameters)
+        }
+    }
 }
 
 class StringValue(value: String) : SupportsArithmetic<String>(value) {
@@ -222,6 +239,22 @@ class StringValue(value: String) : SupportsArithmetic<String>(value) {
     override fun callMethod(methodName: String, parameters: List<IOperation>): Value<*> {
         return when (methodName) {
             "length" -> IntValue(value.length)
+            "toInt" -> {
+                val newValue = value.toIntOrNull()
+                if (newValue == null) {
+                    throw InvalidOperationException("Cannot convert string $value to Int.")
+                }
+                return IntValue(newValue)
+            }
+
+            "toDouble" -> {
+                val newValue = value.toDoubleOrNull()
+                if (newValue == null) {
+                    throw InvalidOperationException("Cannot convert string $value to Int.")
+                }
+                return DoubleValue(newValue)
+            }
+
             else -> super.callMethod(methodName, parameters)
         }
     }
@@ -230,6 +263,13 @@ class StringValue(value: String) : SupportsArithmetic<String>(value) {
 class BoolValue(value: Boolean) : Value<Boolean>(value) {
     override fun toString(): String {
         return "BoolValue: $value"
+    }
+
+    override fun callMethod(methodName: String, parameters: List<IOperation>): Value<*> {
+        return when (methodName) {
+            "toString" -> StringValue(value.toString())
+            else -> super.callMethod(methodName, parameters)
+        }
     }
 }
 
@@ -319,6 +359,7 @@ class ArrayValue<T : Value<*>>(
     override fun callMethod(methodName: String, parameters: List<IOperation>): Value<*> {
         return when (methodName) {
             "size" -> IntValue(value.size)
+            "toString" -> StringValue(getElementsString())
             else -> super.callMethod(methodName, parameters)
         }
     }

@@ -1,5 +1,8 @@
 package com.example.hit.blocks
 
+import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -24,17 +27,34 @@ import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
 import com.example.hit.language.parser.operations.IOperation
-import java.security.Policy.Parameters
 import java.util.UUID
+
+val blockTypeToColor = mapOf(
+    BlockType.ASSIGNMENT to Color(0xFF45A3FF),
+    BlockType.DECLARATION to Color(0xFF45A3FF),
+    BlockType.INITIALIZATION to Color(0xFF45A3FF),
+    BlockType.PRINT to Color(0xFF45A3FF),
+    BlockType.BLOCK to Color(0xFF45A3FF),
+    BlockType.FUNCTION to Color(0xFF45A3FF),
+    BlockType.IF to Color(0xFFBD3FCB),
+    BlockType.FOR to Color(0xFF7745FF),
+    BlockType.WHILE to Color(0xFF7745FF),
+    BlockType.BREAK to Color(0xFFFF9645),
+    BlockType.CONTINUE to Color(0xFFFF9645),
+    BlockType.RETURN to Color(0xFFFF9645)
+)
 
 abstract class BasicBlock(
     var id: UUID,
     val type: BlockType,
-    var color: Color,
+    var color: MutableState<Color>,
+    var x: Float = 0f,
+    var y: Float = 0f,
     var topConnection: BasicBlock? = null,
     var bottomConnection: BasicBlock? = null,
     var heightDP: Dp = 80.dp,
-    var connectionCnt: Int = 0
+    var widthDP: Dp = 256.dp,
+    var zIndex: Float = 0f
 ) {
     fun move() {
         if (topConnection != null) {
@@ -46,19 +66,21 @@ abstract class BasicBlock(
             bottomConnection = null
         }
     }
-    fun isBottomCompatible(topBlock : BasicBlock) : Boolean{
-        return topBlock.bottomConnection == null
+
+    fun isBottomCompatible(): Boolean {
+        return bottomConnection == null
     }
 
-    fun isTopCompatible(bottomBlock : BasicBlock) : Boolean{
-        return bottomBlock.topConnection == null
+    fun isTopCompatible(): Boolean {
+        return topConnection == null
     }
 
-    fun connectTopBlock(topBlock : BasicBlock) {
+    fun connectTopBlock(topBlock: BasicBlock) {
         topConnection = topBlock
         topBlock.bottomConnection = this
     }
-    fun connectBottomBlock(bottomBlock : BasicBlock) {
+
+    fun connectBottomBlock(bottomBlock: BasicBlock) {
         bottomConnection = bottomBlock
         bottomBlock.topConnection = this
     }
@@ -69,13 +91,20 @@ abstract class BasicBlock(
     open fun getDynamicHeightPx(density: Density): Float {
         return with(density) { heightDP.toPx() }
     }
+
+    open fun getDynamicWidthPx(density: Density): Float {
+        return with(density) { widthDP.toPx() }
+    }
 }
 
-
-class AssignmentBlock (
+class AssignmentBlock(
     blockId: UUID,
-    color: Color = Color(0xFF45A3FF),
-) : BasicBlock(id = blockId, type = BlockType.ASSIGNMENT, color = color) {
+    color: Color = Color(0xFF45A3FF)
+) : BasicBlock(
+    id = blockId,
+    type = BlockType.ASSIGNMENT,
+    color = mutableStateOf(color)
+) {
     val nameInput = StringInputField()
     val valueInput = OperationInputField()
 
@@ -87,14 +116,18 @@ class AssignmentBlock (
     }
 
     override fun deepCopy(): BasicBlock {
-        return AssignmentBlock(UUID.randomUUID())
+        return AssignmentBlock(UUID.randomUUID(), color.value)
     }
 }
 
 class DeclarationBlock(
     blockId: UUID,
-    color: Color = Color(0xFF45A3FF),
-) : BasicBlock(blockId, type = BlockType.DECLARATION, color = color) {
+    color: Color = Color(0xFF45A3FF)
+) : BasicBlock(
+    blockId,
+    type = BlockType.DECLARATION,
+    color = mutableStateOf(color)
+) {
     val nameInput = NameInputField()
     val typeInput = TypeInputField()
 
@@ -105,14 +138,18 @@ class DeclarationBlock(
     }
 
     override fun deepCopy(): BasicBlock {
-        return DeclarationBlock(UUID.randomUUID())
+        return DeclarationBlock(UUID.randomUUID(), color.value)
     }
 }
 
 class InitializationBlock(
     blockId: UUID,
-    color: Color = Color(0xFF45A3FF),
-) : BasicBlock(blockId, type = BlockType.INITIALIZATION, color = color) {
+    color: Color = Color(0xFF45A3FF)
+) : BasicBlock(
+    blockId,
+    type = BlockType.INITIALIZATION,
+    color = mutableStateOf(color)
+) {
     val nameInput = NameInputField()
     val typeInput = TypeInputField()
     val valueInput = OperationInputField()
@@ -125,13 +162,17 @@ class InitializationBlock(
     }
 
     override fun deepCopy(): BasicBlock {
-        return InitializationBlock(UUID.randomUUID())
+        return InitializationBlock(UUID.randomUUID(), color.value)
     }
 }
 
 class PrintBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.PRINT, color = Color(0xFF45A3FF)) {
+    blockId: UUID
+) : BasicBlock(
+    blockId,
+    type = BlockType.PRINT,
+    color = mutableStateOf(Color(0xFF45A3FF))
+) {
     val valueInput = OperationInputField()
 
     override fun execute(): PrintStatement {
@@ -145,10 +186,15 @@ class PrintBlock(
 }
 
 class BodyBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.BLOCK, color = Color(0xFF45A3FF)) {
+    blockId: UUID
+) : BasicBlock(
+    blockId,
+    type = BlockType.BLOCK,
+    color = mutableStateOf(Color(0xFF45A3FF))
+) {
     val blocks = mutableListOf<BasicBlock>()
-    fun addBlock(block : BasicBlock) {
+
+    fun addBlock(block: BasicBlock) {
         blocks.add(block)
     }
 
@@ -156,7 +202,7 @@ class BodyBlock(
         val container = Container(blocks)
         val orderedBlocks = container.getOrderedBlocks()
         val statements = mutableListOf<IStatement>()
-        for (block in orderedBlocks){
+        for (block in orderedBlocks) {
             statements.add(block.execute())
         }
         return BlockStatement(statements)
@@ -168,8 +214,12 @@ class BodyBlock(
 }
 
 class IfElseBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.IF, color = Color(0xFFBD3FCB)) {
+    blockId: UUID
+) : BasicBlock(
+    blockId,
+    type = BlockType.IF,
+    color = mutableStateOf(Color(0xFFBD3FCB))
+) {
     var blocksInput = mutableListOf<Pair<OperationInputField, BodyBlock>>()
 
     init {
@@ -178,26 +228,23 @@ class IfElseBlock(
 
     private var defaultBlockInput: BodyBlock? = null
 
-
-    fun getDynamicHeightPx(density: Density,hasElse: Boolean, elseIfCounts: Int): Float {
-        val base = 120.dp
-        val elseIfBlockHeight = 160.dp * elseIfCounts
-        val elseBlockHeight = if (hasElse) 100.dp else 0.dp
-
+    override fun getDynamicHeightPx(density: Density): Float {
+        val base = 115.dp
+        val elseIfBlockHeight = 160.dp * blocksInput.size
+        val elseBlockHeight = if (defaultBlockInput != null) 100.dp else 0.dp
         return with(density) {
             (base + elseIfBlockHeight + elseBlockHeight).toPx()
         }
     }
 
-    fun addElseIfBlock(condition : String) {
+    fun addElseIfBlock(condition: String) {
         val conditionInput = OperationInputField()
         conditionInput.set(condition)
         val block = BodyBlock(blockId = UUID.randomUUID())
         blocksInput.add(Pair(conditionInput, block))
     }
 
-
-    fun setNewCondition(condition : String, index : Int) {
+    fun setNewCondition(condition: String, index: Int) {
         val conditionInput = OperationInputField()
         conditionInput.set(condition)
         blocksInput[index] = Pair(conditionInput, blocksInput[index].second)
@@ -214,7 +261,7 @@ class IfElseBlock(
         for (blockInput in blocksInput) {
             val operation = blockInput.first.getOperation()
             val statements = mutableListOf<IStatement>()
-            for (block in blockInput.second.blocks){
+            for (block in blockInput.second.blocks) {
                 statements.add(block.execute())
             }
             blocks.add(Pair(operation, BlockStatement(statements)))
@@ -237,8 +284,12 @@ class IfElseBlock(
 }
 
 class ForBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.FOR, color = Color(0xFF7745FF)) {
+    blockId: UUID
+) : BasicBlock(
+    blockId,
+    type = BlockType.FOR,
+    color = mutableStateOf(Color(0xFF7745FF))
+) {
     val initializerInput = DeclarationStatementInputField()
     val conditionInput = OperationInputField()
     val stateChangeInput = AssignmentStatementInputField()
@@ -249,7 +300,7 @@ class ForBlock(
         val operation = conditionInput.getOperation()
         val stateChange = stateChangeInput.getAssignmentStatement()
         val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks){
+        for (block in blocks.blocks) {
             statements.add(block.execute())
         }
         return ForLoop(initializer, operation, stateChange, BlockStatement(statements))
@@ -260,17 +311,20 @@ class ForBlock(
     }
 }
 
-
 class WhileBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.WHILE, color = Color(0xFF7745FF)) {
+    blockId: UUID
+) : BasicBlock(
+    blockId,
+    type = BlockType.WHILE,
+    color = mutableStateOf(Color(0xFF7745FF))
+) {
     val conditionInput = OperationInputField()
     val blocks = BodyBlock(blockId = UUID.randomUUID())
 
     override fun execute(): WhileLoop {
         val operation = conditionInput.getOperation()
         val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks){
+        for (block in blocks.blocks) {
             statements.add(block.execute())
         }
         return WhileLoop(operation, BlockStatement(statements))
@@ -282,8 +336,12 @@ class WhileBlock(
 }
 
 class BreakBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.BREAK, color = Color(0xFFFF9645)) {
+    blockId: UUID
+) : BasicBlock(
+    blockId,
+    type = BlockType.BREAK,
+    color = mutableStateOf(Color(0xFFFF9645))
+) {
     override fun execute(): BreakStatement {
         return BreakStatement()
     }
@@ -294,8 +352,12 @@ class BreakBlock(
 }
 
 class ContinueBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.CONTINUE, color = Color(0xFFFF9645)) {
+    blockId: UUID
+) : BasicBlock(
+    blockId,
+    type = BlockType.CONTINUE,
+    color = mutableStateOf(Color(0xFFFF9645))
+) {
     override fun execute(): ContinueStatement {
         return ContinueStatement()
     }
@@ -306,8 +368,12 @@ class ContinueBlock(
 }
 
 class ReturnBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.RETURN, color = Color(0xFFFF9645)) {
+    blockId: UUID
+) : BasicBlock(
+    blockId,
+    type = BlockType.RETURN,
+    color = mutableStateOf(Color(0xFFFF9645))
+) {
     val valueInputField = OperationInputField()
 
     override fun execute(): ReturnStatement {
@@ -320,8 +386,12 @@ class ReturnBlock(
 }
 
 class FunctionBlock(
-    blockId: UUID,
-) : BasicBlock(blockId, type = BlockType.FUNCTION, color = Color(0xFF45A3FF)) {
+    blockId: UUID
+) : BasicBlock(
+    blockId,
+    type = BlockType.FUNCTION,
+    color = mutableStateOf(Color(0xFF45A3FF))
+) {
     val nameInput = NameInputField()
     val returnValueTypeInput = TypeInputField()
     val inputParameters = FunctionParametersInputField()
@@ -332,7 +402,7 @@ class FunctionBlock(
         val returnValueType = returnValueTypeInput.getType()
         val statements = mutableListOf<IStatement>()
         val parameters = inputParameters.getFunctionParametersInputField()
-        for (block in blocks.blocks){
+        for (block in blocks.blocks) {
             statements.add(block.execute())
         }
         return FunctionDeclarationStatement(name, parameters, BlockStatement(statements), returnValueType)
