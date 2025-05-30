@@ -1,6 +1,10 @@
 package com.example.hit.blocks.container
 
 import com.example.hit.blocks.BasicBlock
+import com.example.hit.blocks.ForBlock
+import com.example.hit.blocks.FunctionBlock
+import com.example.hit.blocks.IfElseBlock
+import com.example.hit.blocks.WhileBlock
 
 class Container(private val blocks : MutableList<BasicBlock>) {
 
@@ -18,6 +22,31 @@ class Container(private val blocks : MutableList<BasicBlock>) {
 
         while (current != null) {
             orderedBlocks.add(current)
+            if (current is IfElseBlock) {
+                for ((_, bodyBlock) in current.blocksInput) {
+                    if (!bodyBlock.isValidBlockArrangement()) {
+                        return false
+                    }
+                }
+            }
+            if (current is ForBlock) {
+                val bodyBlock = current.blocks
+                if (!bodyBlock.isValidBlockArrangement()) {
+                    return false
+                }
+            }
+            if (current is WhileBlock) {
+                val bodyBlock = current.blocks
+                if (!bodyBlock.isValidBlockArrangement()) {
+                    return false
+                }
+            }
+            if (current is FunctionBlock) {
+                val bodyBlock = current.blocks
+                if (!bodyBlock.isValidBlockArrangement()) {
+                    return false
+                }
+            }
             current = current.bottomConnection
         }
 
@@ -31,6 +60,7 @@ class Container(private val blocks : MutableList<BasicBlock>) {
         if (blocks.isEmpty()) return emptyList()
 
         val roots = blocks.filter { it.topConnection == null }
+
 
         val orderedBlocks = mutableListOf<BasicBlock>()
         var current: BasicBlock? = roots.first()

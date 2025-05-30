@@ -48,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -80,11 +81,16 @@ fun CodeScreen(
     val consoleOutput = remember { console }
     var menuForInnerBlock by remember { mutableStateOf(false) }
 
+    val density = LocalDensity.current
+
     val lazyListState = rememberLazyListState()
-    val Scope = rememberCoroutineScope()
-    var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
     val verticalScrollState = rememberScrollState()
     val horizontalScrollState = rememberScrollState()
+
+    val Scope = rememberCoroutineScope()
+    var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
 
     val menuOff by animateDpAsState(
         targetValue = if ((showMenu || menuForInnerBlock) ) 0.dp else (-300).dp,
@@ -248,7 +254,6 @@ fun CodeScreen(
 
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
                         .padding(16.dp)
                         .verticalScroll(verticalScrollState)
                         .horizontalScroll(horizontalScrollState)
@@ -256,9 +261,8 @@ fun CodeScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
                             .height(2000.dp)
-                            .width(2000.dp)
+                            .width(1000.dp)
                     ) {
                         listOfBlocks.forEach { block ->
                             key(block.id){
@@ -267,7 +271,8 @@ fun CodeScreen(
                                     blocksOnScreen = listOfBlocks,
                                     blockWithDeleteShownId = blockWithDeleteShownId,
                                     onShowDeleteChange = { id -> blockWithDeleteShownId = id },
-                                    onSwapMenu = { bodyBlock -> addBlockOnScreen(bodyBlock)}
+                                    onSwapMenu = { bodyBlock -> addBlockOnScreen(bodyBlock)},
+                                    onChangeSize = {onChange(block, density)}
                                 )
                             }
                         }

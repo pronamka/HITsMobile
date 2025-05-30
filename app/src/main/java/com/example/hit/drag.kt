@@ -23,9 +23,11 @@ import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
 import com.example.hit.R
 import com.example.hit.blocks.BodyBlock
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
@@ -37,6 +39,7 @@ fun Drag(
     blockWithDeleteShownId: UUID?,
     onShowDeleteChange: (UUID?) -> Unit,
     onSwapMenu: (BodyBlock) -> Unit,
+    onChangeSize: () -> Unit,
 ) {
 
     var temp = remember { mutableStateListOf(blocksOnScreen) }
@@ -97,29 +100,29 @@ fun Drag(
 
             val otherHeightPx = otherBlock.getDynamicHeightPx(density)
             val otherWidthPx = otherBlock.getDynamicWidthPx(density)
+            val otherXStart = otherBlock.x
+            val otherXEnd = otherBlock.x+otherWidthPx
             val otherTop = otherBlock.y
             val otherBottom = otherTop + otherHeightPx
 
-            val otherTopCenter =
-                Pair(otherBlock.x + otherBlock.getDynamicWidthPx(density) / 2, otherBlock.y)
+            val thisHeightPx = block.getDynamicHeightPx(density)
+            val thisWidthPx = block.getDynamicWidthPx(density)
+            val thisXStart = block.x
+            val thisXEnd = block.x+thisWidthPx
+            val thisTop = block.y
+            val thisBottom = thisTop + thisHeightPx
 
-            val otherBottomCenter = Pair(otherBlock.x + otherWidthPx / 2, otherBottom)
-            val currentTopCenter =
-                Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y)
 
-            val currentBottomCenter = Pair(
-                currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2,
-                currentBlock.y + currentBlock.getDynamicHeightPx(density)
-            )
+            val intersectionSize = min(otherXEnd, thisXEnd) - max(otherXStart, thisXStart)
 
-            //Log.println(Log.DEBUG, null, listOf(currentBlock.y, otherTop).toString())
-            val distanceCurrentTopToOtherBottom = distance(currentTopCenter, otherBottomCenter)
-            //Log.println(Log.DEBUG, null, otherBlock.bottomConnection.toString())
-            if (distanceCurrentTopToOtherBottom < 50f && otherBlock.isBottomCompatible()) {
+            val distanceCurrentTopToOtherBottom = abs(thisTop-otherBottom)
+
+            if (distanceCurrentTopToOtherBottom < 30f && intersectionSize > min(thisWidthPx, otherWidthPx)*0.7 && otherBlock.isBottomCompatible()) {
                 return Snap(otherBlock.x, otherBottom, otherBlock, true) // block to to other bottom
             }
-            val distanceCurrentBottomToOtherTop = distance(currentBottomCenter, otherTopCenter)
-            if (distanceCurrentBottomToOtherTop < 50f && otherBlock.isTopCompatible()) {
+
+            val distanceCurrentBottomToOtherTop = abs(thisBottom-otherTop)
+            if (distanceCurrentBottomToOtherTop < 30f && intersectionSize > min(thisWidthPx, otherWidthPx)*0.7 && otherBlock.isTopCompatible()) {
                 return Snap(
                     otherBlock.x,
                     otherTop - currentBlock.getDynamicHeightPx(density),
@@ -158,6 +161,7 @@ fun Drag(
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
+                        onChangeSize()
                         increaseZIndex()
                         block.move()
                         snapTarget = null
@@ -205,7 +209,7 @@ fun Drag(
         BlockItem(
             block = block,
             onClick = { onShowDeleteChange(null) },
-            onSwapMenu = onSwapMenu
+            onSwapMenu = onSwapMenu,
         )
         if (block.id == blockWithDeleteShownId) {
             Button(
