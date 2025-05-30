@@ -28,9 +28,6 @@ class CodeRunner(private val container: Container, private val console: MutableL
                 try{
                     val statement = statements[i]
                     statement.evaluate()
-                    if (statement is PrintStatement){
-                        console.add(statement.outputValue!!)
-                    }
                 }
                 catch (e: Exception) {
                     errorIndex = i

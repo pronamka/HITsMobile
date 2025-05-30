@@ -321,7 +321,7 @@ fun BlockItem(
                                         elseIfCounts = elseIfCounts.toMutableList().also {
                                             it[index] = newCondition
                                         }
-                                        block.setNewCondition(condition, index + 1)
+                                        block.setNewCondition(elseIfCounts[index], index + 1)
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth(0.5f)
@@ -416,7 +416,7 @@ fun BlockItem(
                                 Button(
                                     onClick = {
                                         if(!showMenu){
-                                            onSwapMenu(block.blocksInput[block.blocksInput.size - 1].second)
+                                            onSwapMenu(block.defaultBlockInput!!)
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(
@@ -455,13 +455,13 @@ fun BlockItem(
                                         .padding(16.dp)
                                         .clickable { innerBlockWithDeleteShownId = null },
                                 ) {
-                                    block.blocksInput[block.blocksInput.size - 1].second.blocks.forEach{blockFor ->
+                                    block.defaultBlockInput!!.blocks.forEach{blockFor ->
                                         Box(
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Drag(
                                                 block = blockFor,
-                                                blocksOnScreen = block.blocksInput[block.blocksInput.size - 1].second.blocks,
+                                                blocksOnScreen = block.defaultBlockInput!!.blocks,
                                                 //del = { block.blocksInput[block.blocksInput.size - 1].second.blocks.remove(blockFor) },
                                                 blockWithDeleteShownId = innerBlockWithDeleteShownId,
                                                 onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },

@@ -60,6 +60,7 @@ import com.example.hit.blocks.BodyBlock
 import com.example.hit.blocks.blockTypeToColor
 import com.example.hit.blocks.container.Container
 import com.example.hit.codeRunner.CodeRunner
+import com.example.hit.console.console
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -76,7 +77,7 @@ fun CodeScreen(
     var showConsole by remember { mutableStateOf(false) }
     val listOfBlocks = remember { mutableStateListOf<BasicBlock>() }
     var blockId by remember { mutableStateOf<UUID?>(null) }
-    val consoleOutput = remember { mutableStateListOf<String>() }
+    val consoleOutput = remember { console }
     var menuForInnerBlock by remember { mutableStateOf(false) }
 
     val lazyListState = rememberLazyListState()

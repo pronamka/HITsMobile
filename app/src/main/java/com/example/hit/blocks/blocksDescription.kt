@@ -27,6 +27,7 @@ import com.example.hit.language.parser.VariableAssignmentStatement
 import com.example.hit.language.parser.VariableType
 import com.example.hit.language.parser.WhileLoop
 import com.example.hit.language.parser.operations.IOperation
+import java.io.Console
 import java.util.UUID
 
 val blockTypeToColor = mapOf(
@@ -167,7 +168,7 @@ class InitializationBlock(
 }
 
 class PrintBlock(
-    blockId: UUID
+    blockId: UUID,
 ) : BasicBlock(
     blockId,
     type = BlockType.PRINT,
@@ -228,7 +229,6 @@ class IfElseBlock(
 
     var defaultBlockInput: BodyBlock? = null
 
-
     fun getDynamicHeightPx(density: Density, hasElse: Boolean, elseIfCounts: Int): Float {
         val base = 120.dp
         val elseIfBlockHeight = 160.dp * elseIfCounts
@@ -269,19 +269,11 @@ class IfElseBlock(
 
         for (blockInput in blocksInput) {
             val operation = blockInput.first.getOperation()
-            val statements = mutableListOf<IStatement>()
-            for (block in blockInput.second.blocks) {
-                statements.add(block.execute())
-            }
-            blocks.add(Pair(operation, BlockStatement(statements)))
+            blocks.add(Pair(operation, blockInput.second.execute()))
         }
 
         if (defaultBlockInput != null) {
-            val statements = mutableListOf<IStatement>()
-            for (block in defaultBlockInput!!.blocks) {
-                statements.add(block.execute())
-            }
-            defaultBlock = BlockStatement(statements)
+            defaultBlock = defaultBlockInput!!.execute()
         }
 
         return IfElseStatement(blocks, defaultBlock)
@@ -308,11 +300,7 @@ class ForBlock(
         val initializer = initializerInput.getDeclarationStatement()
         val operation = conditionInput.getOperation()
         val stateChange = stateChangeInput.getAssignmentStatement()
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks) {
-            statements.add(block.execute())
-        }
-        return ForLoop(initializer, operation, stateChange, BlockStatement(statements))
+        return ForLoop(initializer, operation, stateChange, blocks.execute())
     }
 
     override fun deepCopy(): BasicBlock {
@@ -332,11 +320,7 @@ class WhileBlock(
 
     override fun execute(): WhileLoop {
         val operation = conditionInput.getOperation()
-        val statements = mutableListOf<IStatement>()
-        for (block in blocks.blocks) {
-            statements.add(block.execute())
-        }
-        return WhileLoop(operation, BlockStatement(statements))
+        return WhileLoop(operation, blocks.execute())
     }
 
     override fun deepCopy(): BasicBlock {
@@ -409,12 +393,8 @@ class FunctionBlock(
     override fun execute(): FunctionDeclarationStatement {
         val name = nameInput.getName()
         val returnValueType = returnValueTypeInput.getType()
-        val statements = mutableListOf<IStatement>()
         val parameters = inputParameters.getFunctionParametersInputField()
-        for (block in blocks.blocks) {
-            statements.add(block.execute())
-        }
-        return FunctionDeclarationStatement(name, parameters, BlockStatement(statements), returnValueType)
+        return FunctionDeclarationStatement(name, parameters, blocks.execute(), returnValueType)
     }
 
     override fun deepCopy(): BasicBlock {
