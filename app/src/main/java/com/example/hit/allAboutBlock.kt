@@ -66,13 +66,19 @@ data class BlockPosition(
     var widthPx: Float = 0f
 )
 
-fun onChange(block : BasicBlock, coordinates : LayoutCoordinates, density: Density) {
-    if (block is IfElseBlock) {
-        val hasElse = block.defaultBlockInput != null
-        val elseIfCounts = block.blocksInput.size - 1
-        block.heightDP = block.getDynamicHeightPx(density, hasElse, elseIfCounts).dp
-        block.widthDP = coordinates.size.width.dp
+fun onChange(block : BasicBlock, density: Density) {
+    if (block is IfElseBlock || block is WhileBlock || block is ForBlock) {
+        block.heightDP = block.getDynamicHeightPx(density).dp
+        block.widthDP = block.getDynamicWidthPx(density).dp
     }
+}
+
+object Constants{
+    val bodyBlockHorizontalPadding = 8.dp
+    val bodyBlockVerticalPadding = 12.dp
+
+    val standardColumnPadding =8.dp
+    val standardColumnHorizontalArrangement = 8.dp
 }
 
 
@@ -108,7 +114,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates, density)
+                        onChange(block, density)
                     }
                     .background(
                         color = block.color.value,
@@ -197,7 +203,7 @@ fun BlockItem(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates, density)
+                        onChange(block, density)
                     }
                     .wrapContentWidth()
                     .wrapContentHeight()
@@ -212,12 +218,12 @@ fun BlockItem(
                     modifier = Modifier
                         .wrapContentWidth()
                         .wrapContentHeight()
-                        .padding(16.dp),
+                        .padding(Constants.standardColumnPadding),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(18.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Constants.standardColumnHorizontalArrangement),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -262,11 +268,11 @@ fun BlockItem(
 
                     Box(
                         modifier = Modifier
-                            .padding(8.dp)
-                            .wrapContentWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .padding(horizontal = Constants.bodyBlockHorizontalPadding, vertical = Constants.bodyBlockVerticalPadding)
+                            .wrapContentWidth(unbounded = true)
                             .wrapContentHeight(unbounded = true)
                             .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp)
+                            .clickable { innerBlockWithDeleteShownId = null }
                             .background(
                                 color = Color.White.copy(alpha = 0.2f),
                                 shape = RoundedCornerShape(16.dp)
@@ -277,24 +283,16 @@ fun BlockItem(
                                 shape = RoundedCornerShape(16.dp)
                             )
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .wrapContentSize()
-                                .padding(16.dp)
-                                .clickable { innerBlockWithDeleteShownId = null },
-                        ) {
-                            block.blocksInput[0].second.blocks.forEach{blockInner ->
-                                Drag(
-                                    block = blockInner,
-                                    blocksOnScreen = block.blocksInput[0].second.blocks,
-                                    //del = { block.blocksInput[0].second.blocks.remove(blockInner) },
-                                    blockWithDeleteShownId = innerBlockWithDeleteShownId,
-                                    onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
-                                    onSwapMenu = onSwapMenu
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
+                        block.blocksInput[0].second.blocks.forEach{blockInner ->
+                            Drag(
+                                block = blockInner,
+                                blocksOnScreen = block.blocksInput[0].second.blocks,
+                                blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
+                                onSwapMenu = onSwapMenu
+                            )
                         }
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
 
                     elseIfCounts.forEachIndexed { index, condition ->
@@ -305,7 +303,7 @@ fun BlockItem(
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -351,11 +349,11 @@ fun BlockItem(
                             }
                             Box(
                                 modifier = Modifier
-                                    .padding(8.dp)
                                     .padding(horizontal = 12.dp, vertical = 8.dp)
                                     .wrapContentWidth(unbounded = true)
                                     .wrapContentHeight(unbounded = true)
                                     .defaultMinSize(minHeight = 80.dp, minWidth = 252.dp)
+                                    .clickable { innerBlockWithDeleteShownId = null }
                                     .background(
                                         color = Color.White.copy(alpha = 0.2f),
                                         shape = RoundedCornerShape(16.dp)
@@ -366,28 +364,20 @@ fun BlockItem(
                                         shape = RoundedCornerShape(16.dp)
                                     )
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp)
-                                        .clickable { innerBlockWithDeleteShownId = null },
-                                ) {
-                                    block.blocksInput[index + 1].second.blocks.forEach{blockInner ->
-                                        Box(
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Drag(
-                                                block = blockInner,
-                                                blocksOnScreen = block.blocksInput[index + 1].second.blocks,
-                                                //del = { block.blocksInput[index + 1].second.blocks.remove(blockInner) },
-                                                blockWithDeleteShownId = innerBlockWithDeleteShownId,
-                                                onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
-                                                onSwapMenu = onSwapMenu
-                                            )
-                                        }
+                                block.blocksInput[index + 1].second.blocks.forEach{blockInner ->
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Drag(
+                                            block = blockInner,
+                                            blocksOnScreen = block.blocksInput[index + 1].second.blocks,
+                                            blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                            onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
+                                            onSwapMenu = onSwapMenu
+                                        )
                                     }
-                                    Spacer(modifier = Modifier.height(150.dp))
                                 }
+                                Spacer(modifier = Modifier.height(150.dp))
                             }
                         }
                     }
@@ -434,11 +424,11 @@ fun BlockItem(
                             }
                             Box(
                                 modifier = Modifier
-                                    .padding(8.dp)
-                                    .wrapContentWidth()
                                     .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    .wrapContentWidth(unbounded = true)
                                     .wrapContentHeight(unbounded = true)
                                     .defaultMinSize(minHeight = 60.dp, minWidth = 252.dp)
+                                    .clickable { innerBlockWithDeleteShownId = null }
                                     .background(
                                         color = Color.White.copy(alpha = 0.2f),
                                         shape = RoundedCornerShape(16.dp)
@@ -449,28 +439,20 @@ fun BlockItem(
                                         shape = RoundedCornerShape(16.dp)
                                     )
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp)
-                                        .clickable { innerBlockWithDeleteShownId = null },
-                                ) {
-                                    block.blocksInput[block.blocksInput.size - 1].second.blocks.forEach{blockFor ->
-                                        Box(
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Drag(
-                                                block = blockFor,
-                                                blocksOnScreen = block.blocksInput[block.blocksInput.size - 1].second.blocks,
-                                                //del = { block.blocksInput[block.blocksInput.size - 1].second.blocks.remove(blockFor) },
-                                                blockWithDeleteShownId = innerBlockWithDeleteShownId,
-                                                onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
-                                                onSwapMenu = onSwapMenu
-                                            )
-                                        }
+                                block.blocksInput[block.blocksInput.size - 1].second.blocks.forEach{blockFor ->
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Drag(
+                                            block = blockFor,
+                                            blocksOnScreen = block.blocksInput[block.blocksInput.size - 1].second.blocks,
+                                            blockWithDeleteShownId = innerBlockWithDeleteShownId,
+                                            onShowDeleteChange = { id -> innerBlockWithDeleteShownId = id },
+                                            onSwapMenu = onSwapMenu
+                                        )
                                     }
-                                    Spacer(modifier = Modifier.height(150.dp))
                                 }
+                                Spacer(modifier = Modifier.height(150.dp))
                             }
                         }
                     } else {
@@ -533,7 +515,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates, density)
+                        onChange(block, density)
                     }
                     .background(
                         color = block.color.value,
@@ -599,7 +581,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates,density)
+                        onChange(block, density)
                     }
                     .background(
                         color = block.color.value,
@@ -666,7 +648,7 @@ fun BlockItem(
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates, density)
+                        onChange(block, density)
                     }
                     .background(
                         color = block.color.value,
@@ -799,7 +781,7 @@ fun BlockItem(
                     .wrapContentWidth()
                     .wrapContentHeight()
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates, density)
+                        onChange(block,density)
                     }
                     .background(
                         color = block.color.value,
@@ -886,7 +868,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates, density)
+                        onChange(block, density)
                     }
                     .background(
                         color = block.color.value,
@@ -918,7 +900,7 @@ fun BlockItem(
                     .width(252.dp)
                     .height(80.dp)
                     .onGloballyPositioned { coordinates ->
-                        onChange(block, coordinates, density)
+                        onChange(block, density)
                     }
                     .background(
                         color = block.color.value,
