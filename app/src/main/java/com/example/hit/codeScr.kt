@@ -74,9 +74,11 @@ fun CodeScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showConsole by remember { mutableStateOf(false) }
     val listOfBlocks = remember { mutableStateListOf<BasicBlock>() }
-    var blockId by remember { mutableStateOf<UUID?>(null) }
+    //var blockId by remember { mutableStateOf<UUID?>(null) }
     val consoleOutput = remember { mutableStateListOf<String>() }
     val density = LocalDensity.current
+
+    var draggedBlockId by remember { mutableStateOf<UUID?>(null) }
 
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -247,19 +249,13 @@ fun CodeScreen(
                             .height(2000.dp)
                     ) {
                         listOfBlocks.forEach { block ->
-                            Box(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Drag(
-                                    block = block,
-                                    active = blockId == block.id,
-                                    initID = { blockId = block.id },
-                                    blocksOnScreen = listOfBlocks,
-                                    del = { listOfBlocks.remove(block) },
-                                    blockWithDeleteShownId = blockWithDeleteShownId,
-                                    onShowDeleteChange = { id -> blockWithDeleteShownId = id }
-                                )
-                            }
+                            Drag(
+                                block = block,
+                                blocksOnScreen = listOfBlocks,
+                                del = { listOfBlocks.remove(block) },
+                                blockWithDeleteShownId = blockWithDeleteShownId,
+                                onShowDeleteChange = { id -> blockWithDeleteShownId = id },
+                            )
                         }
                         Spacer(modifier = Modifier.height(150.dp))
                     }

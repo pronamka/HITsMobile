@@ -29,16 +29,14 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun Drag(
     block: BasicBlock,
-    active : Boolean,
-    initID : () -> Unit,
     blocksOnScreen: List<BasicBlock>,
-    del: ()-> Unit,
+    del: () -> Unit,
     blockWithDeleteShownId: UUID?,
-    onShowDeleteChange: (UUID?) -> Unit
-){
-    fun compatible(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop : Boolean): Boolean {
+    onShowDeleteChange: (UUID?) -> Unit,
+) {
+    fun compatible(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop: Boolean): Boolean {
         val draggedBlock = blocksOnScreen.first { it.id == draggedBlockId }
-        val possibleConnectedBlock = blocksOnScreen.first{ it.id == possibleConnectedBlockId }
+        val possibleConnectedBlock = blocksOnScreen.first { it.id == possibleConnectedBlockId }
         return if (isTop) {
             draggedBlock.isBottomCompatible(possibleConnectedBlock)
         } else {
@@ -46,7 +44,7 @@ fun Drag(
         }
     }
 
-    fun createConnection(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop : Boolean) {
+    fun createConnection(draggedBlockId: UUID, possibleConnectedBlockId: UUID, isTop: Boolean) {
         val draggedBlock = blocksOnScreen.first { it.id == draggedBlockId }
         val possibleConnectedBlock = blocksOnScreen.first { it.id == possibleConnectedBlockId }
 
@@ -64,6 +62,8 @@ fun Drag(
 
     var currentX by remember { mutableStateOf(block.x) }
     var currentY by remember { mutableStateOf(block.y) }
+
+    var active by remember { mutableStateOf(false) }
 
     val animatedX by animateFloatAsState(
         targetValue = currentX,
@@ -99,13 +99,18 @@ fun Drag(
             val otherTop = otherBlock.y
             val otherBottom = otherTop + otherHeightPx
 
-            val otherTopCenter = Pair(otherBlock.x + otherBlock.getDynamicWidthPx(density) / 2, otherBlock.y)
+            val otherTopCenter =
+                Pair(otherBlock.x + otherBlock.getDynamicWidthPx(density) / 2, otherBlock.y)
 
 
             val otherBottomCenter = Pair(otherBlock.x + otherWidthPx / 2, otherBottom)
-            val currentTopCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y)
+            val currentTopCenter =
+                Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y)
 
-            val currentBottomCenter = Pair(currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2, currentBlock.y+currentBlock.getDynamicHeightPx(density))
+            val currentBottomCenter = Pair(
+                currentBlock.x + currentBlock.getDynamicWidthPx(density) / 2,
+                currentBlock.y + currentBlock.getDynamicHeightPx(density)
+            )
 
             Log.println(Log.DEBUG, null, listOf(currentBlock.y, otherTop).toString())
             val distanceCurrentTopToOtherBottom = distance(currentTopCenter, otherBottomCenter)
@@ -114,16 +119,20 @@ fun Drag(
             }
             val distanceCurrentBottomToOtherTop = distance(currentBottomCenter, otherTopCenter)
             if (distanceCurrentBottomToOtherTop < 50f) {
-                return Pair(otherBlock.x, otherTop-currentBlock.getDynamicHeightPx(density))
+                return Pair(otherBlock.x, otherTop - currentBlock.getDynamicHeightPx(density))
             }
         }
         return null
     }
 
+    fun calculateZIndex(): Float {
+        Log.println(Log.DEBUG, null, active.toString())
+        return if (active) 1000f else 0f
+    }
+
     Box(
         modifier = Modifier
             .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
-            .zIndex(if (active) 1f else 0f)
             .combinedClickable(
                 onClick = { onShowDeleteChange(null) },
                 onLongClick = { onShowDeleteChange(block.id) }
@@ -139,12 +148,14 @@ fun Drag(
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
+                        active = true
+                        //Log.println(Log.DEBUG, null, active.toString())
                         block.connectionCnt = 0
-                        initID()
                         snapTarget = null
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
+
                         currentX = (currentX + dragAmount.x).coerceAtLeast(0f)
                         currentY = currentY + dragAmount.y
 
@@ -156,6 +167,8 @@ fun Drag(
                         isNearSnap = potentialSnap != null
                     },
                     onDragEnd = {
+                        active = false
+                        //Log.println(Log.DEBUG, null, active.toString())
                         if (snapTarget != null) {
                             currentX = snapTarget!!.first
                             currentY = snapTarget!!.second
@@ -167,17 +180,20 @@ fun Drag(
                     }
                 )
             }
+            .zIndex(calculateZIndex())
+
     ) {
         BlockItem(
             block = block,
             onClick = { onShowDeleteChange(null) },
         )
-        if(block.id == blockWithDeleteShownId){
+        if (block.id == blockWithDeleteShownId) {
             Button(
                 onClick = { del() },
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
-                Text(text = "Delete",
+                Text(
+                    text = "Delete",
                     color = Color.White,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Medium,
