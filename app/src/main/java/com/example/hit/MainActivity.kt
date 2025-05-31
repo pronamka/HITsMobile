@@ -105,7 +105,7 @@ fun StartScr(
         Spacer(modifier = Modifier.height(25.dp))
 
         Button(
-            onClick = { navController.navigate(Destinations.DOCUMENTATION_SCREEN) },
+            onClick = { showDialog.value = true },
             modifier = Modifier.height(50.dp).width(250.dp),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                 containerColor = colorResource(R.color.purple_001),
