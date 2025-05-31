@@ -47,7 +47,7 @@ class Variable(
         if (TypesManager.valueTypeCorresponds(type, variableValue)) {
             return variableValue
         }
-        if (type is VariableType.DOUBLE && variableValue is IntValue){
+        if (type is VariableType.DOUBLE && variableValue is IntValue) {
             return DoubleValue(variableValue.value.toDouble())
         }
         throw UnexpectedTypeException(

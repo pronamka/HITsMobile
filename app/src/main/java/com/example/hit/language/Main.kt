@@ -21,15 +21,15 @@ fun getOperation(input: String): IOperation {
     return OperationsParser(Lexer(input).tokenize()).parse()[0]
 }
 
-fun getDeclarationStatement(input: String): DeclarationStatement{
+fun getDeclarationStatement(input: String): DeclarationStatement {
     return StatementsParser(Lexer(input).tokenize()).parseDeclaration()
 }
 
-fun getAssignmentStatement(input: String): AssignmentStatement{
+fun getAssignmentStatement(input: String): AssignmentStatement {
     return StatementsParser(Lexer(input).tokenize()).parseAssignment()
 }
 
-fun getStatementsParser(input: String): StatementsParser{
+fun getStatementsParser(input: String): StatementsParser {
     return StatementsParser(Lexer(input).tokenize())
 }
 

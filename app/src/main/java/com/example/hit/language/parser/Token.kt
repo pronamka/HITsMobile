@@ -5,9 +5,9 @@ import com.example.hit.language.parser.operations.IOperation
 open class Token(
     val tokenType: TokenType,
     val tokenValue: String
-){
-    fun tokenTypeEquals(otherTokenType: TokenType): Boolean{
-        return tokenType===otherTokenType
+) {
+    fun tokenTypeEquals(otherTokenType: TokenType): Boolean {
+        return tokenType === otherTokenType
     }
 
     override fun toString(): String {
@@ -19,4 +19,4 @@ class ArrayToken(
     val size: IOperation? = null,
     val elementType: VariableType,
     val value: IOperation? = null
-): Token(TokenType.ARRAY, "")
+) : Token(TokenType.ARRAY, "")

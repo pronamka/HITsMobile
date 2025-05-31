@@ -86,7 +86,9 @@ fun StartScr(
 
         Button(
             onClick = { navController.navigate(Destinations.CODE_SCREEN) },
-            modifier = Modifier.height(50.dp).width(250.dp),
+            modifier = Modifier
+                .height(50.dp)
+                .width(250.dp),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                 containerColor = colorResource(R.color.purple_001),
                 contentColor = colorResource(R.color.white_001),
@@ -106,7 +108,9 @@ fun StartScr(
 
         Button(
             onClick = { showDialog.value = true },
-            modifier = Modifier.height(50.dp).width(250.dp),
+            modifier = Modifier
+                .height(50.dp)
+                .width(250.dp),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                 containerColor = colorResource(R.color.purple_001),
                 contentColor = colorResource(R.color.white_001),
@@ -115,13 +119,22 @@ fun StartScr(
         ) {
             Icon(Icons.Default.Info, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = stringResource(R.string.about_app_button), fontFamily = fontSt, fontSize = 24.sp)
+            Text(
+                text = stringResource(R.string.about_app_button),
+                fontFamily = fontSt,
+                fontSize = 24.sp
+            )
         }
         if (showDialog.value) {
             AlertDialog(
                 onDismissRequest = { showDialog.value = false },
-                title = { Text(text = stringResource(R.string.about_app_button), fontFamily = fontSt) },
-                text = { Text(text = stringResource(R.string.inAbout), fontFamily = fontSt)},
+                title = {
+                    Text(
+                        text = stringResource(R.string.about_app_button),
+                        fontFamily = fontSt
+                    )
+                },
+                text = { Text(text = stringResource(R.string.inAbout), fontFamily = fontSt) },
                 confirmButton = {
                     TextButton(onClick = { showDialog.value = false }) {
                         Text(stringResource(R.string.Ok), fontFamily = fontSt)

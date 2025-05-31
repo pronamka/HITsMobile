@@ -9,7 +9,7 @@ enum class ConditionOperationType {
     NOT_EQUAL
 }
 
-enum class LogicalOperationType{
+enum class LogicalOperationType {
     AND,
     OR,
     NOT

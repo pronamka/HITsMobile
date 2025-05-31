@@ -43,13 +43,10 @@ fun Drag(
     onChangeSize: () -> Unit,
 ) {
 
-    var temp = remember { mutableStateListOf(blocksOnScreen) }
     data class Snap(var topConnectedBlock: BasicBlock?, var bottomConnectedBlock: BasicBlock?)
 
     val GreyColor = colorResource(R.color.grey_001)
 
-
-    var lastInteractedTimestamp by remember { mutableStateOf(System.currentTimeMillis()) }
     val density = LocalDensity.current
 
     var isNearSnap by remember { mutableStateOf(false) }
@@ -77,7 +74,6 @@ fun Drag(
     var currentZIndex by remember { mutableFloatStateOf(1f) }
 
     fun distance(point1: Pair<Float, Float>, point2: Pair<Float, Float>): Float {
-        //Log.println(Log.DEBUG, null, listOf(point1, point2).toString())
         val dx = point1.first - point2.first
         val dy = point1.second - point2.second
         return kotlin.math.sqrt(dx * dx + dy * dy)
@@ -105,28 +101,36 @@ fun Drag(
             val otherHeightPx = otherBlock.getDynamicHeightPx(density)
             val otherWidthPx = otherBlock.getDynamicWidthPx(density)
             val otherXStart = otherBlock.x
-            val otherXEnd = otherBlock.x+otherWidthPx
+            val otherXEnd = otherBlock.x + otherWidthPx
             val otherTop = otherBlock.y
             val otherBottom = otherTop + otherHeightPx
 
             val thisHeightPx = block.getDynamicHeightPx(density)
             val thisWidthPx = block.getDynamicWidthPx(density)
             val thisXStart = block.x
-            val thisXEnd = block.x+thisWidthPx
+            val thisXEnd = block.x + thisWidthPx
             val thisTop = block.y
             val thisBottom = thisTop + thisHeightPx
 
 
             val intersectionSize = min(otherXEnd, thisXEnd) - max(otherXStart, thisXStart)
 
-            val distanceCurrentTopToOtherBottom = abs(thisTop-otherBottom)
+            val distanceCurrentTopToOtherBottom = abs(thisTop - otherBottom)
 
-            if (distanceCurrentTopToOtherBottom < 30f && intersectionSize > min(thisWidthPx, otherWidthPx)*0.7 && otherBlock.isBottomCompatible()) {
+            if (distanceCurrentTopToOtherBottom < 30f && intersectionSize > min(
+                    thisWidthPx,
+                    otherWidthPx
+                ) * 0.7 && otherBlock.isBottomCompatible()
+            ) {
                 snap.topConnectedBlock = otherBlock
             }
 
-            val distanceCurrentBottomToOtherTop = abs(thisBottom-otherTop)
-            if (distanceCurrentBottomToOtherTop < 30f && intersectionSize > min(thisWidthPx, otherWidthPx)*0.7 && otherBlock.isTopCompatible()) {
+            val distanceCurrentBottomToOtherTop = abs(thisBottom - otherTop)
+            if (distanceCurrentBottomToOtherTop < 30f && intersectionSize > min(
+                    thisWidthPx,
+                    otherWidthPx
+                ) * 0.7 && otherBlock.isTopCompatible()
+            ) {
                 snap.bottomConnectedBlock = otherBlock
             }
         }
@@ -167,13 +171,22 @@ fun Drag(
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        if (block.parentBlock != null){
-                            currentX = min(currentX+dragAmount.x, block.parentBlock!!.getDynamicWidthPx(density)-block.getDynamicWidthPx(density) )
-                            currentY = min(currentY+dragAmount.y, block.parentBlock!!.getDynamicHeightPx(density)-block.getDynamicHeightPx(density) )
-                        }
-                        else{
-                            currentX = currentX+dragAmount.x
-                            currentY = currentY+dragAmount.y
+                        if (block.parentBlock != null) {
+                            currentX = min(
+                                currentX + dragAmount.x,
+                                block.parentBlock!!.getDynamicWidthPx(density) - block.getDynamicWidthPx(
+                                    density
+                                )
+                            )
+                            currentY = min(
+                                currentY + dragAmount.y,
+                                block.parentBlock!!.getDynamicHeightPx(density) - block.getDynamicHeightPx(
+                                    density
+                                )
+                            )
+                        } else {
+                            currentX = currentX + dragAmount.x
+                            currentY = currentY + dragAmount.y
                         }
                         currentX = currentX.coerceAtLeast(0f)
                         currentY = currentY.coerceAtLeast(0f)
@@ -183,13 +196,14 @@ fun Drag(
 
                         val potentialSnap = findSnapTarget(block)
                         snapTarget = potentialSnap
-                        isNearSnap = (potentialSnap.topConnectedBlock != null || potentialSnap.bottomConnectedBlock != null)
+                        isNearSnap =
+                            (potentialSnap.topConnectedBlock != null || potentialSnap.bottomConnectedBlock != null)
                     },
                     onDragEnd = {
                         if (snapTarget.topConnectedBlock != null) {
                             val topBlock = snapTarget.topConnectedBlock!!
                             currentX = topBlock.x
-                            currentY = topBlock.y+topBlock.getDynamicHeightPx(density)
+                            currentY = topBlock.y + topBlock.getDynamicHeightPx(density)
                             block.x = currentX
                             block.y = currentY
                             block.connectTopBlock(topBlock)
@@ -197,7 +211,7 @@ fun Drag(
                         if (snapTarget.bottomConnectedBlock != null) {
                             val bottomBlock = snapTarget.bottomConnectedBlock!!
                             currentX = bottomBlock.x
-                            currentY = bottomBlock.y-block.getDynamicHeightPx(density)
+                            currentY = bottomBlock.y - block.getDynamicHeightPx(density)
                             block.x = currentX
                             block.y = currentY
                             block.connectBottomBlock(bottomBlock)
@@ -220,7 +234,7 @@ fun Drag(
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 Text(
-                    text =  stringResource(R.string.delete),
+                    text = stringResource(R.string.delete),
                     color = Color.White,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Medium,

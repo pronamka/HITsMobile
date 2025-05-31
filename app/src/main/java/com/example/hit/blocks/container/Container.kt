@@ -6,9 +6,9 @@ import com.example.hit.blocks.FunctionBlock
 import com.example.hit.blocks.IfElseBlock
 import com.example.hit.blocks.WhileBlock
 
-class Container(private val blocks : MutableList<BasicBlock>) {
+class Container(private val blocks: MutableList<BasicBlock>) {
 
-    fun isValidBlockArrangement() : Boolean {
+    fun isValidBlockArrangement(): Boolean {
         if (blocks.size == 0) {
             return true
         }

@@ -93,7 +93,7 @@ fun CodeScreen(
     var blockWithDeleteShownId by remember { mutableStateOf<UUID?>(null) }
 
     val menuOff by animateDpAsState(
-        targetValue = if ((showMenu || menuForInnerBlock) ) 0.dp else (-300).dp,
+        targetValue = if ((showMenu || menuForInnerBlock)) 0.dp else (-300).dp,
     )
 
     val consoleOff by animateDpAsState(
@@ -107,12 +107,12 @@ fun CodeScreen(
     val defaultBlocks = remember { BlockData.defaultBlocks }
 
     var currentBodyBlock by remember { mutableStateOf<BodyBlock?>(null) }
-    var temp = remember {mutableStateListOf<BasicBlock>()}
+    var temp = remember { mutableStateListOf<BasicBlock>() }
     val purple2Color = colorResource(R.color.purple_002)
-    val whiteColor =colorResource(R.color.white_001)
+    val whiteColor = colorResource(R.color.white_001)
 
 
-    fun addBlockOnScreen(bodyBlock: BodyBlock){
+    fun addBlockOnScreen(bodyBlock: BodyBlock) {
         currentBodyBlock = bodyBlock
         temp.clear()
         temp.addAll(currentBodyBlock!!.blocks)
@@ -268,14 +268,14 @@ fun CodeScreen(
                             .width(1000.dp)
                     ) {
                         listOfBlocks.forEach { block ->
-                            key(block.id){
+                            key(block.id) {
                                 Drag(
                                     block = block,
                                     blocksOnScreen = listOfBlocks,
                                     blockWithDeleteShownId = blockWithDeleteShownId,
                                     onShowDeleteChange = { id -> blockWithDeleteShownId = id },
-                                    onSwapMenu = { bodyBlock -> addBlockOnScreen(bodyBlock)},
-                                    onChangeSize = {onChange(block, density)}
+                                    onSwapMenu = { bodyBlock -> addBlockOnScreen(bodyBlock) },
+                                    onChangeSize = { onChange(block, density) }
                                 )
                             }
                         }
@@ -327,10 +327,12 @@ fun CodeScreen(
                     )
 
                     Button(
-                        onClick = { showConsole = false;
-                                  for (block in listOfBlocks) {
-                                      block.color.value = blockTypeToColor[block.type]!!
-                                  }},
+                        onClick = {
+                            showConsole = false;
+                            for (block in listOfBlocks) {
+                                block.color.value = blockTypeToColor[block.type]!!
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colorResource(R.color.red_001),
                             contentColor = Color.White
@@ -369,7 +371,7 @@ fun CodeScreen(
         }
 
 
-        if(showMenu || menuForInnerBlock) {
+        if (showMenu || menuForInnerBlock) {
             Box(
                 modifier = Modifier
                     .background(Color.Black.copy(alpha = alpha))
@@ -412,7 +414,7 @@ fun CodeScreen(
                             val newBlock = block.deepCopy()
                             if (showMenu) listOfBlocks.add(newBlock)
                             else {
-                                if (currentBodyBlock==null){
+                                if (currentBodyBlock == null) {
                                     listOfBlocks.add(newBlock)
                                 }
                                 currentBodyBlock!!.addBlock(newBlock)
@@ -423,7 +425,7 @@ fun CodeScreen(
                                 lazyListState.animateScrollToItem(listOfBlocks.size - 1)
                             }
                         },
-                        onSwapMenu = { bodyBlock -> addBlockOnScreen(bodyBlock)}
+                        onSwapMenu = { bodyBlock -> addBlockOnScreen(bodyBlock) }
                     )
                 }
             }

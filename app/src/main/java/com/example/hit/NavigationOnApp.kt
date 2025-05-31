@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
 var showDialog = mutableStateOf(false)
+
 @Composable
 fun NavGraph(navController: NavHostController) {
     NavHost(

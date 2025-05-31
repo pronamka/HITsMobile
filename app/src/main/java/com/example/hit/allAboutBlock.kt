@@ -334,7 +334,8 @@ fun BlockItem(
                                     onSwapMenu(block.blocksInput[0].second)
                                 }
                             }, colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(R.color.purple_002), contentColor = Color.White
+                                containerColor = colorResource(R.color.purple_002),
+                                contentColor = Color.White
                             ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
@@ -867,7 +868,8 @@ fun BlockItem(
                                     onSwapMenu(block.blocks)
                                 }
                             }, colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(R.color.purple_002), contentColor = Color.White
+                                containerColor = colorResource(R.color.purple_002),
+                                contentColor = Color.White
                             ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(
@@ -998,7 +1000,8 @@ fun BlockItem(
                                     onSwapMenu(block.blocks)
                                 }
                             }, colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(R.color.purple_002), contentColor = Color.White
+                                containerColor = colorResource(R.color.purple_002),
+                                contentColor = Color.White
                             ), modifier = Modifier.width(NumberConstants.addBlockButtonWidth)
                         ) {
                             Column(

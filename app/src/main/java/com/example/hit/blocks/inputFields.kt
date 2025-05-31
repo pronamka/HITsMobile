@@ -29,7 +29,7 @@ class StringInputField(initialValue: String = "") {
 abstract class BasicInputField {
     val inputFiled: StringInputField = StringInputField()
 
-    fun set(newName : String) {
+    fun set(newName: String) {
         inputFiled.set(newName)
     }
 
@@ -71,7 +71,7 @@ class NameInputField : BasicInputField() {
     }
 }
 
-class TypeInputField : BasicInputField(){
+class TypeInputField : BasicInputField() {
     fun getType(): VariableType {
         val s = inputFiled.get()
         return StatementsParser(Lexer(s).tokenize()).parseType()
@@ -85,21 +85,21 @@ class OperationInputField : BasicInputField() {
     }
 }
 
-class DeclarationStatementInputField : BasicInputField(){
+class DeclarationStatementInputField : BasicInputField() {
     fun getDeclarationStatement(): DeclarationStatement {
         val s = inputFiled.get()
         return StatementsParser(Lexer(s).tokenize()).parseDeclaration()
     }
 }
 
-class AssignmentStatementInputField : BasicInputField(){
+class AssignmentStatementInputField : BasicInputField() {
     fun getAssignmentStatement(): AssignmentStatement {
         val s = inputFiled.get()
         return StatementsParser(Lexer(s).tokenize()).parseAssignment()
     }
 }
 
-class FunctionParametersInputField : BasicInputField(){
+class FunctionParametersInputField : BasicInputField() {
     fun getFunctionParametersInputField(): List<DeclarationStatement> {
         val s = inputFiled.get()
         return StatementsParser(Lexer(s).tokenize()).parseFunctionParameters()

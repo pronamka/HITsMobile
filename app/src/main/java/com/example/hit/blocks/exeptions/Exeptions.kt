@@ -1,7 +1,7 @@
 package com.example.hit.blocks.exeptions
 
 class NullInputFieldException(
-): Exception("input field parsing failed: Null input field.")
+) : Exception("input field parsing failed: Null input field.")
 
 class InvalidNameException(
     invalidName: String,
